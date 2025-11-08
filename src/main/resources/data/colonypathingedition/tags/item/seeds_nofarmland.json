@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "minecraft:sweet_berries",
+    { "id": "farmersdelight:rice", "required": false }
+  ]
+}

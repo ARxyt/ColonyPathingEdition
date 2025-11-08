@@ -1,0 +1,59 @@
+<window xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        size="250 170"
+        xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/ldtteam/BlockUI/version/1.20.1/src/main/resources/assets/blockui/gui/block_ui.xsd">
+
+    <image source="minecolonies:textures/gui/builderhut/builder_paper_wide.png" size="250 160"/>
+
+    <!-- 顶部标题与输入框 -->
+    <text pos="35 12" size="100 12" color="black"
+          label="$(com.arxyt.colonypathingedition.core.farmfield.rotation_count)" textalign="MIDDLE"/>
+    <input id="season-count" pos="145 11" size="45 14" textalign="MIDDLE"/>
+    <button id="rotation-close" pos="220 11" size="14 14" textalign="MIDDLE" label="x" color="red"/>
+
+    <!-- 当前季节与天数显示 -->
+    <text pos="20 30" size="50 12" color="black" textalign="MIDDLE"
+          label="$(com.arxyt.colonypathingedition.core.farmfield.current_prefix)"/>
+    <input id="current-season" pos="70 29" size="20 14" textalign="MIDDLE"/>
+    <text pos="90 30" size="55 12" color="black" textalign="MIDDLE"
+          label="$(com.arxyt.colonypathingedition.core.farmfield.season_suffix)"/>
+    <input id="current-day" pos="145 29" size="45 14" textalign="MIDDLE"/>
+    <text pos="195 30" size="40 12" color="black"
+          label="$(com.arxyt.colonypathingedition.core.farmfield.day_suffix)"/>
+
+    <!-- 第一季 -->
+    <image id="season-bg-1" pos="10 52" size="230 22" source="minecolonies:textures/gui/builderhut/builder_button_medium.png" visible="false"/>
+    <text pos="13 57" size="35 10" color="black" textalign="MIDDLE" label="$(com.arxyt.colonypathingedition.core.farmfield.season1)"/>
+    <itemicon id="current-seed-1" pos="48 55" size="16 16"/>
+    <button id="add-seeds-1" pos="67 53" size="75 18" textalign="MIDDLE" label="$(com.arxyt.colonypathingedition.core.farmfield.select_seed)"/>
+    <text pos="142 56" size="25 12" color="black" textalign="MIDDLE" label="$(com.arxyt.colonypathingedition.core.farmfield.duration)"/>
+    <input id="set-days-1" pos="167 55" size="45 14" textalign="MIDDLE"/>
+    <text pos="217 56" size="22 12" color="black" label="$(com.arxyt.colonypathingedition.core.farmfield.day_unit)"/>
+
+    <!-- 第二季 -->
+    <image id="season-bg-2" pos="10 76" size="230 22" source="minecolonies:textures/gui/builderhut/builder_button_medium.png" visible="false"/>
+    <text pos="13 81" size="35 10" color="black" textalign="MIDDLE" label="$(com.arxyt.colonypathingedition.core.farmfield.season2)"/>
+    <itemicon id="current-seed-2" pos="48 79" size="16 16"/>
+    <button id="add-seeds-2" pos="67 77" size="75 18" textalign="MIDDLE" label="$(com.arxyt.colonypathingedition.core.farmfield.select_seed)"/>
+    <text pos="142 80" size="25 12" color="black" textalign="MIDDLE" label="$(com.arxyt.colonypathingedition.core.farmfield.duration)"/>
+    <input id="set-days-2" pos="167 79" size="45 14" textalign="MIDDLE"/>
+    <text pos="217 80" size="22 12" color="black" label="$(com.arxyt.colonypathingedition.core.farmfield.day_unit)"/>
+
+    <!-- 第三季 -->
+    <image id="season-bg-3" pos="10 100" size="230 22" source="minecolonies:textures/gui/builderhut/builder_button_medium.png" visible="false"/>
+    <text pos="13 105" size="35 10" color="black" textalign="MIDDLE" label="$(com.arxyt.colonypathingedition.core.farmfield.season3)"/>
+    <itemicon id="current-seed-3" pos="48 103" size="16 16"/>
+    <button id="add-seeds-3" pos="67 101" size="75 18" textalign="MIDDLE" label="$(com.arxyt.colonypathingedition.core.farmfield.select_seed)"/>
+    <text pos="142 104" size="25 12" color="black" textalign="MIDDLE" label="$(com.arxyt.colonypathingedition.core.farmfield.duration)"/>
+    <input id="set-days-3" pos="167 103" size="45 14" textalign="MIDDLE"/>
+    <text pos="217 104" size="22 12" color="black" label="$(com.arxyt.colonypathingedition.core.farmfield.day_unit)"/>
+
+    <!-- 第四季 -->
+    <image id="season-bg-4" pos="10 124" size="230 22" source="minecolonies:textures/gui/builderhut/builder_button_medium.png" visible="false"/>
+    <text pos="13 129" size="35 10" color="black" textalign="MIDDLE" label="$(com.arxyt.colonypathingedition.core.farmfield.season4)"/>
+    <itemicon id="current-seed-4" pos="48 127" size="16 16"/>
+    <button id="add-seeds-4" pos="67 125" size="75 18" textalign="MIDDLE" label="$(com.arxyt.colonypathingedition.core.farmfield.select_seed)"/>
+    <text pos="142 128" size="25 12" color="black" textalign="MIDDLE" label="$(com.arxyt.colonypathingedition.core.farmfield.duration)"/>
+    <input id="set-days-4" pos="167 127" size="45 14" textalign="MIDDLE"/>
+    <text pos="217 128" size="22 12" color="black" label="$(com.arxyt.colonypathingedition.core.farmfield.day_unit)"/>
+
+</window>

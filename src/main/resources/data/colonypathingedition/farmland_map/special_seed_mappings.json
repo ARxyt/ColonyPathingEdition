@@ -1,0 +1,21 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "seed": "minecraft:brown_mushroom",
+      "farmland": "minecraft:stone"
+    },
+    {
+      "seed": "minecraft:red_mushroom",
+      "farmland": "farmersdelight:rich_soil"
+    },
+    {
+      "seed": "minecraft:crimson_fungus",
+      "farmland": "nethersdelight:rich_soul_soil"
+    },
+    {
+      "seed": "minecraft:warped_fungus",
+      "farmland": "nethersdelight:rich_soul_soil"
+    }
+  ]
+}
