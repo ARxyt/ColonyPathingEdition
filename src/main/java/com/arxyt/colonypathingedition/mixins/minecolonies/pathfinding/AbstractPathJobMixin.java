@@ -47,13 +47,16 @@ import static com.minecolonies.api.util.BlockPosUtil.directionFromDelta;
 import static com.minecolonies.core.entity.pathfinding.PathingOptions.MAX_COST;
 
 @Mixin(AbstractPathJob.class)
-public abstract class AbstractPathJobMixin implements AbstractAISkeletonAccessor<IJob<?>>{
+public abstract class AbstractPathJobMixin{
 
     @Final @Shadow(remap = false) private Level actualWorld;
     @Final @Shadow(remap = false) public static int MAX_NODES;
     @Final @Shadow(remap = false) private Int2ObjectOpenHashMap<MNode> nodes;
     @Final @Shadow(remap = false) protected LevelReader world;
+    @Final @Shadow(remap = false) @NotNull protected BlockPos start;
 
+    @Shadow(remap = false) private int visitedLevel;
+    @Shadow(remap = false) private Queue<MNode> nodesToVisit;
     @Shadow(remap = false) private double maxCost;
     @Shadow(remap = false) protected double heuristicMod;
     @Shadow(remap = false) private PathingOptions pathingOptions;
@@ -61,13 +64,14 @@ public abstract class AbstractPathJobMixin implements AbstractAISkeletonAccessor
     @Shadow(remap = false) protected BlockPos.MutableBlockPos tempWorldPos;
     @Shadow(remap = false) protected int maxNodes;
 
+    @Shadow(remap = false) public abstract Mob getEntity();
     @Shadow(remap = false) protected abstract void recalcHeuristic(final MNode node);
     @Shadow(remap = false) protected abstract boolean isPassable(int x, int y, int z, boolean head, MNode parent);
     @Shadow(remap = false) public abstract PathingOptions getPathingOptions();
     @Shadow(remap = false) protected abstract boolean canLeaveBlock(int x, int y, int z, int parentX, int parentY, int parentZ, boolean head);
 
+    @Unique private BlockEntity townhall;
     @Unique protected int actualMaxNodes;
-
     @Unique public double ladderSwitchCost = PathingConfig.LADDER_SWITCH_COST_DEFINER.get();
     @Unique public double shingleCost = PathingConfig.SHINGLE_COST_DEFINER.get();
     @Unique public double destroyingFarmlandCost = PathingConfig.FARMLAND_COST_DEFINER.get();
@@ -78,6 +82,7 @@ public abstract class AbstractPathJobMixin implements AbstractAISkeletonAccessor
     @Unique final private double swimmingPreference = PathingConfig.SWIMMING_PREFERENCE.get();
     @Unique final private double onRailCallbackMultiplier = PathingConfig.ONRAIL_CALLBACK_MULTIPLIER.get();
     @Unique final private double onRoadCallbackMultiplier = PathingConfig.ONROAD_CALLBACK_MULTIPLIER.get();
+    @Unique final private int callbackTimesTolerance =  PathingConfig.CALLBACK_TIMES_TOLERANCE.get();
 
     @Invoker(value="getGroundHeight",remap = false)
     public abstract int invokeGetGroundHeight(final MNode node, final int x, final int y, final int z);
@@ -617,7 +622,7 @@ public abstract class AbstractPathJobMixin implements AbstractAISkeletonAccessor
     private double modifyHeuristic(MNode nextNode, double heuristic, final BlockState state) {
         double newHeuristic = heuristic;
         if(state.getBlock() == Blocks.CAVE_AIR){
-            newHeuristic *= 1 + 0.15 * Math.max(5 - getWorld().getBrightness(LightLayer.BLOCK, new BlockPos(nextNode.x, nextNode.y, nextNode.z)) , 0);
+            newHeuristic *= 1 + 0.15 * Math.max(5 - world.getBrightness(LightLayer.BLOCK, new BlockPos(nextNode.x, nextNode.y, nextNode.z)) , 0);
         }
         if (nextNode.isSwimming()){
             newHeuristic *= swimmingPreference;
@@ -658,14 +663,6 @@ public abstract class AbstractPathJobMixin implements AbstractAISkeletonAccessor
     }
 
     @Unique
-    final private int callbackTimesTolerance =  PathingConfig.CALLBACK_TIMES_TOLERANCE.get();
-
-    @Shadow(remap = false) private int visitedLevel;
-    @Shadow(remap = false) private Queue<MNode> nodesToVisit;
-
-    @Shadow(remap = false) public abstract Mob getEntity();
-
-    @Unique
     private void updateNode(@NotNull final MNode node, @NotNull final MNode nextNode, final double heuristic, final double cost, boolean onRails)
     {
         IMNodeExtras extras = (IMNodeExtras) node;
@@ -693,9 +690,6 @@ public abstract class AbstractPathJobMixin implements AbstractAISkeletonAccessor
 
         nodesToVisit.offer(nextNode);
     }
-
-    @Unique
-    private BlockEntity townhall;
 
     @Inject(method = "<init>*", at = @At("RETURN"))
     private void onConstructorReturn(CallbackInfo ci) {

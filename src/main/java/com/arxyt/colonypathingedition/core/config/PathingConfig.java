@@ -56,6 +56,7 @@ public class PathingConfig {
     public static ModConfigSpec.BooleanValue MAX_ANIMAL_MODIFIER;
     public static ModConfigSpec.BooleanValue BUTCHER_INSTANT_KILL;
 
+    public static ModConfigSpec.BooleanValue USE_MAX_STOCK_FIRST;
     public static ModConfigSpec.BooleanValue PICK_MATERIAL_AT_HUT;
     public static ModConfigSpec.BooleanValue EARLY_ENCHANT;
     public static ModConfigSpec.IntValue ENCHANT_LEVEL_SCALE;
@@ -247,8 +248,11 @@ public class PathingConfig {
                 .define("butcherInstantKill",true);
         builder.pop();
         builder.push("Common Citizens Modifier #通用市民修改#");
+        USE_MAX_STOCK_FIRST = builder
+                .comment("Crafters will use its max stock to craft as default, no need research to unlock.\n 开启后工人会使用库存中余量最多的物品合成，无需点亮对应科技。")
+                .define("crafterUseMaxStockFirst",true);
         MINIMUM_STOCK_PRECISE = builder
-                .comment("Minimum stock can now be set in item counts rather than in stacks.\n 开启后，最低存量将按个计数，而不是按组(目前显示还有问题)。")
+                .comment("Minimum stock can now be set in item counts rather than in stacks.\n 开启后，最低存量将按个计数，而不是按组。")
                 .define("minimumStockPrecise",false);
         PICK_MATERIAL_AT_HUT = builder.comment("Should citizens pick material at their own hut.\n 你的非快递员市民是否应当在他们的小屋方块处取货。")
                         .define("pickMaterialAtHut", true);

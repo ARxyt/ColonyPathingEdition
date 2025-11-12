@@ -3,6 +3,7 @@ package com.arxyt.colonypathingedition.mixins.minecolonies.lumberjack;
 import com.arxyt.colonypathingedition.api.AbstractEntityAIInteractExtra;
 import com.arxyt.colonypathingedition.api.workersetting.BuildingLumberjackExtra;
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
+import com.arxyt.colonypathingedition.core.util.DistanceUtils;
 import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.AbstractEntityAIInteractAccessor;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 import com.minecolonies.api.inventory.InventoryCitizen;
@@ -46,10 +47,10 @@ public abstract class EntityAIWorkLumberjackMixin extends AbstractEntityAICrafti
 
     @Shadow(remap = false) protected abstract boolean mineIfEqualsBlockTag(List<BlockPos> blockPositions, TagKey<Block> tag);
 
-    @Unique BlockPos thisTree = null;
-    @Unique BlockPos lastTree = null;
-    @Unique int gatherState = 0;
-    @Unique BlockPos itemPos = null;
+    @Unique BlockPos thisTree;
+    @Unique BlockPos lastTree;
+    @Unique int gatherState;
+    @Unique BlockPos itemPos;
 
     public EntityAIWorkLumberjackMixin(@NotNull JobLumberjack job) {
         super(job);
@@ -86,7 +87,7 @@ public abstract class EntityAIWorkLumberjackMixin extends AbstractEntityAICrafti
     ) {
         while (!Objects.requireNonNull(job.getTree()).getStumpLocations().isEmpty())
         {
-            final BlockPos pos = job.getTree().getStumpLocations().get(0);
+            final BlockPos pos = job.getTree().getStumpLocations().getFirst();
             final ItemStack sapling = getInventory().getStackInSlot(saplingSlot);
 
             if(PathingConfig.LUMBERJACK_PLANT_WITHOUT_SAPLINGS.get() && worker.getInventoryCitizen().hasSpace()){
@@ -122,6 +123,7 @@ public abstract class EntityAIWorkLumberjackMixin extends AbstractEntityAICrafti
             }
             else
             {
+                ci.cancel();
                 return;
             }
         }
@@ -205,7 +207,7 @@ public abstract class EntityAIWorkLumberjackMixin extends AbstractEntityAICrafti
                 .filter(item -> item != null && item.isAlive() &&
                         (!item.getPersistentData().contains("PreventRemoteMovement") || !item.getPersistentData().getBoolean("PreventRemoteMovement")) &&
                         isItemWorthPickingUp(item.getItem()))
-                .collect(Collectors.toList());
+                .toList();
         for (ItemEntity item: farItems) {
             item.absMoveTo(worker.getBlockX() + 0.5d,worker.getBlockY(),worker.getBlockZ() + 0.5d);
         }
@@ -223,7 +225,7 @@ public abstract class EntityAIWorkLumberjackMixin extends AbstractEntityAICrafti
                 .filter(item -> item != null && item.isAlive() &&
                         (!item.getPersistentData().contains("PreventRemoteMovement") || !item.getPersistentData().getBoolean("PreventRemoteMovement")) &&
                         isItemWorthPickingUp(item.getItem()))
-                .collect(Collectors.toList());
+                .toList();
         if(farItems.isEmpty()){
             return false;
         }
@@ -297,7 +299,7 @@ public abstract class EntityAIWorkLumberjackMixin extends AbstractEntityAICrafti
 
     @Inject(method = "prepareForWoodcutting", at = @At("RETURN"), remap = false, cancellable = true)
     private void remasterPrepareOrderForWoodcutting(CallbackInfoReturnable<IAIState> cir){
-        if(cir.getReturnValue() == LUMBERJACK_SEARCHING_TREE ){
+        if(cir.getReturnValue() == LUMBERJACK_SEARCHING_TREE && (building.shouldRestrict() || lastTree == null || !(DistanceUtils.dist(building.getPosition(),lastTree) > 50))){
             cir.setReturnValue(LUMBERJACK_GATHERING);
         }
     }

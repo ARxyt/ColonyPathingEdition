@@ -1,7 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding.heuristic;
 
 import com.arxyt.colonypathingedition.api.IMNodeExtras;
-import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.AbstractPathJobAccessor;
 import com.arxyt.colonypathingedition.core.util.DistanceUtils;
 import com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding.AbstractPathJobMixin;
 import com.minecolonies.core.entity.pathfinding.MNode;
@@ -17,15 +16,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin( PathJobMoveTowards.class)
-public abstract class PathJobMoveTowardsMixin extends AbstractPathJobMixin implements AbstractPathJobAccessor{
+public abstract class PathJobMoveTowardsMixin extends AbstractPathJobMixin{
     @Final @Shadow(remap = false) protected BlockPos target;
     @Final @Shadow(remap = false) protected int minDistance;
 
     @Inject(method = "computeHeuristic(III)D", at = @At("HEAD"), cancellable = true,remap = false)
     protected void computeHeuristic(int x, int y, int z, CallbackInfoReturnable<Double> cir) {
         double trueDistance = DistanceUtils.dist(x, y, z, target);
-        double awayDistance = DistanceUtils.dist(x, y, z, getStartPos());
-        double dist = DistanceUtils.dist2(getStartPos(), target);
+        double awayDistance = DistanceUtils.dist(x, y, z, start);
+        double dist = DistanceUtils.dist2(start, target);
         double multiplier = 2 * dist / Math.abs(trueDistance - awayDistance + 1.002 * dist);
         double heuristic = trueDistance * trueDistance * multiplier;
         cir.setReturnValue((heuristic));
@@ -57,7 +56,7 @@ public abstract class PathJobMoveTowardsMixin extends AbstractPathJobMixin imple
     @Overwrite(remap = false)
     protected boolean isAtDestination(@NotNull final MNode n)
     {
-        return (DistanceUtils.dist(n.x, n.y, n.z,getStartPos()) > minDistance && DistanceUtils.manhattanDistance(n.x, n.y, n.z,target) < minDistance / 2.0) ||
+        return (DistanceUtils.dist(n.x, n.y, n.z, start) > minDistance && DistanceUtils.manhattanDistance(n.x, n.y, n.z,target) < minDistance / 2.0) ||
                 DistanceUtils.manhattanDistance(n.x, n.y, n.z,target) < 3;
     }
 }

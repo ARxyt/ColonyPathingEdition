@@ -32,6 +32,9 @@ public class EntityAISleepHealerSpecialMixin {
     @Inject(method = "checkSleep", at=@At("HEAD"), remap = false, cancellable = true)
     private void specialCheckSleep(CallbackInfoReturnable<IState> cir)
     {
+        if(citizen.getCitizenData().getHomeBuilding() != null){
+            citizen.getCitizenData().getCitizenHappinessHandler().resetModifier(SLEPTTONIGHT);
+        }
         if(citizen.getCitizenData().getWorkBuilding() instanceof BuildingHospital hospital){
             if(((BuildingHospitalExtra)hospital).getOnDutyCitizen(citizen.getCivilianID()) == citizen.getCivilianID()){
                 workPos = hospital.getPosition();
