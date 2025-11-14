@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.Mixin;
 
 import java.util.List;
 
-@Mixin(EntityAIStructureMiner.class)
+@Mixin(value = EntityAIStructureMiner.class, remap = false)
 public abstract class EntityAIMinerMixin extends AbstractEntityAIStructureWithWorkOrder<JobMiner, BuildingMiner> {
     public EntityAIMinerMixin(@NotNull final JobMiner job)
     {

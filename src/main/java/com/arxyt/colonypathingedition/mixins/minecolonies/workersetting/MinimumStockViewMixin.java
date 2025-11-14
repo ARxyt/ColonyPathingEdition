@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(MinimumStockModuleView.class)
+@Mixin(value = MinimumStockModuleView.class, remap = false)
 public abstract class MinimumStockViewMixin extends AbstractBuildingModuleView{
     @Inject(method = "getWindow", at = @At("HEAD"), cancellable = true, remap = false)
     public void getWindow(CallbackInfoReturnable<BOWindow> cir)

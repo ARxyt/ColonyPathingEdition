@@ -3,6 +3,7 @@ package com.arxyt.colonypathingedition.mixins.minecolonies.workersetting;
 import com.arxyt.colonypathingedition.api.workersetting.BuildingCookExtra;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingCook;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,10 +12,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-@Mixin(BuildingCook.class)
+@Mixin(value = BuildingCook.class, remap = false)
 public class BuildingCookForCustomerMixin implements BuildingCookExtra {
-    private final Queue<Integer> customerQueue = new ConcurrentLinkedQueue<>();
-    private final Set<Integer> processingCustomers = ConcurrentHashMap.newKeySet();
+    @Unique private final Queue<Integer> customerQueue = new ConcurrentLinkedQueue<>();
+    @Unique private final Set<Integer> processingCustomers = ConcurrentHashMap.newKeySet();
 
     // 分片获取 Customers
     public List<Integer> getCustomers(int maxCount) {

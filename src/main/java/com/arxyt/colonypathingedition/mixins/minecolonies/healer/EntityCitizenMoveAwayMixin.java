@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import static com.minecolonies.api.util.constant.CitizenConstants.INITIAL_RUN_SPEED_AVOID;
 import static com.minecolonies.api.util.constant.CitizenConstants.MAX_GUARD_CALL_RANGE;
 
-@Mixin(EntityCitizen.class)
+@Mixin(value = EntityCitizen.class, remap = false)
 public abstract class EntityCitizenMoveAwayMixin {
     @Shadow(remap = false) private ITickRateStateMachine<IState> citizenAI;
 

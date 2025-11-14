@@ -25,7 +25,7 @@ import java.util.*;
 import static com.minecolonies.api.util.constant.CitizenConstants.DISABLED;
 import static com.minecolonies.api.util.constant.Constants.TICKS_SECOND;
 
-@Mixin(CitizenData.class)
+@Mixin(value = CitizenData.class, remap = false)
 public abstract class CitizenDataMixinForLeisure implements ICitizenData {
 
     @Shadow(remap = false) private @Nullable IBuilding homeBuilding;
@@ -98,7 +98,7 @@ public abstract class CitizenDataMixinForLeisure implements ICitizenData {
             }
             catch (final Exception e)
             {
-                Log.getLogger().warn("Error during validation of handler: " + handler.getInquiry(), e);
+                Log.getLogger().warn("Error during validation of handler: {}", handler.getInquiry(), e);
                 // If anything goes wrong in checking validity, remove handler.
                 toRemove.add(handler);
             }

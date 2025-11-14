@@ -3,6 +3,7 @@ package com.arxyt.colonypathingedition.mixins.minecolonies.workersetting;
 import com.arxyt.colonypathingedition.api.workersetting.BuildingHospitalExtra;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingHospital;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -14,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Set;
 
 
-@Mixin(BuildingHospital.class)
+@Mixin(value = BuildingHospital.class, remap = false)
 public abstract class BuildingHospitalMixin implements BuildingHospitalExtra {
 
     @Unique private BuildingHospital asHospital() {
@@ -88,8 +89,8 @@ public abstract class BuildingHospitalMixin implements BuildingHospitalExtra {
         return healerOnDuty;
     }
 
-    @Inject(method = "deserializeNBT(Lnet/minecraft/nbt/CompoundTag;)V", at = @At("RETURN"), remap = false)
-    private void deserializeNBTAddition (CompoundTag compound,CallbackInfo cir){
+    @Inject(method = "deserializeNBT(Lnet/minecraft/core/HolderLookup$Provider;Lnet/minecraft/nbt/CompoundTag;)V", at = @At("RETURN"), remap = false)
+    private void deserializeNBTAddition (HolderLookup.Provider provider, CompoundTag compound, CallbackInfo ci){
         if(compound.contains("on_duty_worker")){
             healerOnDuty = compound.getInt("on_duty_worker");
         }
@@ -98,7 +99,7 @@ public abstract class BuildingHospitalMixin implements BuildingHospitalExtra {
         }
     }
 
-    @Inject(method = "serializeNBT()Lnet/minecraft/nbt/CompoundTag;", at = @At("RETURN"), remap = false, cancellable = true)
+    @Inject(method = "serializeNBT(Lnet/minecraft/core/HolderLookup$Provider;)Lnet/minecraft/nbt/CompoundTag;", at = @At("RETURN"), remap = false, cancellable = true)
     private void serializeNBTAddition (CallbackInfoReturnable<CompoundTag> cir){
         CompoundTag tag = cir.getReturnValue();
         tag.putInt("on_duty_worker", healerOnDuty);

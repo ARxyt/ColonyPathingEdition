@@ -42,7 +42,7 @@ import static com.minecolonies.api.util.constant.TranslationConstants.POOR_MENU_
 import static com.minecolonies.api.util.constant.TranslationConstants.POOR_RESTAURANT_INTERACTION;
 import static com.minecolonies.core.colony.buildings.modules.BuildingModules.RESTAURANT_MENU;
 
-@Mixin(EntityAIWorkCook.class)
+@Mixin(value = EntityAIWorkCook.class, remap = false)
 public abstract class EntityAIWorkCookMixin extends AbstractEntityAIBasicMixin<BuildingCook,JobCook> implements AbstractEntityAIBasicAccessor<BuildingCook> {
 
     @Final @Shadow(remap = false) private static VisibleCitizenStatus COOK;

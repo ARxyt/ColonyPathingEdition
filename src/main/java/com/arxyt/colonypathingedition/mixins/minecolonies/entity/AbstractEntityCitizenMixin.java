@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(AbstractEntityCitizen.class)
+@Mixin(value = AbstractEntityCitizen.class, remap = false)
 public abstract class AbstractEntityCitizenMixin extends AbstractCivilianEntity {
 
     @Shadow(remap = false) public abstract ICitizenJobHandler getCitizenJobHandler();

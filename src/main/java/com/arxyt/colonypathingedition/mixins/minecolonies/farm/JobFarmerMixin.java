@@ -9,7 +9,7 @@ import net.minecraft.world.damagesource.DamageTypes;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 
-@Mixin(JobFarmer.class)
+@Mixin(value = JobFarmer.class, remap = false)
 public abstract class JobFarmerMixin extends AbstractJobCrafter<EntityAIWorkFarmer, JobFarmer> {
     public JobFarmerMixin(final ICitizenData entity)
     {

@@ -42,7 +42,7 @@ import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.*
 import static com.minecolonies.api.util.constant.CitizenConstants.NOON;
 import static com.minecolonies.api.util.constant.TranslationConstants.PATIENT_FULL_INVENTORY;
 
-@Mixin( EntityAIWorkHealer.class)
+@Mixin(value = EntityAIWorkHealer.class, remap = false)
 public abstract class EntityAIWorkHealerMixin extends AbstractEntityAIBasicMixin<BuildingHospital, IJob<?>> implements AbstractEntityAIBasicAccessor<BuildingHospital>{
     @Final @Shadow(remap = false) private static double BASE_XP_GAIN;
     @Final @Shadow(remap = false) private static int MAX_PROGRESS_TICKS;

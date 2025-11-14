@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin( PathJobMoveTowards.class)
+@Mixin(value = PathJobMoveTowards.class, remap = false)
 public abstract class PathJobMoveTowardsMixin extends AbstractPathJobMixin{
     @Final @Shadow(remap = false) protected BlockPos target;
     @Final @Shadow(remap = false) protected int minDistance;

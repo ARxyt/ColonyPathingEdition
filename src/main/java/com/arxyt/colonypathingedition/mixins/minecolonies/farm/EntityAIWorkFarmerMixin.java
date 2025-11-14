@@ -37,7 +37,6 @@ import com.minecolonies.core.util.citizenutils.CitizenItemUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -75,7 +74,7 @@ import static com.minecolonies.api.util.constant.StatisticsConstants.LAND_TILLED
 import static com.minecolonies.api.util.constant.TranslationConstants.NO_FREE_FIELDS;
 
 
-@Mixin(EntityAIWorkFarmer.class)
+@Mixin(value = EntityAIWorkFarmer.class, remap = false)
 public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<JobFarmer, BuildingFarmer> implements AbstractAISkeletonAccessor<JobFarmer>, AbstractEntityAIBasicAccessor<AbstractBuilding> {
     @Shadow(remap = false) private int skippedState;
     @Shadow(remap = false) private boolean didWork;
@@ -225,6 +224,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
         cir.setReturnValue(IDLE);
     }
 
+    @Unique
     private boolean isMissingFarmland = false;
 
     @Inject(method = "workAtField", at = @At("HEAD"), remap = false, cancellable = true)
@@ -348,6 +348,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
         cir.setReturnValue(PREPARING);
     }
 
+    @Unique
     private IAIState checkNextWorkspaceAndState(@NotNull final FarmField farmField, @NotNull final Predicate<BlockPos> harvestAble, @NotNull final Predicate<BlockPos> hoeAble, @NotNull final Predicate<BlockPos> plantAble)
     {
         BlockPos position;
@@ -372,6 +373,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
     }
 
     // Try right click first
+    @Unique
     private boolean newHarvestIfAble(BlockPos pos, FarmField farmField){
         // Right click
         BlockState state = world.getBlockState(pos.above());
@@ -388,6 +390,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
         return false;
     }
 
+    @Unique
     private boolean isItemOfFarmland(final ItemStack itemStack, final Block Farmland){
         if(itemStack.getItem() instanceof BlockItem blockItem){
             return blockItem.getBlock() == Farmland;
@@ -395,6 +398,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
         return false;
     }
 
+    @Unique
     private boolean newHoeIfAble(BlockPos position, final FarmField farmField)
     {
         if (!checkForToolOrWeapon(ModEquipmentTypes.hoe.get()))
@@ -426,6 +430,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
         return true;
     }
 
+    @Unique
     private BlockPos newFindHoeableSurface(@NotNull BlockPos position, @NotNull final FarmField farmField)
     {
         if (checkForToolOrWeapon(ModEquipmentTypes.hoe.get()))
@@ -533,6 +538,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
         return position;
     }
 
+    @Unique
     private void checkFarmlandAndReturnSoli(BlockState farmlandState, Predicate<BlockState> condition){
         if(condition.test(farmlandState)){
             ItemStack stack = new ItemStack(farmlandState.getBlock(),1);
@@ -540,6 +546,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
         }
     }
 
+    @Unique
     private boolean newCreateCorrectFarmlandForSeed(final ItemStack seed, BlockPos pos) {
         if (isUnderWater(seed)){
             final BlockState blockState = world.getBlockState(pos.above());
@@ -611,6 +618,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
     /**
      * Add special check for special seeds.
      */
+    @Unique
     private BlockPos newFindPlantableSurface(@NotNull BlockPos position, @NotNull final FarmField farmField)
     {
         final ItemStack seed = farmField.getSeed();
@@ -665,6 +673,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
         return position;
     }
 
+    @Unique
     private boolean newPlantCrop(final ItemStack item, @NotNull final BlockPos position)
     {
         if (item == null || item.isEmpty())
@@ -687,7 +696,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
                 return true;
             }
             InteractionResult placeResult = blockItem.place(
-                    new BlockPlaceContext(FakePlayerFactory.getMinecraft((ServerLevel) world),
+                    new BlockPlaceContext(FakePlayerFactory.getMinecraft(world),
                     InteractionHand.MAIN_HAND, new ItemStack(seed),
                     new BlockHitResult(position.getCenter(),Direction.UP,position,false))
             );
@@ -737,8 +746,8 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
                 if (InventoryUtils.shrinkItemCountInItemHandler(getWorker().getInventoryCitizen(), this::isCompost))
                 {
                     new CompostParticleMessage(position.above())
-                            .sendToTargetPoint((ServerLevel) world, null, position.getX(), position.getY(), position.getZ(), BLOCK_BREAK_SOUND_RANGE);
-                    bonemealable.performBonemeal((ServerLevel)getWorld(), getWorld().getRandom(), position.above(), surfaceState);
+                            .sendToTargetPoint(world, null, position.getX(), position.getY(), position.getZ(), BLOCK_BREAK_SOUND_RANGE);
+                    bonemealable.performBonemeal(getWorld(), getWorld().getRandom(), position.above(), surfaceState);
                     surfaceState = getWorld().getBlockState(position.above());
                     surfaceBlock = surfaceState.getBlock();
                     if (!(surfaceBlock instanceof BushBlock && surfaceBlock instanceof BonemealableBlock))

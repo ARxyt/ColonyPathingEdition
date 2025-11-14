@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.HashSet;
 import java.util.Set;
 
-@Mixin(CitizenFoodHandler.class)
+@Mixin(value = CitizenFoodHandler.class, remap = false)
 public class CitizenFoodHandlerMixin {
     @Final @Shadow(remap = false) private EvictingQueue<Item> lastEatenFoods;
     @Shadow(remap = false) private ICitizenFoodHandler.CitizenFoodStats foodStatCache;

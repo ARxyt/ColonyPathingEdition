@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import static net.minecraft.world.level.Level.TICKS_PER_DAY;
 
 
-@Mixin(FarmField.class)
+@Mixin(value = FarmField.class, remap = false)
 public abstract class FarmFieldClientMixin extends AbstractBuildingExtension {
     @Shadow(remap = false)  private ItemStack seed;
 

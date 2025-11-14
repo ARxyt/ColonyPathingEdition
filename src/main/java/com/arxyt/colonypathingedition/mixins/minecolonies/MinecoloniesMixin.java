@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(MineColonies.class)
+@Mixin(value = MineColonies.class, remap = false)
 public class MinecoloniesMixin {
     @Inject(method = "onNetworkRegistry", at = @At("TAIL"))
     private static void onNetworkRegistry(RegisterPayloadHandlersEvent event, CallbackInfo ci, @Local final PayloadRegistrar registry){

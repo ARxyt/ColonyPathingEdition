@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.List;
 
-@Mixin(AbstractEntityAIInteract.class)
+@Mixin(value = AbstractEntityAIInteract.class, remap = false)
 public abstract class AbstractEntityAIInteractMixin implements AbstractEntityAIInteractExtra {
     @Shadow(remap = false) private int stillTicks = 0;
     @Shadow(remap = false) private int previousIndex = 0;

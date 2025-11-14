@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.Unique;
 import java.util.Objects;
 import java.util.Random;
 
-@Mixin(PathingStuckHandler.class)
+@Mixin(value = PathingStuckHandler.class, remap = false)
 public abstract class UnstuckMixin<NAV extends PathNavigation & IMinecoloniesNavigator> implements MinecoloniesAdvancedPathNavigateAccessor {
 
     @Shadow (remap = false) private int delayToNextUnstuckAction;
@@ -36,8 +36,6 @@ public abstract class UnstuckMixin<NAV extends PathNavigation & IMinecoloniesNav
     @Shadow (remap = false) protected abstract void breakBlocks(NAV navigator);
     @Shadow (remap = false) protected abstract void resetStuckTimers();
     @Shadow (remap = false) protected abstract void completeStuckAction(NAV navigator);
-
-    @Unique private static final int TICKS_PER_BLOCK = 20;
 
     @Unique private int stuckLevelRecorder = 0;
     @Unique private boolean needReset = false;

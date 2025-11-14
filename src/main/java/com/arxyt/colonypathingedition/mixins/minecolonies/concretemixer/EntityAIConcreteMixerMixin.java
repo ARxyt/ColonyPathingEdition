@@ -28,7 +28,7 @@ import static com.minecolonies.api.util.constant.Constants.STACKSIZE;
 import static com.minecolonies.api.util.constant.Constants.UPDATE_FLAG;
 import static com.minecolonies.api.util.constant.StatisticsConstants.ITEMS_CRAFTED_DETAIL;
 
-@Mixin(EntityAIConcreteMixer.class)
+@Mixin(value = EntityAIConcreteMixer.class, remap = false)
 public abstract class EntityAIConcreteMixerMixin extends AbstractEntityAICrafting<JobConcreteMixer, BuildingConcreteMixer>{
 
     @Shadow(remap = false) @Final private static Predicate<ItemStack> CONCRETE;
@@ -46,7 +46,7 @@ public abstract class EntityAIConcreteMixerMixin extends AbstractEntityAICraftin
     private final Predicate<ItemStack> REQUEST_CONCRETE_BLOCK =
             stack -> stack.getItem() == currentRequest.getRequest().getStack().getItem();
 
-    @Unique BlockPos posToMine = null;
+    @Unique BlockPos pathFindEdition$posToMine = null;
 
     public EntityAIConcreteMixerMixin(@NotNull final JobConcreteMixer job) {
         super(job);
@@ -130,23 +130,23 @@ public abstract class EntityAIConcreteMixerMixin extends AbstractEntityAICraftin
     @Overwrite(remap = false)
     private IAIState harvestConcrete()
     {
-        posToMine = building.getBlockToMine();
-        if (posToMine == null)
+        pathFindEdition$posToMine = building.getBlockToMine();
+        if (pathFindEdition$posToMine == null)
         {
             this.resetActionsDone();
             return START_WORKING;
         }
 
-        if (!walkToWorkPos(posToMine))
+        if (!walkToWorkPos(pathFindEdition$posToMine))
         {
             return getState();
         }
 
-        final BlockState blockToMine = world.getBlockState(posToMine);
-        if (mineBlock(posToMine))
+        final BlockState blockToMine = world.getBlockState(pathFindEdition$posToMine);
+        if (mineBlock(pathFindEdition$posToMine))
         {
-            int multiplier = ((BuildingConcreteMixerExtra)building).getSimulatedTimes(posToMine);
-            ((BuildingConcreteMixerExtra)building).deleteSimulateBlock(posToMine);
+            int multiplier = ((BuildingConcreteMixerExtra)building).getSimulatedTimes(pathFindEdition$posToMine);
+            ((BuildingConcreteMixerExtra)building).deleteSimulateBlock(pathFindEdition$posToMine);
 
             StatsUtil.trackStatByName(building, ITEMS_CRAFTED_DETAIL, blockToMine.getBlock().getDescriptionId(), multiplier);
             if (currentRequest != null && currentRecipeStorage != null && blockToMine.getBlock().asItem().equals(currentRecipeStorage.getPrimaryOutput().getItem()))
@@ -181,7 +181,7 @@ public abstract class EntityAIConcreteMixerMixin extends AbstractEntityAICraftin
     @Override
     protected List<ItemStack> increaseBlockDrops(final List<ItemStack> drops)
     {
-        int multiplier = ((BuildingConcreteMixerExtra)building).getSimulatedTimes(posToMine);
+        int multiplier = ((BuildingConcreteMixerExtra)building).getSimulatedTimes(pathFindEdition$posToMine);
 
         for (ItemStack stack : drops) {
             if (!stack.isEmpty()) {

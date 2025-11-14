@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.Interface;
  * 把 IMNodeExtras 接口的方法织入到 MNode，
  * 并用 @Unique 字段保存状态。
  */
-@Mixin(MNode.class)
+@Mixin(value = MNode.class, remap = false)
 @Implements(@Interface(iface = IMNodeExtras.class, prefix = "extra$"))
 public abstract class MNodeMixin
 {

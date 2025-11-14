@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(RestaurantMenuModuleWindow.class)
+@Mixin(value = RestaurantMenuModuleWindow.class, remap = false)
 public abstract class RestaurantMenuModuleWindowMixin {
 
     @Redirect(method = "lambda$updateResources$1", at = @At(value = "INVOKE", target = "Ljava/lang/String;contains(Ljava/lang/CharSequence;)Z"), remap = false)

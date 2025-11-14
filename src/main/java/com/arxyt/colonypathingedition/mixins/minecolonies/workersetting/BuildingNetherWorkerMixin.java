@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import static com.minecolonies.core.colony.buildings.workerbuildings.BuildingNetherWorker.getMaxPerPeriod;
 import static net.minecraft.world.level.Level.TICKS_PER_DAY;
 
-@Mixin(BuildingNetherWorker.class)
+@Mixin(value = BuildingNetherWorker.class, remap = false)
 public abstract class BuildingNetherWorkerMixin extends AbstractBuilding {
 
     @Shadow(remap = false) private long snapTime;

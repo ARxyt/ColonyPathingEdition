@@ -27,7 +27,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import static com.minecolonies.api.util.constant.TranslationConstants.FIELD_STATUS;
 import static com.minecolonies.api.util.constant.translation.GuiTranslationConstants.FIELD_LIST_LABEL_DISTANCE;
 
-@Mixin(FarmFieldsModuleWindow.class)
+@Mixin(value = FarmFieldsModuleWindow.class, remap = false)
 public abstract class FarmFieldsModuleWindowMixin extends AbstractModuleWindow {
     @Shadow(remap = false) @Final private static String HUT_FIELDS_RESOURCE_SUFFIX;
     @Shadow(remap = false) private ScrollingList fieldList;

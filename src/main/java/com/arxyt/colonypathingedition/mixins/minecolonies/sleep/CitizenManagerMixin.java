@@ -16,7 +16,7 @@ import java.util.Map;
 import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.JOBS_MAY_NOT_SLEEP;
 import static com.minecolonies.api.util.constant.TranslationConstants.ALL_CITIZENS_ARE_SLEEPING;
 
-@Mixin(CitizenManager.class)
+@Mixin(value = CitizenManager.class, remap = false)
 public class CitizenManagerMixin {
 
     @Final @Shadow(remap = false) private Map<Integer, ICitizenData> citizens = new HashMap<>();

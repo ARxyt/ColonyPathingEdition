@@ -2,7 +2,6 @@ package com.arxyt.colonypathingedition.mixins.minecolonies.herder;
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.arxyt.colonypathingedition.core.costants.states.HerderCheckState;
-import com.minecolonies.api.colony.buildings.IBuilding;
 import com.minecolonies.api.crafting.ItemStorage;
 import com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
@@ -21,7 +20,6 @@ import com.minecolonies.core.entity.ai.workers.AbstractEntityAIInteract;
 import com.minecolonies.core.entity.ai.workers.production.herders.AbstractEntityAIHerder;
 import com.minecolonies.core.util.citizenutils.CitizenItemUtils;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Vec3i;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
@@ -41,7 +39,7 @@ import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.*
 import static com.minecolonies.api.util.constant.Constants.TICKS_SECOND;
 import static com.minecolonies.api.util.constant.StatisticsConstants.ITEM_USED;
 
-@Mixin(AbstractEntityAIHerder.class)
+@Mixin(value = AbstractEntityAIHerder.class, remap = false)
 public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B extends AbstractBuilding>
         extends AbstractEntityAIInteract<J, B>
 {
@@ -67,11 +65,11 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
 
     @Unique final private boolean isMaxAnimalChange = PathingConfig.MAX_ANIMAL_MODIFIER.get();
     @Unique private static final int DECIDING_DELAY = 40;
-    @Unique private Animal toKill = null;
-    @Unique private HerderCheckState checkState = CHECK_PICKUP;
-    @Unique private int pickupTimeOut = 0;
-    @Unique private List<Animal> toFeedList = null;
-    @Unique private Animal currentFed = null;
+    @Unique private Animal toKill;
+    @Unique private HerderCheckState checkState;
+    @Unique private int pickupTimeOut;
+    @Unique private List<Animal> toFeedList;
+    @Unique private Animal currentFed;
 
     public AbstractEntityAIHerderMixin(@NotNull J job) {
         super(job);
@@ -242,7 +240,7 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
 
         Objects.requireNonNull(this.current_module); List<? extends Animal> animals = searchForAnimals(this.current_module::isCompatible);
 
-        if (!equipTool(InteractionHand.MAIN_HAND, (EquipmentTypeEntry) ModEquipmentTypes.axe.get()))
+        if (!equipTool(InteractionHand.MAIN_HAND, ModEquipmentTypes.axe.get()))
         {
             return AIWorkerState.START_WORKING;
         }
@@ -254,7 +252,7 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
 
         BlockPos center = this.worker.blockPosition();
         if (toKill == null || !toKill.isAlive()) {
-            animals.sort(Comparator.<Animal>comparingDouble(an -> an.blockPosition().distSqr((Vec3i) center)));
+            animals.sort(Comparator.<Animal>comparingDouble(an -> an.blockPosition().distSqr(center)));
             Animal decideToKill = null;
             for (Animal entity : animals) {
                 if (!entity.isBaby() && !entity.isInLove() && (decideToKill == null || decideToKill.getHealth() > entity.getHealth())) {
@@ -277,7 +275,7 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
         }
 
         if (!toKill.isAlive()) {
-            StatsUtil.trackStat((IBuilding)this.building, "animals_butchered", 1);
+            StatsUtil.trackStat(this.building, "animals_butchered", 1);
             this.worker.getCitizenExperienceHandler().addExperience(XP_PER_ACTION);
             incrementActionsDoneAndDecSaturation();
             this.fedRecently.remove(toKill.getUUID());
@@ -323,7 +321,7 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
         }
 
         if (currentFed == null){
-            currentFed = toFeedList.remove(0);
+            currentFed = toFeedList.removeFirst();
         }
 
         Animal toFeed = currentFed;

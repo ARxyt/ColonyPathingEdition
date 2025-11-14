@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import java.util.List;
 
 
-@Mixin(EntityAIQuarrier.class)
+@Mixin(value = EntityAIQuarrier.class, remap = false)
 public abstract class EntityAIQuarrierMixin extends AbstractEntityAIStructureWithWorkOrder<JobQuarrier, BuildingMiner> {
 
     public EntityAIQuarrierMixin(@NotNull final JobQuarrier job)

@@ -25,7 +25,7 @@ import static com.minecolonies.api.research.util.ResearchConstants.WALKING;
 import static net.minecraft.world.entity.Entity.RemovalReason.DISCARDED;
 
 
-@Mixin(MinecoloniesMinecart.class)
+@Mixin(value = MinecoloniesMinecart.class, remap = false)
 public abstract class MinecoloniesMinecartMixin extends Minecart implements AbstractMinecartAccessor {
     public MinecoloniesMinecartMixin(final EntityType<?> type, final Level world)
     {
@@ -42,7 +42,7 @@ public abstract class MinecoloniesMinecartMixin extends Minecart implements Abst
         float railMaxSpeed = ((BaseRailBlock)state.getBlock()).getRailMaxSpeed(state, this.level(), pos, this);
 
         double speedFactor = 1;
-        if(!this.getPassengers().isEmpty() && this.getPassengers().get(0) instanceof AbstractEntityCitizen citizen){
+        if(!this.getPassengers().isEmpty() && this.getPassengers().getFirst() instanceof AbstractEntityCitizen citizen){
             MobEffectInstance effect = citizen.getEffect(MobEffects.MOVEMENT_SPEED);
             if (effect != null) {
                 speedFactor += effect.getAmplifier() * 0.3;
@@ -101,7 +101,7 @@ public abstract class MinecoloniesMinecartMixin extends Minecart implements Abst
             if (this.canUseRail() && isOnRails()) {
                 this.moveAlongTrack(blockpos, blockstate);
                 if (blockstate.getBlock() instanceof PoweredRailBlock && ((PoweredRailBlock)blockstate.getBlock()).isActivatorRail()) {
-                    this.activateMinecart(k, i, j, (Boolean)blockstate.getValue(PoweredRailBlock.POWERED));
+                    this.activateMinecart(k, i, j, blockstate.getValue(PoweredRailBlock.POWERED));
                 }
             } else {
                 this.comeOffTrack();
@@ -118,7 +118,7 @@ public abstract class MinecoloniesMinecartMixin extends Minecart implements Abst
                 }
             }
 
-            double d4 = (double)Mth.wrapDegrees(this.getYRot() - this.yRotO);
+            double d4 = Mth.wrapDegrees(this.getYRot() - this.yRotO);
             if (d4 < -170.0D || d4 >= 170.0D) {
                 this.setYRot(this.getYRot() + 180.0F);
                 filpReverse();

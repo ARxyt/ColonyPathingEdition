@@ -3,6 +3,7 @@ package com.arxyt.colonypathingedition.mixins.minecolonies.workersetting;
 import com.arxyt.colonypathingedition.api.workersetting.BuildingConcreteMixerExtra;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingConcreteMixer;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
@@ -21,11 +22,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Mixin(BuildingConcreteMixer.class)
+@Mixin(value = BuildingConcreteMixer.class, remap = false)
 public abstract class BuildingConcreteMixerMixin implements BuildingConcreteMixerExtra {
-    private static final String CONCRETE_MIXER_SIMULATED_BLOCKS = "simulated_blocks";
-    private static final String CONCRETE_MIXER_SIMULATED_POS = "simulated_block_pos";
-    private static final String CONCRETE_MIXER_SIMULATED_COUNT = "simulated_count";
+    @Unique private static final String CONCRETE_MIXER_SIMULATED_BLOCKS = "simulated_blocks";
+    @Unique private static final String CONCRETE_MIXER_SIMULATED_POS = "simulated_block_pos";
+    @Unique private static final String CONCRETE_MIXER_SIMULATED_COUNT = "simulated_count";
 
     @Shadow(remap = false) @Final private Map<Integer, List<BlockPos>> waterPos;
 
@@ -56,8 +57,8 @@ public abstract class BuildingConcreteMixerMixin implements BuildingConcreteMixe
         return false;
     }
 
-    @Inject(method = "deserializeNBT(Lnet/minecraft/nbt/CompoundTag;)V", at = @At("RETURN"), remap = false)
-    private void deserializeNBTAddition (CompoundTag compound, CallbackInfo cir){
+    @Inject(method = "deserializeNBT(Lnet/minecraft/core/HolderLookup$Provider;Lnet/minecraft/nbt/CompoundTag;)V", at = @At("RETURN"), remap = false)
+    private void deserializeNBTAddition (HolderLookup.Provider provider, CompoundTag compound, CallbackInfo ci){
         simulatedBlocks.clear();
 
         final ListTag simMapList = compound.getList(CONCRETE_MIXER_SIMULATED_BLOCKS, Tag.TAG_COMPOUND);
@@ -70,7 +71,7 @@ public abstract class BuildingConcreteMixerMixin implements BuildingConcreteMixe
         }
     }
 
-    @Inject(method = "serializeNBT()Lnet/minecraft/nbt/CompoundTag;", at = @At("RETURN"), remap = false, cancellable = true)
+    @Inject(method = "serializeNBT(Lnet/minecraft/core/HolderLookup$Provider;)Lnet/minecraft/nbt/CompoundTag;", at = @At("RETURN"), remap = false, cancellable = true)
     private void serializeNBTAddition (CallbackInfoReturnable<CompoundTag> cir){
         final CompoundTag compound = cir.getReturnValue();
         @NotNull final ListTag simMap = new ListTag();

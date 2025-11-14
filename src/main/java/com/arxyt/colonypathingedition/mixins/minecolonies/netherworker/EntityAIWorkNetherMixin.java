@@ -54,7 +54,7 @@ import static com.minecolonies.api.util.constant.StatisticsConstants.MINER_DEATH
 import static com.minecolonies.core.colony.buildings.modules.BuildingModules.NETHERMINER_MENU;
 import static net.minecraft.world.level.block.BrushableBlock.TICK_DELAY;
 
-@Mixin(EntityAIWorkNether.class)
+@Mixin(value = EntityAIWorkNether.class, remap = false)
 public abstract class EntityAIWorkNetherMixin extends AbstractEntityAICrafting<JobNetherWorker, BuildingNetherWorker> implements AbstractEntityAIBasicExtra, DamageSourcesAccessor {
     @Shadow(remap = false) protected abstract void checkAndRequestArmor();
     @Shadow(remap = false) protected abstract IAIState checkAndRequestFood();
@@ -71,7 +71,7 @@ public abstract class EntityAIWorkNetherMixin extends AbstractEntityAICrafting<J
     @Final @Shadow(remap = false) private static float SECONDARY_DAMAGE_REDUCTION;
     @Final @Shadow(remap = false) List<ItemStack> netherEdible;
 
-    int timeOutCounter = 0;
+    @Unique int timeOutCounter;
 
     public EntityAIWorkNetherMixin(@NotNull JobNetherWorker job) {
         super(job);
@@ -87,6 +87,7 @@ public abstract class EntityAIWorkNetherMixin extends AbstractEntityAICrafting<J
         return true;
     }
 
+    @Unique
     private boolean checkEmptyEquipmentAvailable(List<IRequest<?>> requests){
         for (final List<GuardGear> itemList : itemsNeeded) {
             for (final GuardGear item : itemList) {
@@ -110,6 +111,7 @@ public abstract class EntityAIWorkNetherMixin extends AbstractEntityAICrafting<J
         return false;
     }
 
+    @Unique
     private boolean checkAndRequestArmorWithAvailableCheck(){
         checkAndRequestArmor();
         List<IRequest<?>> requests = getRequestCannotBeDone().stream().filter(r ->
@@ -203,8 +205,8 @@ public abstract class EntityAIWorkNetherMixin extends AbstractEntityAICrafting<J
         }
 
         if(!hasEaten && worker.getCitizenData().getSaturation() < FULL_SATURATION){
-            if(worker.getCitizenJobHandler().getColonyJob() instanceof JobNetherWorker job){
-                ((JobNetherWorkerExtra) job).setShouldEat(true);
+            if(worker.getCitizenJobHandler().getColonyJob() instanceof JobNetherWorker jobNetherWorker){
+                ((JobNetherWorkerExtra) jobNetherWorker).setShouldEat(true);
                 hasEaten = true;
             }
         }
@@ -277,7 +279,7 @@ public abstract class EntityAIWorkNetherMixin extends AbstractEntityAICrafting<J
         return NETHER_LEAVE;
     }
 
-    @Unique boolean hasEaten = false;
+    @Unique boolean hasEaten;
 
     /**
      * Leave for the Nether by walking to the portal and going invisible.
@@ -342,6 +344,7 @@ public abstract class EntityAIWorkNetherMixin extends AbstractEntityAICrafting<J
     }
 
     // Is it an extra round in nether?
+    @Unique
     boolean extraRound;
 
     /**
@@ -377,7 +380,7 @@ public abstract class EntityAIWorkNetherMixin extends AbstractEntityAICrafting<J
                         DamageSource source = ((DamageSourcesAccessor)world.damageSources()).invokerSource(DamageSourceKeys.NETHER);
 
                         //Set up the mob to do battle with
-                        EntityType<?> mobType = component.entityType();;
+                        EntityType<?> mobType = component.entityType();
                         LivingEntity mob = (LivingEntity) mobType.create(world);
                         assert mob != null;
                         float mobHealth = mob.getHealth();
@@ -406,12 +409,10 @@ public abstract class EntityAIWorkNetherMixin extends AbstractEntityAICrafting<J
                                 }
                                 else
                                 {
-                                    damageToDo += TinkersToolHelper.getDamage(sword);
+                                    damageToDo += (float) TinkersToolHelper.getDamage(sword);
                                 }
                                 damageToDo += EnchantmentHelper.modifyDamage((ServerLevel)this.worker.level(), sword, mob, this.worker.level().damageSources().source(DamageSourceKeys.DEFAULT, this.worker), 1.0F) / 2.5F;
-                                sword.hurtAndBreak(1, (ServerLevel)this.worker.level(), this.worker, (item) -> {
-                                    this.worker.setItemSlot(EquipmentSlot.MAINHAND, this.findTool((EquipmentTypeEntry)ModEquipmentTypes.sword.get()));
-                                });
+                                sword.hurtAndBreak(1, (ServerLevel)this.worker.level(), this.worker, (item) -> this.worker.setItemSlot(EquipmentSlot.MAINHAND, this.findTool(ModEquipmentTypes.sword.get())));
                             }
 
                             // Hit the mob
@@ -479,7 +480,7 @@ public abstract class EntityAIWorkNetherMixin extends AbstractEntityAICrafting<J
                         if(escaped){
                             break;
                         }
-                        this.worker.getCitizenExperienceHandler().addExperience(CitizenItemUtils.applyMending(this.worker, (double)component.xp()));
+                        this.worker.getCitizenExperienceHandler().addExperience(CitizenItemUtils.applyMending(this.worker, component.xp()));
                     }
                 }
                 else if (!currStack.isEmpty())

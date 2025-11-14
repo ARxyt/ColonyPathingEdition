@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.LOAD_STRUCTURE;
 import static com.minecolonies.api.util.constant.CitizenConstants.*;
 
-@Mixin(EntityAIStructureBuilder.class)
+@Mixin(value = EntityAIStructureBuilder.class, remap = false)
 public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStructureWithWorkOrder<JobBuilder, BuildingBuilder> {
 
     @Shadow(remap = false) PathResult<?> gotoPath;

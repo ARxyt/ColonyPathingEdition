@@ -36,7 +36,7 @@ import static com.minecolonies.api.util.constant.TranslationConstants.COM_MINECO
 import static com.minecolonies.core.entity.ai.minimal.EntityAIEatTask.RESTAURANT_LIMIT;
 import static com.minecolonies.core.entity.citizen.citizenhandlers.CitizenDiseaseHandler.SEEK_DOCTOR_HEALTH;
 
-@Mixin(CitizenAI.class)
+@Mixin(value = CitizenAI.class, remap = false)
 public class CitizenAIMixin {
     @Final @Shadow(remap = false) private EntityCitizen citizen;
     @Shadow(remap = false) private IState lastState;

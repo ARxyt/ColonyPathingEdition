@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(EntityAICitizenAvoidEntity.class)
+@Mixin(value = EntityAICitizenAvoidEntity.class, remap = false)
 public class EntityAIRunToHospitalMixin {
     @Final @Shadow(remap = false) private EntityCitizen citizen;
     @Final @Shadow(remap = false) private double nearSpeed;

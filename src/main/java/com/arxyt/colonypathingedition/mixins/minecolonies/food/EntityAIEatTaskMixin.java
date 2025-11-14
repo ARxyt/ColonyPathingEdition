@@ -39,7 +39,7 @@ import static com.minecolonies.core.colony.buildings.modules.BuildingModules.RES
 import static com.minecolonies.core.entity.ai.minimal.EntityAIEatTask.EatingState.*;
 import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.*;
 
-@Mixin(EntityAIEatTask.class)
+@Mixin(value = EntityAIEatTask.class, remap = false)
 public abstract class EntityAIEatTaskMixin {
     @Final @Shadow(remap = false) private EntityCitizen citizen;
     @Shadow(remap = false) private IBuilding restaurant;
@@ -49,7 +49,6 @@ public abstract class EntityAIEatTaskMixin {
     @Shadow(remap = false) private int waitingTicks;
     @Shadow(remap = false) private int foodSlot;
 
-    @Shadow(remap = false) protected abstract boolean hasFood();
     @Shadow(remap = false) protected abstract void reset();
 
     @Unique private boolean forceEatAtHut = false;
@@ -226,7 +225,7 @@ public abstract class EntityAIEatTaskMixin {
                     return GO_TO_HUT;
                 }
             }
-            if (citizen.getCitizenData().getJob() instanceof JobCook jobCook && jobCook.getBuildingPos().equals(restaurantPos) && MathUtils.RANDOM.nextInt(TICKS_SECOND) <= 0)
+            if (citizen.getCitizenData().getJob() instanceof JobCook jobCook && jobCook.getBuildingPos().equals(restaurantPos) && MathUtils.RANDOM.nextInt(TICKS_SECOND) == 0)
             {
                 reset();
                 return DONE;

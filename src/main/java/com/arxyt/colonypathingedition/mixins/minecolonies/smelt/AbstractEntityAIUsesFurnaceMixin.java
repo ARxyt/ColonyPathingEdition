@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import static com.minecolonies.api.util.constant.Constants.RESULT_SLOT;
 import static com.minecolonies.api.util.constant.Constants.SMELTABLE_SLOT;
 
-@Mixin(AbstractEntityAIUsesFurnace.class)
+@Mixin(value = AbstractEntityAIUsesFurnace.class, remap = false)
 public abstract class AbstractEntityAIUsesFurnaceMixin implements AbstractAISkeletonAccessor<IJob<?>>, AbstractEntityAIBasicAccessor<AbstractBuilding>
 {
     @Final @Shadow(remap = false)  private static int RETRIEVE_SMELTABLE_IF_MORE_THAN;
@@ -42,7 +42,7 @@ public abstract class AbstractEntityAIUsesFurnaceMixin implements AbstractAISkel
             method = "fillUpFurnace",
             at = @At(
                     value = "INVOKE",
-                    target = "Lcom/minecolonies/api/util/InventoryUtils;transferXOfFirstSlotInItemHandlerWithIntoInItemHandler(Lnet/minecraftforge/items/IItemHandler;Ljava/util/function/Predicate;ILnet/minecraftforge/items/IItemHandler;I)I",
+                    target = "Lcom/minecolonies/api/util/InventoryUtils;transferXOfFirstSlotInItemHandlerWithIntoInItemHandler(Lnet/neoforged/neoforge/items/IItemHandler;Ljava/util/function/Predicate;ILnet/neoforged/neoforge/items/IItemHandler;I)I",
                     ordinal = 0,
                     shift = At.Shift.AFTER
             ),

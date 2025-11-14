@@ -35,6 +35,7 @@ public class PathingConfig {
     public static ModConfigSpec.DoubleValue ONROAD_PREFERENCE;
     public static ModConfigSpec.DoubleValue SWIMMING_PREFERENCE;
     public static ModConfigSpec.IntValue CALLBACK_TIMES_TOLERANCE;
+    public static ModConfigSpec.IntValue NODE_EXTEND_COUNT;
 
     public static ModConfigSpec.DoubleValue RESTAURANT_WAITING_TIME;
 
@@ -178,6 +179,9 @@ public class PathingConfig {
         CALLBACK_TIMES_TOLERANCE = builder
                 .comment("Tolerates how many times callback nodes can be expanded during each pathfinding process. (default: 2)\n 能容忍每次寻路中回扣节点被扩展几次，数值过大可能会造成扩展的无用节点增加 (默认 : 2)")
                 .defineInRange("callbackTimesTolerance", 2, 1, 25);
+        NODE_EXTEND_COUNT = builder
+                .comment("Explore the \"cheapest\" X nodes at every step. (default: 4)\n 每一步寻路时探索最优的 X 个节点 (默认 : 4)")
+                .defineInRange("nodeExtendCount", 4, 1, 25);
         builder.pop();
         builder.pop();
         builder.push("Restaurant Related Modifier #餐厅相关逻辑修改#");

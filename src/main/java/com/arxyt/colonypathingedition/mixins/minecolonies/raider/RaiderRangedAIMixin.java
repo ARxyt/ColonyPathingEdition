@@ -17,7 +17,7 @@ import java.util.List;
 
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.GUARD_FLEE;
 
-@Mixin(RaiderRangedAI.class)
+@Mixin(value = RaiderRangedAI.class, remap = false)
 public class RaiderRangedAIMixin<T extends AbstractEntityMinecoloniesMonster & IThreatTableEntity> extends AttackMoveAI<T> {
     public RaiderRangedAIMixin(
             final T owner,
@@ -36,7 +36,7 @@ public class RaiderRangedAIMixin<T extends AbstractEntityMinecoloniesMonster & I
         if (target != null && target.isAlive())
         {
             if(target instanceof AbstractEntityCitizen citizen){
-                if(citizen.getCitizenJobHandler().getColonyJob() instanceof AbstractJobGuard guard && guard.getWorkerAI().getState() == GUARD_FLEE){
+                if(citizen.getCitizenJobHandler().getColonyJob() instanceof AbstractJobGuard<?> guard && guard.getWorkerAI().getState() == GUARD_FLEE){
                     user.getThreatTable().addThreat(target, 20 - user.getThreatTable().getThreatFor(target));
                 }
             }
@@ -79,7 +79,7 @@ public class RaiderRangedAIMixin<T extends AbstractEntityMinecoloniesMonster & I
 
             if (isEntityValidTarget(entity) )
             {
-                if (entity instanceof AbstractEntityCitizen citizen && citizen.getCitizenJobHandler().getColonyJob() instanceof AbstractJobGuard guard && guard.getWorkerAI().getState() != GUARD_FLEE){
+                if (entity instanceof AbstractEntityCitizen citizen && citizen.getCitizenJobHandler().getColonyJob() instanceof AbstractJobGuard<?> guard && guard.getWorkerAI().getState() != GUARD_FLEE){
                     user.getThreatTable().addThreat(entity, 40);
                 }
                 else if( user.getSensing().hasLineOfSight(entity)) {

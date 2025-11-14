@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 import java.util.List;
 
-@Mixin(AbstractEntityAIInteract.class)
+@Mixin(value = AbstractEntityAIInteract.class, remap = false)
 public interface AbstractEntityAIInteractAccessor {
     @Invoker(value = "searchForItems",remap = false) void invokeSearchForItems(final AABB boundingBox);
     @Invoker(value = "getItemsForPickUp",remap = false) List<BlockPos> invokeGetItemsForPickUp();

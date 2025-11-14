@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
 
-@Mixin(Patient.class)
+@Mixin(value = Patient.class, remap = false)
 @Implements(@Interface(iface = PatientExtras.class, prefix = "extra$"))
 public abstract class PatientMixin {
     @Unique int employed = -1;

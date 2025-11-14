@@ -14,6 +14,7 @@ import net.minecraft.world.entity.Pose;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -22,12 +23,12 @@ import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.S
 import static com.minecolonies.api.util.constant.HappinessConstants.SLEPTTONIGHT;
 import static com.minecolonies.core.entity.ai.minimal.EntityAISleep.SleepState.*;
 
-@Mixin(EntityAISleep.class)
+@Mixin(value = EntityAISleep.class, remap = false)
 public class EntityAISleepHealerSpecialMixin {
     @Final @Shadow(remap = false) private EntityCitizen citizen;
 
-    private boolean onDuty = false;
-    private BlockPos workPos = null;
+    @Unique private boolean onDuty = false;
+    @Unique private BlockPos workPos = null;
 
     @Inject(method = "checkSleep", at=@At("HEAD"), remap = false, cancellable = true)
     private void specialCheckSleep(CallbackInfoReturnable<IState> cir)

@@ -5,6 +5,7 @@ import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.minecolonies.api.colony.buildings.IBuilding;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingLumberjack;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(BuildingLumberjack.class)
+@Mixin(value = BuildingLumberjack.class, remap = false)
 public abstract class BuildingLumberjackMixin implements IBuilding, BuildingLumberjackExtra
 {
     @Unique BlockPos lastTree = null;
@@ -52,8 +53,8 @@ public abstract class BuildingLumberjackMixin implements IBuilding, BuildingLumb
         thisTree = treePos;
     }
 
-    @Inject(method = "deserializeNBT(Lnet/minecraft/nbt/CompoundTag;)V",at=@At("RETURN"),remap = false)
-    private void deserializeNBTAddition (CompoundTag compound, CallbackInfo cir){
+    @Inject(method = "deserializeNBT(Lnet/minecraft/core/HolderLookup$Provider;Lnet/minecraft/nbt/CompoundTag;)V",at=@At("RETURN"),remap = false)
+    private void deserializeNBTAddition (HolderLookup.Provider provider, CompoundTag compound, CallbackInfo ci){
         if(compound.contains("last_tree", Tag.TAG_COMPOUND)){
             CompoundTag treeTag = compound.getCompound("last_tree");
             int x = treeTag.getInt("x");
@@ -70,7 +71,7 @@ public abstract class BuildingLumberjackMixin implements IBuilding, BuildingLumb
         }
     }
 
-    @Inject(method = "serializeNBT()Lnet/minecraft/nbt/CompoundTag;",at=@At("RETURN"),remap = false,cancellable = true)
+    @Inject(method = "serializeNBT(Lnet/minecraft/core/HolderLookup$Provider;)Lnet/minecraft/nbt/CompoundTag;",at=@At("RETURN"),remap = false,cancellable = true)
     private void serializeNBTAddition (CallbackInfoReturnable<CompoundTag> cir){
         CompoundTag tag = cir.getReturnValue();
         if (lastTree != null) {

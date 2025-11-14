@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * 修改 Minecolonies 的路径计算逻辑
  */
-@Mixin(PathingOptions.class)
+@Mixin(value = PathingOptions.class, remap = false)
 public abstract class PathingOptionsMixin {
     // Shadow 目标字段
     @Shadow(remap = false) public double railsExitCost;

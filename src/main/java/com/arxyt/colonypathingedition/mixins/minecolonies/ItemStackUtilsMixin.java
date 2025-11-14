@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(ItemStackUtils.class)
+@Mixin(value = ItemStackUtils.class, remap = false)
 public class ItemStackUtilsMixin {
     @Unique private final static int levelScale = PathingConfig.ENCHANT_LEVEL_SCALE.get();
     @Unique private final static boolean allowZero = PathingConfig.EARLY_ENCHANT.get();

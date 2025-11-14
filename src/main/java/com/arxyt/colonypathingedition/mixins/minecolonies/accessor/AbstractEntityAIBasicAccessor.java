@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(value = AbstractEntityAIBasic.class,remap = false)
+@Mixin(value = AbstractEntityAIBasic.class, remap = false)
 public interface AbstractEntityAIBasicAccessor<B extends AbstractBuilding> {
     @Accessor(value = "building",remap = false) B getBuilding();
     @Accessor(value = "walkTo",remap = false) BlockPos getWalkTo();

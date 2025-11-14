@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Objects;
 
-@Mixin(EntityCitizen.class)
+@Mixin(value = EntityCitizen.class, remap = false)
 public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
     @Shadow(remap = false) private ICitizenColonyHandler citizenColonyHandler;
 
@@ -71,7 +71,7 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
             if (attackerColony != null && citizenColonyHandler.getColonyOrRegister() != null)
             {
                 final IPermissions permission = attackerColony.getPermissions();
-                citizenColonyHandler.getColonyOrRegister().getPermissions().addPlayer(permission.getOwner(), permission.getOwnerName(), permission.getRank(permission.HOSTILE_RANK_ID));
+                citizenColonyHandler.getColonyOrRegister().getPermissions().addPlayer(permission.getOwner(), permission.getOwnerName(), permission.getRank(IPermissions.HOSTILE_RANK_ID));
             }
         }
 

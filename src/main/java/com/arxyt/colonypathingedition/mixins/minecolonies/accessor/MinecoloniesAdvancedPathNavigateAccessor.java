@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(MinecoloniesAdvancedPathNavigate.class)
+@Mixin(value = MinecoloniesAdvancedPathNavigate.class, remap = false)
 public interface MinecoloniesAdvancedPathNavigateAccessor {
     @Invoker(value = "walkTowards",remap = false) PathResult<AbstractPathJob> invokeWalkTowards(final BlockPos towards, final double range, final double speedFactor);
 }

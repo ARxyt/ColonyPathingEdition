@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-@Mixin(BuildingExtensionsModule.class)
+@Mixin(value = BuildingExtensionsModule.class, remap = false)
 public abstract class BuildingExtensionsModuleMixin extends AbstractBuildingModule {
     @Shadow(remap = false) private boolean shouldAssignManually;
 

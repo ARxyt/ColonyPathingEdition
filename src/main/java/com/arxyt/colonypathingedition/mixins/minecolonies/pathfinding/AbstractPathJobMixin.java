@@ -2,11 +2,9 @@ package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding;
 
 import com.arxyt.colonypathingedition.api.IMNodeExtras;
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
-import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.AbstractAISkeletonAccessor;
 import com.ldtteam.domumornamentum.block.decorative.*;
 import com.ldtteam.structurize.blockentities.interfaces.IBlueprintDataProviderBE;
 import com.minecolonies.api.colony.buildings.workerbuildings.ITownHall;
-import com.minecolonies.api.colony.jobs.IJob;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.util.Log;
 import com.minecolonies.api.util.ShapeUtil;
@@ -14,6 +12,7 @@ import com.minecolonies.core.entity.pathfinding.PathfindingUtils;
 import com.minecolonies.core.entity.pathfinding.PathingOptions;
 import com.minecolonies.core.entity.pathfinding.SurfaceType;
 import com.minecolonies.core.entity.pathfinding.pathjobs.AbstractPathJob;
+import com.minecolonies.core.entity.pathfinding.pathresults.PathResult;
 import com.minecolonies.core.entity.pathfinding.world.CachingBlockLookup;
 import com.minecolonies.core.entity.pathfinding.MNode;
 import com.minecolonies.api.util.constant.ColonyConstants;
@@ -37,16 +36,13 @@ import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 
 import static com.minecolonies.api.util.BlockPosUtil.directionFromDelta;
 import static com.minecolonies.core.entity.pathfinding.PathingOptions.MAX_COST;
 
-@Mixin(AbstractPathJob.class)
+@Mixin(value = AbstractPathJob.class, remap = false)
 public abstract class AbstractPathJobMixin{
 
     @Final @Shadow(remap = false) private Level actualWorld;
@@ -54,7 +50,11 @@ public abstract class AbstractPathJobMixin{
     @Final @Shadow(remap = false) private Int2ObjectOpenHashMap<MNode> nodes;
     @Final @Shadow(remap = false) protected LevelReader world;
     @Final @Shadow(remap = false) @NotNull protected BlockPos start;
+    @Final @Shadow(remap = false) protected PathResult result;
 
+    @Shadow(remap = false) protected int totalNodesVisited;
+    @Shadow(remap = false) private boolean reachesDestination;
+    @Shadow(remap = false) public int extraNodes;
     @Shadow(remap = false) private int visitedLevel;
     @Shadow(remap = false) private Queue<MNode> nodesToVisit;
     @Shadow(remap = false) private double maxCost;
@@ -69,6 +69,15 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) protected abstract boolean isPassable(int x, int y, int z, boolean head, MNode parent);
     @Shadow(remap = false) public abstract PathingOptions getPathingOptions();
     @Shadow(remap = false) protected abstract boolean canLeaveBlock(int x, int y, int z, int parentX, int parentY, int parentZ, boolean head);
+    @Shadow(remap = false) protected abstract MNode getAndSetupStartNode();
+    @Shadow(remap = false) protected abstract double getEndNodeScore(MNode n);
+    @Shadow(remap = false) protected abstract void handleDebugExtraNode(MNode node);
+    @Shadow(remap = false) protected abstract void handleDebugPathReach(MNode bestNode);
+    @Shadow(remap = false) protected abstract void handleDebugOptions(MNode node);
+    @Shadow(remap = false) protected abstract boolean isAtDestination(MNode n);
+    @Shadow(remap = false) protected abstract boolean stopOnNodeLimit(int totalNodesVisited, MNode bestNode, int nodesSinceEndNode);
+    @Shadow(remap = false) protected abstract void visitNode(MNode node);
+    @Shadow(remap = false) @NotNull protected abstract Path finalizePath(MNode targetNode);
 
     @Unique private BlockEntity townhall;
     @Unique protected int actualMaxNodes;
@@ -83,6 +92,7 @@ public abstract class AbstractPathJobMixin{
     @Unique final private double onRailCallbackMultiplier = PathingConfig.ONRAIL_CALLBACK_MULTIPLIER.get();
     @Unique final private double onRoadCallbackMultiplier = PathingConfig.ONROAD_CALLBACK_MULTIPLIER.get();
     @Unique final private int callbackTimesTolerance =  PathingConfig.CALLBACK_TIMES_TOLERANCE.get();
+    @Unique final private int extendCount =  PathingConfig.NODE_EXTEND_COUNT.get();
 
     @Invoker(value="getGroundHeight",remap = false)
     public abstract int invokeGetGroundHeight(final MNode node, final int x, final int y, final int z);
@@ -251,66 +261,147 @@ public abstract class AbstractPathJobMixin{
     }
 
     /**
-     * 在 search 方法头部插入：记录当前 maxNodes 到 savedMaxNodes
+     * @author ARxyt
+     * @reason Explore stretgies reworked, to explore more nodes that "cheap".
      */
-    @Inject(
-            method = "search",
-            at     = @At("HEAD"),
-            remap = false
-    )
-    private void onSearchHead(CallbackInfoReturnable<Path> cir)
+    @Nullable
+    @Overwrite(remap = false)
+    protected Path search()
     {
         this.actualMaxNodes = this.maxNodes;
-    }
+        MNode bestNode = getAndSetupStartNode();
+        double bestNodeEndScore = getEndNodeScore(bestNode);
+        // Node count since we found a better end node than the current one
+        int nodesSinceEndNode = 0;
 
+        while (!nodesToVisit.isEmpty())
+        {
+            if (Thread.currentThread().isInterrupted())
+            {
+                return null;
+            }
 
+            Queue<MNode> cheapestNodelist = new ArrayDeque<>();
+            for (int i = 0; i < extendCount; i++) {
+                if(nodesToVisit.peek() != null) cheapestNodelist.add(nodesToVisit.poll());
+                else break;
+            }
+            while (!cheapestNodelist.isEmpty()) {
+                final MNode node = cheapestNodelist.poll();
 
-    /**
-     * 用 Redirect 拦截 recalcHeuristic(bestNode) 调用，
-     * 调用原方法后，bestNode 已被更新，我们可以在这里用它做计算。
-     */
-    @Redirect(
-            method = "search()Lnet/minecraft/world/level/pathfinder/Path;",
-            at = @At(
-                    value   = "INVOKE",
-                    target  = "Lcom/minecolonies/core/entity/pathfinding/pathjobs/AbstractPathJob;recalcHeuristic(Lcom/minecolonies/core/entity/pathfinding/MNode;)V",
-                    ordinal = 0,
-                    remap = false
-            ),
-            remap = false
-    )
-    private void onRecalcHeuristicAndThen1(AbstractPathJob instance, MNode bestNode)
-    {
-        // 1) 先执行原来的 recalcHeuristic(bestNode)
-        recalcHeuristic(bestNode);
+                if (node.isVisited()) {
+                    // Revisiting is used to update neighbours to an updated cost
+                    visitNode(node);
+                    node.increaseVisited();
+                    continue;
+                }
 
-        // 2) 按 bestNode 的 heuristic 调整 maxNodes：
-        double h = bestNode.getHeuristic();
-        int extra = (int) Math.ceil(Math.sqrt(h) * 10);
-        maxNodes = Math.max(Math.min(actualMaxNodes + extra , MAX_NODES),maxNodes);
-    }
+                nodesSinceEndNode++;
+                totalNodesVisited++;
 
-    /**
-     * 用 Redirect 拦截 recalcHeuristic(bestNode) 调用，
-     * 调用原方法后，bestNode 已被更新，我们可以在这里用它做计算。
-     */
-    @Redirect(
-            method = "search()Lnet/minecraft/world/level/pathfinder/Path;",
-            at = @At(
-                    value   = "INVOKE",
-                    target  = "Lcom/minecolonies/core/entity/pathfinding/pathjobs/AbstractPathJob;recalcHeuristic(Lcom/minecolonies/core/entity/pathfinding/MNode;)V",
-                    ordinal = 1,
-                    remap = false
-            ),
-            remap = false
-    )
-    private void onRecalcHeuristicAndThen2(AbstractPathJob instance, MNode bestNode)
-    {
-        recalcHeuristic(bestNode);
+                // Limiting max amount of nodes mapped, encountering a high cost node increases the limit
+                if (totalNodesVisited > Math.min(MAX_NODES, maxNodes + node.getHeuristic() * 2)) {
+                    if (stopOnNodeLimit(totalNodesVisited, bestNode, nodesSinceEndNode)) {
+                        break;
+                    }
+                }
 
-        double h = bestNode.getHeuristic();
-        int extra = (int) Math.ceil(Math.sqrt(h) * 10);
-        maxNodes = Math.max(Math.min(actualMaxNodes + extra , MAX_NODES),maxNodes);
+                if (!reachesDestination && isAtDestination(node)) {
+                    bestNode = node;
+                    bestNodeEndScore = getEndNodeScore(node);
+                    result.setPathReachesDestination(true);
+                    handleDebugPathReach(bestNode);
+
+                    reachesDestination = true;
+                    break;
+                }
+
+                if (!node.isCornerNode()) {
+                    // Calculates a score for a possible end node, defaults to heuristic(closest)
+                    final double nodeEndSCore = getEndNodeScore(node);
+                    if (nodeEndSCore < bestNodeEndScore) {
+                        if (!reachesDestination || isAtDestination(node)) {
+                            nodesSinceEndNode = 0;
+                            bestNode = node;
+                            bestNodeEndScore = nodeEndSCore;
+                        }
+                    }
+                }
+
+                // Don't keep searching more costly nodes when there is a destination
+                if (reachesDestination && node.getScore() > bestNode.getScore()) {
+                    break;
+                }
+
+                handleDebugOptions(node);
+                visitNode(node);
+                node.increaseVisited();
+            }
+        }
+
+        // Explore additional possible endnodes after reaching, if we got extra nodes to search
+        if (extraNodes > 0 && reachesDestination)
+        {
+            // Make sure to expand from the final node
+            visitNode(bestNode);
+
+            if (!nodesToVisit.isEmpty())
+            {
+                // Search only closest nodes to the goal
+                final Queue<MNode> original = nodesToVisit;
+                nodesToVisit = new PriorityQueue<>(nodesToVisit.size(), (a, b) -> {
+                    if ((a.getHeuristic()) < (b.getHeuristic()))
+                    {
+                        return -1;
+                    }
+                    else if (a.getHeuristic() > b.getHeuristic())
+                    {
+                        return 1;
+                    }
+                    else
+                    {
+                        return a.getCounterAdded() - b.getCounterAdded();
+                    }
+                });
+                nodesToVisit.addAll(original);
+
+                while (!nodesToVisit.isEmpty())
+                {
+                    if (Thread.currentThread().isInterrupted())
+                    {
+                        return null;
+                    }
+
+                    final MNode node = nodesToVisit.poll();
+                    if (node.isVisited())
+                    {
+                        visitNode(node);
+                        continue;
+                    }
+
+                    handleDebugExtraNode(node);
+
+                    final double nodeEndSCore = getEndNodeScore(node);
+                    if (nodeEndSCore < bestNodeEndScore && (!reachesDestination || isAtDestination(node)))
+                    {
+                        bestNode = node;
+                        bestNodeEndScore = nodeEndSCore;
+                    }
+
+                    if (extraNodes > 0)
+                    {
+                        extraNodes--;
+                        if (extraNodes == 0)
+                        {
+                            break;
+                        }
+                    }
+                    visitNode(node);
+                }
+            }
+        }
+
+        return finalizePath(bestNode);
     }
 
     @Unique

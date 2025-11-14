@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(value = CrafterRecipeSetting.class)
+@Mixin(value = CrafterRecipeSetting.class, remap = false)
 public class CrafterRecipeSettingMixin extends StringSettingWithDesc {
     @Inject(method = "<init>()V", at = @At("TAIL"), remap = false)
     private void init(CallbackInfo ci) {

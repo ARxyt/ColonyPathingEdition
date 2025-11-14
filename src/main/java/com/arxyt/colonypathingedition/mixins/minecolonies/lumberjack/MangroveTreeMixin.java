@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -19,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
-@Mixin(Tree.class)
+@Mixin(value = Tree.class, remap = false)
 public abstract class MangroveTreeMixin {
     @Shadow(remap = false) private LinkedList<BlockPos> woodBlocks;
     @Shadow(remap = false) private ArrayList<BlockPos> stumpLocations;
@@ -27,7 +28,8 @@ public abstract class MangroveTreeMixin {
     @Shadow(remap = false) private BlockPos topLog;
     @Shadow(remap = false) private BlockPos location;
 
-    public void fillMangroveTreeStumps(final int yLevel,Level world)
+    @Unique
+    public void fillMangroveTreeStumps(final int yLevel, Level world)
     {
         for (@NotNull final BlockPos pos : woodBlocks)
         {
@@ -43,7 +45,7 @@ public abstract class MangroveTreeMixin {
         }
 
         // 红树树桩处理
-        if (stumpLocations.size() > 0 && sapling.is(Items.MANGROVE_PROPAGULE))
+        if (!stumpLocations.isEmpty() && sapling.is(Items.MANGROVE_PROPAGULE))
         {
             BlockPos.MutableBlockPos acc = BlockPos.ZERO.mutable();
             acc.move(0,320,0);
@@ -54,7 +56,7 @@ public abstract class MangroveTreeMixin {
                     acc = BlockPos.ZERO.mutable().move(stump);
                 }
             }
-            if (stumpLocations.size() > 0 && sapling.is(Items.MANGROVE_PROPAGULE))
+            if (!stumpLocations.isEmpty() && sapling.is(Items.MANGROVE_PROPAGULE))
             {
                 // 保留原有 acc 的 X 和 Z 坐标
                 int targetX = acc.getX();

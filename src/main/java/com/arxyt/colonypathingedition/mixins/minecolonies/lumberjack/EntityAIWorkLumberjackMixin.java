@@ -35,12 +35,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.*;
 import static com.minecolonies.api.items.ModTags.fungi;
 
-@Mixin(EntityAIWorkLumberjack.class)
+@Mixin(value = EntityAIWorkLumberjack.class, remap = false)
 public abstract class EntityAIWorkLumberjackMixin extends AbstractEntityAICrafting<JobLumberjack, BuildingLumberjack> implements AbstractEntityAIInteractAccessor, AbstractEntityAIInteractExtra {
 
     @Final @Shadow(remap = false) public static float RANGE_HORIZONTAL_PICKUP;

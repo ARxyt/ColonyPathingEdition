@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.minecolonies.core.entity.pathfinding.pathjobs.PathJobMoveCloseToXNearY;
 
 // Mixin for PathJobMoveAwayFromLocation
-@Mixin(PathJobMoveCloseToXNearY.class)
+@Mixin(value = PathJobMoveCloseToXNearY.class, remap = false)
 public abstract class PathJobMoveCloseToXNearYMixin {
     @Final @Shadow(remap = false) public BlockPos desiredPosition;
     @Final @Shadow(remap = false) public BlockPos nearbyPosition;

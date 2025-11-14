@@ -22,7 +22,7 @@ import java.util.Objects;
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.*;
 import static com.minecolonies.api.research.util.ResearchConstants.FLEEING_SPEED;
 
-@Mixin(AbstractEntityAIGuard.class)
+@Mixin(value = AbstractEntityAIGuard.class, remap = false)
 public abstract class AbstractEntityAIGuardMixinForFleeAndRegen implements AbstractAISkeletonAccessor<AbstractJobGuard<?>>,AbstractEntityAIBasicAccessor<AbstractBuildingGuards> {
     @Final @Shadow (remap = false) protected IGuardBuilding buildingGuards;
 

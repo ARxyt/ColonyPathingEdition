@@ -7,16 +7,20 @@ import com.arxyt.colonypathingedition.core.easycolony.event.LinkageEvent;
 import com.arxyt.colonypathingedition.core.easycolony.event.ReadMindEvent;
 import com.arxyt.colonypathingedition.core.easycolony.event.ResurrectEvent;
 import com.arxyt.colonypathingedition.core.message.*;
+import com.arxyt.colonypathingedition.core.minecolonies.module.ModBuildingInitializer;
 import com.arxyt.colonypathingedition.core.update.UpdateManager;
 import com.mojang.logging.LogUtils;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.javafmlmod.FMLModContainer;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.common.NeoForge;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
 @Mod("colonypathingedition")
@@ -31,6 +35,7 @@ public class ColonyPathingEdition {
                 PathingConfig.init(new ModConfigSpec.Builder())
         );
         modBus.addListener(LinkageEvent::onFMLCommonSetup);
+        modBus.addListener(ColonyPathingEdition::preInit);
         // 客户端初始化
         if (FMLEnvironment.dist == Dist.CLIENT) {
             NeoForge.EVENT_BUS.register(UpdateManager.class);
@@ -40,5 +45,10 @@ public class ColonyPathingEdition {
         NeoForge.EVENT_BUS.register(new ReadMindEvent());
         NeoForge.EVENT_BUS.register(new ResurrectEvent());
         LOGGER.info("Colony Pathing Edition mod loaded");
+    }
+
+    @SubscribeEvent
+    public static void preInit(@NotNull final FMLCommonSetupEvent event) {
+        event.enqueueWork(ModBuildingInitializer::init);
     }
 }

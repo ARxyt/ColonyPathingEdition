@@ -27,7 +27,7 @@ import static com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra.get
 import static com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra.getRecalLocalScore;
 import static com.minecolonies.api.util.FoodUtils.getBestFoodForCitizen;
 
-@Mixin(FoodUtils.class)
+@Mixin(value = FoodUtils.class, remap = false)
 public class FoodUtilsMixin {
     @Unique private static final double foodPunisher = PathingConfig.FOOD_PUNISHER.get();
     @Unique private static final double foodBonusNormal = PathingConfig.FOOD_BONUS_NORMAL.get();

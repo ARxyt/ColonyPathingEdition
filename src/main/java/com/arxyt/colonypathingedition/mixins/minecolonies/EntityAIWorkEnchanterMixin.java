@@ -46,7 +46,7 @@ import static com.minecolonies.api.util.constant.StatisticsConstants.CITIZENS_VI
 import static com.minecolonies.api.util.constant.TranslationConstants.NO_WORKERS_TO_DRAIN_SET;
 
 
-@Mixin(EntityAIWorkEnchanter.class)
+@Mixin(value = EntityAIWorkEnchanter.class, remap = false)
 public abstract class EntityAIWorkEnchanterMixin extends AbstractEntityAICrafting<JobEnchanter, BuildingEnchanter>
 {
     @Shadow(remap = false) @Final private static int MANA_REQ_PER_LEVEL;

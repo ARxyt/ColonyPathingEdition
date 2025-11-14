@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 
-@Mixin(EntityAIWorkDeliveryman.class)
+@Mixin(value = EntityAIWorkDeliveryman.class, remap = false)
 public abstract class EntityAIWorkDeliverymanMixin implements AbstractAISkeletonAccessor<JobDeliveryman>, AbstractEntityAIBasicAccessor<BuildingDeliveryman> {
     // 提升单次运输容量
     /**

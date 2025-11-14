@@ -29,7 +29,7 @@ import static com.minecolonies.api.util.constant.TranslationConstants.NO_HOSPITA
 import static com.minecolonies.api.util.constant.TranslationConstants.WAITING_FOR_CURE;
 import static com.minecolonies.core.entity.ai.minimal.EntityAISickTask.DiseaseState.*;
 
-@Mixin(EntityAISickTask.class)
+@Mixin(value = EntityAISickTask.class, remap = false)
 abstract public class EntityAISickTaskMixin {
     @Final @Shadow(remap = false) private EntityCitizen citizen;
     @Final @Shadow(remap = false) private ICitizenData citizenData;

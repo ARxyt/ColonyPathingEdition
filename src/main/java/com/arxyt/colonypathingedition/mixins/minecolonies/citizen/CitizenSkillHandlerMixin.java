@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.Map;
 import java.util.Random;
 
-@Mixin(CitizenSkillHandler.class)
+@Mixin(value = CitizenSkillHandler.class, remap = false)
 public abstract class CitizenSkillHandlerMixin {
     @Shadow(remap = false) public abstract void init(int levelCap);
 

@@ -27,7 +27,7 @@ import java.util.Collections;
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.*;
 import static com.minecolonies.api.util.constant.StatisticsConstants.MILKING_ATTEMPTS;
 
-@Mixin(EntityAIWorkCowboy.class)
+@Mixin(value = EntityAIWorkCowboy.class, remap = false)
 public abstract class EntityAIWorkCowboyMixin extends AbstractEntityAIHerder<JobCowboy, BuildingCowboy> {
 
     @Shadow(remap = false) @Final private static VisibleCitizenStatus HERD_COW;

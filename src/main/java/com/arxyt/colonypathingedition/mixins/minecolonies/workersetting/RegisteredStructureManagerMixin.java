@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import static net.minecraft.world.level.Level.TICKS_PER_DAY;
 
 
-@Mixin(RegisteredStructureManager.class)
+@Mixin(value = RegisteredStructureManager.class, remap = false)
 public class RegisteredStructureManagerMixin {
     @Unique int trueDate = -1;
 

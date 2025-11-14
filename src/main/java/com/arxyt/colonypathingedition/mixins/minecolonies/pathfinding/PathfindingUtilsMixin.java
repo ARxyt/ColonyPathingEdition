@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
-@Mixin(PathfindingUtils.class)
+@Mixin(value = PathfindingUtils.class, remap = false)
 public abstract class PathfindingUtilsMixin {
 
     @Invoker(value = "canStandInSolidBlock",remap = false)

@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 import java.util.function.Supplier;
 
-@Mixin(BuildingModules.class)
+@Mixin(value = BuildingModules.class, remap = false)
 public class BuildingModulesMixin
 {
     /**

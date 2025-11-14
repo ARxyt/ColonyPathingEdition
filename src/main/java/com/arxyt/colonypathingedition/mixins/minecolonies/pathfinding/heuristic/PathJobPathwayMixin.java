@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin( PathJobPathway.class)
+@Mixin(value = PathJobPathway.class, remap = false)
 public class PathJobPathwayMixin {
     @Final @Shadow(remap = false) private BlockPos end;
 

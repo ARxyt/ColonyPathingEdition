@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(WindowReplaceBlock.class)
+@Mixin(value = WindowReplaceBlock.class, remap = false)
 public abstract class WindowReplaceBlockMixin {
 
     @Redirect(method = "lambda$onUpdate$5", at = @At(value = "INVOKE", target = "Ljava/lang/String;contains(Ljava/lang/CharSequence;)Z"), remap = false)

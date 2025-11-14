@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(EntityAIWorkRabbitHerder.class)
+@Mixin(value = EntityAIWorkRabbitHerder.class, remap = false)
 public abstract class EntityAIWorkRabbitHerderMixin extends AbstractEntityAIHerder<JobRabbitHerder, BuildingRabbitHutch> {
 
     public EntityAIWorkRabbitHerderMixin(@NotNull JobRabbitHerder job) {

@@ -45,7 +45,7 @@ import static com.minecolonies.api.util.ItemStackUtils.*;
 import static com.minecolonies.api.util.constant.Constants.*;
 import static com.minecolonies.api.util.constant.TranslationConstants.BAKER_HAS_NO_FURNACES_MESSAGE;
 
-@Mixin( AbstractEntityAIRequestSmelter.class )
+@Mixin(value = AbstractEntityAIRequestSmelter.class, remap = false)
 public abstract class AbstractEntityAIRequestSmelterMixin<J extends AbstractJobCrafter<?, J>, B extends AbstractBuilding> extends AbstractEntityAICrafting<J, B> {
     @Shadow(remap = false) protected abstract int getMaxUsableFurnaces();
 
@@ -325,6 +325,7 @@ public abstract class AbstractEntityAIRequestSmelterMixin<J extends AbstractJobC
         return false;
     }
 
+    @Unique
     boolean checkRecipeFinish = false;
 
     /**
@@ -427,8 +428,8 @@ public abstract class AbstractEntityAIRequestSmelterMixin<J extends AbstractJobC
             }
             final int maxFurnaces = getMaxUsableFurnaces();
             final int maxUsableFurnaces = Math.min(maxFurnaces,countOfUsableFurnaces());
-            final Predicate<ItemStack> smeltable = stack -> ItemStackUtils.compareItemStacksIgnoreStackSize(currentRecipeStorage.getCleanedInput().get(0).getItemStack(), stack);
-            final int smeltableInFurnaces = getExtendedCount(currentRecipeStorage.getCleanedInput().get(0).getItemStack());
+            final Predicate<ItemStack> smeltable = stack -> ItemStackUtils.compareItemStacksIgnoreStackSize(currentRecipeStorage.getCleanedInput().getFirst().getItemStack(), stack);
+            final int smeltableInFurnaces = getExtendedCount(currentRecipeStorage.getCleanedInput().getFirst().getItemStack());
             final int resultInFurnaces = getExtendedCount(currentRecipeStorage.getPrimaryOutput());
             final int resultInCitizenInv = InventoryUtils.getItemCountInItemHandler(worker.getInventoryCitizen(),
                     stack -> ItemStackUtils.compareItemStacksIgnoreStackSize(stack, currentRecipeStorage.getPrimaryOutput()));
@@ -449,7 +450,7 @@ public abstract class AbstractEntityAIRequestSmelterMixin<J extends AbstractJobC
 
             if (worker.getItemInHand(InteractionHand.MAIN_HAND).isEmpty())
             {
-                worker.setItemInHand(InteractionHand.MAIN_HAND, currentRecipeStorage.getCleanedInput().get(0).getItemStack().copy());
+                worker.setItemInHand(InteractionHand.MAIN_HAND, currentRecipeStorage.getCleanedInput().getFirst().getItemStack().copy());
             }
             if (amountOfSmeltableInInv > 0)
             {

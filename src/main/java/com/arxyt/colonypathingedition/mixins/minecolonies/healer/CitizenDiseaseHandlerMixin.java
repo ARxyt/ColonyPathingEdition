@@ -21,7 +21,7 @@ import java.util.Optional;
 import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.SICK_TIME;
 import static com.minecolonies.api.util.constant.CitizenConstants.*;
 
-@Mixin( CitizenDiseaseHandler.class)
+@Mixin(value = CitizenDiseaseHandler.class, remap = false)
 public abstract class CitizenDiseaseHandlerMixin implements ICitizenDiseaseHandlerExtra {
     @Final @Shadow(remap = false) private ICitizenData citizenData;
     @Shadow(remap = false) private Disease disease;

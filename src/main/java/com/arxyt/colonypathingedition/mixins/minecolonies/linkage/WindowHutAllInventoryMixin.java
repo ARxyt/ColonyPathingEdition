@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(WindowHutAllInventory.class)
+@Mixin(value = WindowHutAllInventory.class, remap = false)
 public abstract class WindowHutAllInventoryMixin {
 
     @Redirect(method = "lambda$updateResources$2", at = @At(value = "INVOKE", target = "Ljava/lang/String;contains(Ljava/lang/CharSequence;)Z"), remap = false)

@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(WindowField.class)
+@Mixin(value = WindowField.class, remap = false)
 public class WindowFieldMixin {
 
     @Shadow(remap = false) private @Nullable FarmField farmField;
