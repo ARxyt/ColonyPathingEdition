@@ -713,7 +713,12 @@ public abstract class AbstractPathJobMixin{
     private double modifyHeuristic(MNode nextNode, double heuristic, final BlockState state) {
         double newHeuristic = heuristic;
         if(state.getBlock() == Blocks.CAVE_AIR){
-            newHeuristic *= 1 + 0.15 * Math.max(5 - world.getBrightness(LightLayer.BLOCK, new BlockPos(nextNode.x, nextNode.y, nextNode.z)) , 0);
+            if(world.getLightEngine() != null) {
+                newHeuristic *= 1 + 0.15 * Math.max(5 - world.getBrightness(LightLayer.BLOCK, new BlockPos(nextNode.x, nextNode.y, nextNode.z)), 0);
+            }
+            else{
+                newHeuristic *= 1 + 0.75;
+            }
         }
         if (nextNode.isSwimming()){
             newHeuristic *= swimmingPreference;

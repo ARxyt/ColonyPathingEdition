@@ -110,7 +110,7 @@ public abstract class UnstuckMixin<NAV extends PathNavigation & IMinecoloniesNav
                 }
             }
             navigator.setPauseTicks(0);
-            ((MinecoloniesAdvancedPathNavigateAccessor) navigator).invokeWalkTowards(prevDestination.offset(dPos), 100, 1.0f + 0.4f * stuckLevel);
+            ((MinecoloniesAdvancedPathNavigateAccessor) navigator).invokeWalkTowards(prevDestination.offset(dPos), 100, 1.0f + 0.25f * stuckLevel);
             stuckLevelRecorder = stuckLevel;
             navigator.setPauseTicks(300);
             delayToNextUnstuckAction = 350;
