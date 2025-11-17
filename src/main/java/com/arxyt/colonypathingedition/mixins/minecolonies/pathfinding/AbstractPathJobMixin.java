@@ -6,6 +6,7 @@ import com.ldtteam.domumornamentum.block.decorative.*;
 import com.ldtteam.structurize.blockentities.interfaces.IBlueprintDataProviderBE;
 import com.minecolonies.api.colony.buildings.workerbuildings.ITownHall;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
+import com.minecolonies.api.util.BlockPosUtil;
 import com.minecolonies.api.util.Log;
 import com.minecolonies.api.util.ShapeUtil;
 import com.minecolonies.core.entity.pathfinding.PathfindingUtils;
@@ -20,6 +21,7 @@ import com.minecolonies.core.util.WorkerUtil;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
 import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
@@ -30,6 +32,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.*;
@@ -40,6 +43,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.*;
 
 import static com.minecolonies.api.util.BlockPosUtil.directionFromDelta;
+import static com.minecolonies.api.util.constant.PathingConstants.HALF_A_BLOCK;
+import static com.minecolonies.api.util.constant.PathingConstants.MAX_JUMP_HEIGHT;
 import static com.minecolonies.core.entity.pathfinding.PathingOptions.MAX_COST;
 
 @Mixin(value = AbstractPathJob.class, remap = false)
@@ -69,6 +74,7 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) protected abstract boolean isPassable(int x, int y, int z, boolean head, MNode parent);
     @Shadow(remap = false) public abstract PathingOptions getPathingOptions();
     @Shadow(remap = false) protected abstract boolean canLeaveBlock(int x, int y, int z, int parentX, int parentY, int parentZ, boolean head);
+    @Shadow(remap = false) protected abstract boolean canLeaveBlock(int x, int y, int z, MNode parent, boolean head);
     @Shadow(remap = false) protected abstract MNode getAndSetupStartNode();
     @Shadow(remap = false) protected abstract double getEndNodeScore(MNode n);
     @Shadow(remap = false) protected abstract void handleDebugExtraNode(MNode node);
@@ -274,6 +280,7 @@ public abstract class AbstractPathJobMixin{
         // Node count since we found a better end node than the current one
         int nodesSinceEndNode = 0;
 
+        boolean shouldSkip = false;
         while (!nodesToVisit.isEmpty())
         {
             if (Thread.currentThread().isInterrupted())
@@ -289,6 +296,10 @@ public abstract class AbstractPathJobMixin{
             while (!cheapestNodelist.isEmpty()) {
                 final MNode node = cheapestNodelist.poll();
 
+                if(node == null){
+                    continue;
+                }
+
                 if (node.isVisited()) {
                     // Revisiting is used to update neighbours to an updated cost
                     visitNode(node);
@@ -299,9 +310,10 @@ public abstract class AbstractPathJobMixin{
                 nodesSinceEndNode++;
                 totalNodesVisited++;
 
-                // Limiting max amount of nodes mapped, encountering a high cost node increases the limit
-                if (totalNodesVisited > Math.min(MAX_NODES, maxNodes + node.getHeuristic() * 2)) {
+                // Limiting max amount of nodes mapped, based on node's heuristic
+                if (totalNodesVisited > Math.min(MAX_NODES, maxNodes + node.getHeuristic())) {
                     if (stopOnNodeLimit(totalNodesVisited, bestNode, nodesSinceEndNode)) {
+                        shouldSkip = true;
                         break;
                     }
                 }
@@ -311,8 +323,8 @@ public abstract class AbstractPathJobMixin{
                     bestNodeEndScore = getEndNodeScore(node);
                     result.setPathReachesDestination(true);
                     handleDebugPathReach(bestNode);
-
                     reachesDestination = true;
+                    shouldSkip = true;
                     break;
                 }
 
@@ -330,6 +342,7 @@ public abstract class AbstractPathJobMixin{
 
                 // Don't keep searching more costly nodes when there is a destination
                 if (reachesDestination && node.getScore() > bestNode.getScore()) {
+                    shouldSkip = true;
                     break;
                 }
 
@@ -337,6 +350,7 @@ public abstract class AbstractPathJobMixin{
                 visitNode(node);
                 node.increaseVisited();
             }
+            if(shouldSkip) break;
         }
 
         // Explore additional possible endnodes after reaching, if we got extra nodes to search
@@ -520,7 +534,7 @@ public abstract class AbstractPathJobMixin{
             if (SurfaceType.getSurfaceType(world, below, tempWorldPos.set(x, y - i, z), getPathingOptions()) == SurfaceType.WALKABLE) {
                 //  Level path
                 return y - i + 1;
-            } else if (!below.isAir()) {
+            } else if (!below.isAir() || below.getCollisionShape(world, new BlockPos(x, y-1, z)).isEmpty()) {
                 if (PathfindingUtils.isLadder(below, pathingOptions)) {
                     return y - i + 1;
                 } else {
@@ -643,6 +657,11 @@ public abstract class AbstractPathJobMixin{
         final double heuristic = computeHeuristic(nextX, nextY, nextZ) * heuristicMod;
         final double cost = node.getCost() + nextCost;
 
+        // fix to distant horizon
+        if(heuristic == 0.0 && node.getHeuristic() == 0){
+            return;
+        }
+
         if (nextNode == null)
         {
             nextNode = invokeCreateNode(node, nextX, nextY, nextZ, nodeKey, heuristic, cost);
@@ -677,6 +696,67 @@ public abstract class AbstractPathJobMixin{
             }
             updateNode(node, nextNode, heuristic, cost, onRails);
         }
+    }
+
+    /**
+     * @author ARxyt
+     * @reason Y axis modification on canJump tester.
+     */
+    @Overwrite(remap = false)
+    private int handleTargetNotPassable(@Nullable final MNode parent, final int x, final int y, final int z, @NotNull final BlockState target)
+    {
+        final boolean canJump = parent != null && !parent.isLadder() && !parent.isSwimming();
+        //  Need to try jumping up one, if we can
+        if (!canJump || SurfaceType.getSurfaceType(world, target, tempWorldPos.set(x, y, z), getPathingOptions()) != SurfaceType.WALKABLE)
+        {
+            return Integer.MIN_VALUE;
+        }
+
+        //  Check for headroom in the target space
+        if (!isPassable(x, y + 2, z, true, parent))
+        {
+            final VoxelShape bb1 = cachedBlockLookup.getBlockState(x, y, z).getCollisionShape(world, tempWorldPos.set(x, y, z));
+            final VoxelShape bb2 = cachedBlockLookup.getBlockState(x, y + 2, z).getCollisionShape(world, tempWorldPos.set(x, y + 2, z));
+            if ((y + 2 + ShapeUtil.getStartY(bb2, 1)) - (y + ShapeUtil.getEndY(bb1, 0)) < 2)
+            {
+                return Integer.MIN_VALUE;
+            }
+        }
+
+        if (!canLeaveBlock(x, y + 2, z, parent, true))
+        {
+            return Integer.MIN_VALUE;
+        }
+
+        //  Check for jump room from the origin space
+        if (!isPassable(parent.x, parent.y + 2, parent.z, true, parent) && !cachedBlockLookup.getBlockState(parent.x, parent.y + 2, parent.z).hasProperty(BlockStateProperties.OPEN))
+        {
+            final VoxelShape bb1 = cachedBlockLookup.getBlockState(x, y, z).getCollisionShape(world, tempWorldPos.set(x, y, z));
+            final VoxelShape bb2 = cachedBlockLookup.getBlockState(parent.x, parent.y + 2, parent.z).getCollisionShape(world, tempWorldPos.set(parent.x, parent.y + 2, parent.z));
+            if ((parent.y + 2 + ShapeUtil.getStartY(bb2, 1)) - (y + ShapeUtil.getEndY(bb1, 0)) < 2)
+            {
+                return Integer.MIN_VALUE;
+            }
+        }
+
+        final BlockState parentBelow = cachedBlockLookup.getBlockState(parent.x, parent.y - 1, parent.z);
+        final VoxelShape parentBB = parentBelow.getCollisionShape(world, tempWorldPos.set(parent.x, parent.y - 1, parent.z));
+
+        double parentY = ShapeUtil.max(parentBB, Direction.Axis.Y);
+        double parentMaxY = parentY + parent.y - 1;
+        final double targetMaxY = ShapeUtil.max(target.getCollisionShape(world, tempWorldPos.set(x, y, z)), Direction.Axis.Y) + y;
+        if (targetMaxY - parentMaxY < MAX_JUMP_HEIGHT)
+        {
+            return y + 1;
+        }
+        if (target.is(BlockTags.STAIRS)
+                && parentY - HALF_A_BLOCK < MAX_JUMP_HEIGHT
+                && target.getValue(StairBlock.HALF) == Half.BOTTOM
+                && BlockPosUtil.getXZFacing(parent.x, parent.z, x, z) == target.getValue(StairBlock.FACING))
+        {
+            return y + 1;
+        }
+        return Integer.MIN_VALUE;
     }
 
     @Unique

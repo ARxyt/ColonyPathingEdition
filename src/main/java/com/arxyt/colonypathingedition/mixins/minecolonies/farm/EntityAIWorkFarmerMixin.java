@@ -113,6 +113,8 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
         );
     }
 
+    @Unique private final Predicate<BlockState> normal = blockState -> blockState.getBlock() instanceof MinecoloniesFarmland || blockState.is(Blocks.FARMLAND);
+
     public EntityAIWorkFarmerMixin(@NotNull final JobFarmer job)
     {
         super(job);
@@ -214,7 +216,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
             }
             farmField.setFieldStage(FarmField.Stage.EMPTY);
             module.resetCurrentExtension();
-            cir.setReturnValue(IDLE);
+            cir.setReturnValue(PREPARING);
             return;
         }
         else if (fieldToWork != null)
@@ -235,6 +237,10 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
         worker.getCitizenData().setVisibleStatus(FARMING_ICON);
         if (field instanceof FarmField farmField)
         {
+            if (farmField.getSeed().isEmpty()){
+                cir.setReturnValue(PREPARING);
+                return;
+            }
             if (building.getWorkingOffset() != null)
             {
                 final BlockPos position = farmField.getPosition().below().south(building.getWorkingOffset().getZ()).east(building.getWorkingOffset().getX());
@@ -335,7 +341,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
                 }
                 didWork = false;
                 building.setPrevPos(null);
-                cir.setReturnValue(IDLE);
+                cir.setReturnValue(PREPARING);
                 return;
             }
         }
@@ -571,13 +577,14 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
                 }
             }
         }
-        final BlockState blockState = world.getBlockState(pos);
+        BlockState blockState = world.getBlockState(pos);
         if(SpecialSeedManager.isSpecialSeed(seed.getItem())){
             if(worker.getCitizenData().getEntity().isPresent() && worker.getBlockY() <= pos.getY()) {
                 Vec3 vec = worker.blockPosition().above().getCenter();
                 worker.getCitizenData().getEntity().get().teleportTo(vec.x, pos.getY() + 1.5, vec.z);
             }
-            checkFarmlandAndReturnSoli(blockState, state -> SpecialSeedManager.isSpecialSoil(state.getBlock())
+            checkFarmlandAndReturnSoli(blockState, state -> !state.getCollisionShape(world, pos).isEmpty()
+                            && !normal.test(state)
                             && state.getBlock() != SpecialSeedManager.getRequiredSoil(seed.getItem())
                     );
             world.setBlock(pos, SpecialSeedManager.getRequiredSoil(seed.getItem()).defaultBlockState(), 3);
@@ -589,14 +596,16 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
                     Vec3 vec = worker.blockPosition().above().getCenter();
                     worker.getCitizenData().getEntity().get().teleportTo(vec.x, pos.getY() + 1.5, vec.z);
                 }
-                checkFarmlandAndReturnSoli(blockState, state -> SpecialSeedManager.isSpecialSoil(state.getBlock()) && !state.is(BlockTags.DIRT));
+                checkFarmlandAndReturnSoli(blockState, state -> !state.getCollisionShape(world, pos).isEmpty()
+                        && !normal.test(state)
+                        && !state.is(BlockTags.DIRT));
                 world.setBlock(pos, Blocks.DIRT.defaultBlockState(), 3);
             }
             return true;
         }
         if (seed.getItem() instanceof ItemCrop itemCrop)
         {
-            checkFarmlandAndReturnSoli(blockState, state -> SpecialSeedManager.isSpecialSoil(state.getBlock()));
+            checkFarmlandAndReturnSoli(blockState, state -> !state.getCollisionShape(world, pos).isEmpty() && !normal.test(state));
             world.setBlockAndUpdate(pos, ((MinecoloniesCropBlock) itemCrop.getBlock()).getPreferredFarmland().defaultBlockState());
         }
         else
@@ -609,7 +618,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
                 world.setBlockAndUpdate(pos, toolModifiedState);
                 return true;
             }
-            checkFarmlandAndReturnSoli(blockState, state -> SpecialSeedManager.isSpecialSoil(state.getBlock()));
+            checkFarmlandAndReturnSoli(blockState, state -> !state.getCollisionShape(world, pos).isEmpty() && !normal.test(state));
             world.setBlockAndUpdate(pos, Blocks.FARMLAND.defaultBlockState());
         }
         return true;
@@ -729,6 +738,10 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
         if (surfaceBlock instanceof BushBlock){
             if (surfaceBlock instanceof FungusBlock || surfaceBlock instanceof MushroomBlock){
                 cir.setReturnValue(null);
+                return;
+            }
+            if (surfaceBlock instanceof FlowerBlock || surfaceBlock instanceof TallGrassBlock || surfaceBlock instanceof SaplingBlock){
+                cir.setReturnValue(position);
                 return;
             }
             if (surfaceBlock instanceof BonemealableBlock bonemealable) {

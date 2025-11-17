@@ -67,7 +67,7 @@ public class HurtAlertEvent {
                 .append(Component.literal(" ♥): "))
                 .append(message)
                 .sendTo(colony.getImportantMessageEntityPlayers());
-        MessageUtils.forCitizen(citizen, message).withPriority(MessageUtils.MessagePriority.IMPORTANT).sendTo(colony.getImportantMessageEntityPlayers());
+        //MessageUtils.forCitizen(citizen, message).withPriority(MessageUtils.MessagePriority.IMPORTANT).sendTo(colony.getImportantMessageEntityPlayers());
     }
 
 }
