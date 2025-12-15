@@ -2,7 +2,9 @@ package com.arxyt.colonypathingedition.mixins.minecolonies.citizen;
 
 import com.arxyt.colonypathingedition.api.JobNetherWorkerExtra;
 import com.arxyt.colonypathingedition.api.workersetting.BuildingHospitalExtra;
+import com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEatTask;
 import com.minecolonies.api.colony.interactionhandling.ChatPriority;
+import com.minecolonies.api.entity.ai.IStateAI;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
 import com.minecolonies.api.entity.ai.statemachine.states.CitizenAIState;
 import com.minecolonies.api.entity.citizen.VisibleCitizenStatus;
@@ -13,6 +15,7 @@ import com.minecolonies.core.colony.interactionhandling.StandardInteraction;
 import com.minecolonies.core.colony.jobs.AbstractJobGuard;
 import com.minecolonies.core.colony.jobs.JobNetherWorker;
 import com.minecolonies.core.colony.jobs.JobPupil;
+import com.minecolonies.core.entity.ai.minimal.EntityAIEatTask;
 import com.minecolonies.core.entity.ai.workers.AbstractEntityAIBasic;
 import com.minecolonies.core.entity.ai.workers.CitizenAI;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
@@ -24,8 +27,12 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.List;
+
+import static com.arxyt.colonypathingedition.core.config.PathingConfig.EATING_AI_MODULE;
 import static com.minecolonies.api.entity.citizen.VisibleCitizenStatus.*;
 import static com.minecolonies.api.entity.citizen.VisibleCitizenStatus.HOUSE;
 import static com.minecolonies.api.entity.citizen.VisibleCitizenStatus.MOURNING;
@@ -41,6 +48,20 @@ public class CitizenAIMixin {
     @Final @Shadow(remap = false) private EntityCitizen citizen;
     @Shadow(remap = false) private IState lastState;
 
+    @Shadow(remap = false) private List<IStateAI> minimalAI;
+
+    @Inject(
+            method = "<init>",
+            at = @At("TAIL"),
+            remap = false
+    )
+    private void initResetAI(EntityCitizen citizen, CallbackInfo ci){
+        if(EATING_AI_MODULE.get()) {
+            minimalAI.removeIf(iStateAI -> iStateAI instanceof EntityAIEatTask);
+            minimalAI.add(new NewEntityAIEatTask(citizen));
+        }
+    }
+
     @Inject(
             method = "calculateNextState",
             at = @At("HEAD"),
@@ -51,7 +72,7 @@ public class CitizenAIMixin {
     {
         if (citizen.getCitizenJobHandler().getColonyJob() instanceof AbstractJobGuard<?> guardJob)
         {
-            citizen.getCitizenAI().setCurrentDelay(20 * 5);
+            citizen.getCitizenAI().setCurrentDelay(40);
             if (newShouldEat() || (citizen.getCitizenData().getSaturation() <= 0 && citizen.getHealth() < SEEK_DOCTOR_HEALTH))
             {
                 citizen.getCitizenData().setVisibleStatus(VisibleCitizenStatus.EAT);
@@ -76,7 +97,7 @@ public class CitizenAIMixin {
         if (citizen.getCitizenData().getCitizenDiseaseHandler().isSick() && citizen.getCitizenData().getCitizenDiseaseHandler().sleepsAtHospital())
         {
             citizen.getCitizenData().setVisibleStatus(VisibleCitizenStatus.SICK);
-            citizen.getCitizenAI().setCurrentDelay(20 * 5);
+            citizen.getCitizenAI().setCurrentDelay(40);
             cir.setReturnValue(CitizenAIState.SICK);
             return;
         }
@@ -92,12 +113,12 @@ public class CitizenAIMixin {
                     if (citizen.getCitizenSleepHandler().isAsleep()){
                         citizen.getCitizenSleepHandler().onWakeUp();
                     }
-                    citizen.getCitizenAI().setCurrentDelay(20 * 5);
+                    citizen.getCitizenAI().setCurrentDelay(20);
                     cir.setReturnValue(CitizenAIState.WORK);
                     return;
                 }
             }
-            citizen.getCitizenAI().setCurrentDelay(20 * 3);
+            citizen.getCitizenAI().setCurrentDelay(100);
             cir.setReturnValue(CitizenAIState.SLEEP);
             return;
         }
@@ -109,10 +130,10 @@ public class CitizenAIMixin {
             {
                 citizen.setVisibleStatusIfNone(SLEEP);
                 if(citizen.level().getDayTime() % 24000 < 23700) {
-                    citizen.getCitizenAI().setCurrentDelay(20 * 15);
+                    citizen.getCitizenAI().setCurrentDelay(300);
                 }
                 else{
-                    citizen.getCitizenAI().setCurrentDelay(20 * 3);
+                    citizen.getCitizenAI().setCurrentDelay(40);
                 }
                 cir.setReturnValue(CitizenAIState.SLEEP);
                 return;
@@ -148,7 +169,7 @@ public class CitizenAIMixin {
         if (citizen.getCitizenData().getCitizenDiseaseHandler().isSick() || citizen.getCitizenData().getCitizenDiseaseHandler().isHurt())
         {
             citizen.getCitizenData().setVisibleStatus(VisibleCitizenStatus.SICK);
-            citizen.getCitizenAI().setCurrentDelay(20 * 5);
+            citizen.getCitizenAI().setCurrentDelay(40);
             cir.setReturnValue(CitizenAIState.SICK);
             return;
         }
@@ -157,7 +178,7 @@ public class CitizenAIMixin {
         if (newShouldEat())
         {
             citizen.getCitizenData().setVisibleStatus(VisibleCitizenStatus.EAT);
-            citizen.getCitizenAI().setCurrentDelay(20 * 5);
+            citizen.getCitizenAI().setCurrentDelay(40);
             cir.setReturnValue(CitizenAIState.EATING);
             return;
         }
@@ -193,7 +214,7 @@ public class CitizenAIMixin {
                 || !citizen.getCitizenData().getJob().canAIBeInterrupted()))
         {
             citizen.setVisibleStatusIfNone(WORKING);
-            citizen.getCitizenAI().setCurrentDelay(20 * 5);
+            citizen.getCitizenAI().setCurrentDelay(20);
             cir.setReturnValue(CitizenAIState.WORK);
             return;
         }

@@ -4,6 +4,8 @@ import com.arxyt.colonypathingedition.core.config.enums.BuilderModeEnum;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class PathingConfig {
+    public static ModConfigSpec.BooleanValue EATING_AI_MODULE;
+
     public static ModConfigSpec.BooleanValue HURT_ALERT;
     public static ModConfigSpec.BooleanValue ALLOW_RESURRECT;
     public static ModConfigSpec.ConfigValue<String> RESURRECT_ITEM;
@@ -73,6 +75,11 @@ public class PathingConfig {
     public static ModConfigSpec.IntValue MAX_PATHING_DISTANCE;
 
     public static ModConfigSpec init(ModConfigSpec.Builder builder) {
+        builder.push("Module Opener #模块特性开关#");
+        EATING_AI_MODULE = builder
+                .comment("Open the module to use the remastered eating AI system (default: true)\n 开启此模块将会启用重制的市民进食AI (默认开启)")
+                .define("enableNewEatingModule", true);
+        builder.pop();
         builder.push("Easycolony Feature #简易殖民地相关特性开关#");
         HURT_ALERT = builder
                 .comment("Is citizen alert when get hurt? (default: true)\n 市民是否警告玩家自己受伤？(默认开启)")

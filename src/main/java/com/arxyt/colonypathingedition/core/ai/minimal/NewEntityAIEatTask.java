@@ -1,0 +1,468 @@
+package com.arxyt.colonypathingedition.core.ai.minimal;
+
+import com.arxyt.colonypathingedition.api.workersetting.BuildingCookExtra;
+import com.arxyt.colonypathingedition.core.config.PathingConfig;
+import com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra;
+import com.minecolonies.api.colony.ICitizenData;
+import com.minecolonies.api.colony.IColony;
+import com.minecolonies.api.colony.buildings.IBuilding;
+import com.minecolonies.api.colony.interactionhandling.ChatPriority;
+import com.minecolonies.api.colony.jobs.IJob;
+import com.minecolonies.api.crafting.ItemStorage;
+import com.minecolonies.api.entity.ai.IStateAI;
+import com.minecolonies.api.entity.ai.statemachine.states.CitizenAIState;
+import com.minecolonies.api.entity.ai.statemachine.states.IState;
+import com.minecolonies.api.entity.ai.statemachine.tickratestatemachine.TickingTransition;
+import com.minecolonies.api.entity.citizen.VisibleCitizenStatus;
+import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenFoodHandler;
+import com.minecolonies.api.util.*;
+import com.minecolonies.api.util.constant.CitizenConstants;
+import com.minecolonies.core.colony.buildings.workerbuildings.BuildingCook;
+import com.minecolonies.core.colony.interactionhandling.StandardInteraction;
+import com.minecolonies.core.colony.jobs.JobCook;
+import com.minecolonies.core.entity.citizen.EntityCitizen;
+import com.minecolonies.core.entity.other.SittingEntity;
+import com.minecolonies.core.entity.pathfinding.navigation.EntityNavigationUtils;
+import com.minecolonies.core.network.messages.client.ItemParticleEffectMessage;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
+
+import static com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEatTask.NewEatingState.*;
+import static com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEatTask.EatingCheckState.*;
+import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.JOBS_EAT_IMMEDIATELY;
+import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.JOBS_FORCE_EAT_AT_HUT;
+import static com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra.getRecalLocalScore;
+import static com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra.getShouldEatAtHut;
+import static com.minecolonies.api.util.constant.CitizenConstants.FULL_SATURATION;
+import static com.minecolonies.api.util.constant.CitizenConstants.NIGHT;
+import static com.minecolonies.api.util.constant.Constants.SECONDS_A_MINUTE;
+import static com.minecolonies.api.util.constant.Constants.TICKS_SECOND;
+import static com.minecolonies.api.util.constant.GuardConstants.BASIC_VOLUME;
+import static com.minecolonies.api.util.constant.TranslationConstants.NO_RESTAURANT;
+
+public class NewEntityAIEatTask implements IStateAI {
+
+    private final double WAITING_MINUTES = PathingConfig.RESTAURANT_WAITING_TIME.get();
+    private static final int REQUIRED_TIME_TO_EAT = 3;
+
+    public enum NewEatingState implements IState
+    {
+        CHECK_FOOD,
+        GO_TO_HUT,
+        GO_TO_RESTAURANT,
+        WAIT_FOR_FOOD,
+        GET_FOOD_YOURSELF,
+        GO_TO_EAT_POS,
+        EAT,
+        DONE
+    }
+
+    public enum EatingCheckState {
+        CHECK_INHAND,
+        CHECK_HUT,
+        CHECK_RESTAURANT
+    }
+    /**
+     * The citizen assigned to this task.
+     */
+    private final EntityCitizen citizen;
+    private EatingCheckState checkState;
+    private IBuilding restaurant = null;
+    private BlockPos restaurantPos = null;
+    private BlockPos eatPos = null;
+    private int timeOutWalking = 0;
+    private int waitingTicks = 0;
+    private int foodSlot = -1;
+    private Set<Item> eatenFood = new LinkedHashSet<>();
+    /**
+     * Instantiates this task.
+     *
+     * @param citizen the citizen.
+     */
+    public NewEntityAIEatTask(final EntityCitizen citizen)
+    {
+        super();
+        this.citizen = citizen;
+
+        citizen.getCitizenAI().addTransition(new TickingTransition<>(CitizenAIState.EATING, () -> true, this::startEating, 1));
+        citizen.getCitizenAI().addTransition(new TickingTransition<>(CHECK_FOOD, () -> true, this::checkFood, 20));
+        citizen.getCitizenAI().addTransition(new TickingTransition<>(GO_TO_HUT, () -> true, this::goToHut, 20));
+        citizen.getCitizenAI().addTransition(new TickingTransition<>(GO_TO_RESTAURANT, () -> true, this::goToRestaurant, 20));
+        citizen.getCitizenAI().addTransition(new TickingTransition<>(WAIT_FOR_FOOD, () -> true, this::waitForFood, 20));
+        citizen.getCitizenAI().addTransition(new TickingTransition<>(GET_FOOD_YOURSELF, () -> true, this::getFoodYourself, 20));
+        citizen.getCitizenAI().addTransition(new TickingTransition<>(GO_TO_EAT_POS, () -> true, this::goToEatingPlace, 20));
+        citizen.getCitizenAI().addTransition(new TickingTransition<>(EAT, () -> true, this::eat, 20));
+        citizen.getCitizenAI().addTransition(new TickingTransition<>(DONE, () -> true, this::endEating, 1));
+    }
+
+    /**
+     * Tool fuctions
+     */
+
+    private void reset(){
+        citizen.releaseUsingItem();
+        citizen.stopUsingItem();
+        citizen.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        checkState = CHECK_INHAND;
+        timeOutWalking = 0;
+        waitingTicks = 0;
+        restaurantPos = null;
+        restaurant = null;
+        eatPos = null;
+        foodSlot = -1;
+        eatenFood.clear();
+    }
+
+    private boolean hasFood(boolean needRestaurantCheck){
+        final int slot = FoodUtilExtra.getBestFoodForCitizenWithRestaurantCheck(citizen.getInventoryCitizen(), citizen.getCitizenData(), null ,needRestaurantCheck);
+        if(slot != -1) {
+            foodSlot = slot;
+            return true;
+        }
+        return false;
+    }
+
+    private BlockPos findPlaceToEat()
+    {
+        if (restaurantPos != null)
+        {
+            final IBuilding restaurant = citizen.getCitizenData().getColony().getBuildingManager().getBuilding(restaurantPos);
+            if (restaurant instanceof BuildingCook)
+            {
+                final BlockPos sitting = ((BuildingCook) restaurant).getNextSittingPosition();
+                if(sitting == null || restaurant.isInBuilding(sitting)){
+                    return sitting;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * AI transports
+     */
+
+    private NewEatingState startEating(){
+        reset();
+        citizen.getCitizenData().setVisibleStatus(VisibleCitizenStatus.EAT);
+        final ICitizenData citizenData = citizen.getCitizenData();
+        final IJob<?> job = citizen.getCitizenJobHandler().getColonyJob();
+        if (job != null && citizenData.isWorking())
+        {
+            citizenData.setWorking(false);
+        }
+        return CHECK_FOOD;
+    }
+
+    private NewEatingState checkFood(){
+        switch (checkState) {
+            case CHECK_INHAND : {
+                if (hasFood(true)) {
+                    return EAT;
+                }
+                checkState = CHECK_HUT;
+            }
+            case CHECK_HUT : {
+                final ICitizenData citizenData = citizen.getCitizenData();
+                final IBuilding buildingWorker = citizenData.getWorkBuilding();
+                if (buildingWorker == null) {
+                    return GO_TO_RESTAURANT;
+                }
+                final IColony colony = citizenData.getColony();
+                final BlockPos bestRestaurantPos = colony.getBuildingManager().getBestBuilding(citizen, BuildingCook.class);
+                final BlockPos citizenPos = citizen.blockPosition();
+                final BlockPos buildingPos = buildingWorker.getPosition();
+                // For citizens working outside their work huts, maybe more efficient to eat nearby.
+                // Chefs should eat at their workplace more often, as they are producers of food.
+                if ( bestRestaurantPos == null || BlockPosUtil.dist(citizenPos, buildingPos) < BlockPosUtil.dist(citizenPos, bestRestaurantPos) || (citizenData.getJob() != null && JOBS_FORCE_EAT_AT_HUT.contains(citizenData.getJob().getClass()))) {
+                    final ItemStorage storageToGet = FoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, buildingWorker);
+                    if (storageToGet != null) {
+                        boolean niceFood = getShouldEatAtHut(citizenData, storageToGet.getItem());
+                        if (niceFood) {
+                            return GO_TO_HUT;
+                        }
+                    }
+                }
+                return GO_TO_RESTAURANT;
+            }
+            case CHECK_RESTAURANT : {
+                // There should be some complex simulation to find the best restaurant.
+                final ICitizenData citizenData = citizen.getCitizenData();
+                final IColony colony = citizenData.getColony();
+                restaurantPos = colony.getBuildingManager().getBestBuilding(citizen, BuildingCook.class);
+                return GO_TO_RESTAURANT;
+            }
+        }
+        return GO_TO_RESTAURANT;
+    }
+
+    private NewEatingState goToHut(){
+        restaurantPos = null;
+        restaurant = null;
+        final ICitizenData citizenData = citizen.getCitizenData();
+        final IBuilding buildingWorker = citizenData.getWorkBuilding();
+        if(buildingWorker == null){
+            return GO_TO_RESTAURANT;
+        }
+        if (!EntityNavigationUtils.walkToBuilding(citizen, buildingWorker)) {
+            // adding some speed if starved.
+            MobEffectInstance effectInstance = citizen.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
+            if(effectInstance != null){
+                citizen.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED,effectInstance.getDuration(),3));
+            }
+            return GO_TO_HUT;
+        }
+        final ItemStorage storageToGet = FoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, buildingWorker);
+        if (storageToGet != null)
+        {
+            // When restaurants out of food, would trigger "Force Eat At Hut".
+            // Worker would return to work hut to eat, regardless of food condition.
+            // If there isn't food at hut, go back to restaurants to wait for player.
+            int qty = ((int) ((FULL_SATURATION - citizen.getCitizenData().getSaturation()) / FoodUtils.getFoodValue(storageToGet.getItemStack(), citizen))) + 1;
+            InventoryUtils.transferItemStackIntoNextBestSlotInItemHandler(buildingWorker, storageToGet, qty, citizen.getInventoryCitizen());
+            return EAT;
+        }
+        return GO_TO_RESTAURANT;
+    }
+
+    private NewEatingState goToRestaurant() {
+        final ICitizenData citizenData = citizen.getCitizenData();
+        if(restaurantPos == null){
+            checkState = CHECK_RESTAURANT;
+            checkFood();
+            if (restaurantPos == null)
+            {
+                if (citizen.getCitizenData().getSaturation() >= CitizenConstants.AVERAGE_SATURATION)
+                {
+                    reset();
+                    citizenData.setJustAte(true);
+                    return DONE;
+                }
+                citizenData.triggerInteraction(new StandardInteraction(Component.translatable(NO_RESTAURANT), ChatPriority.BLOCKING));
+                citizen.getCitizenAI().setCurrentDelay(20 * 5);
+                checkState = CHECK_INHAND;
+                return checkFood();
+            }
+        }
+        final IBuilding building = Objects.requireNonNull(citizen.getCitizenColonyHandler().getColonyOrRegister()).getBuildingManager().getBuilding(restaurantPos);
+        if (building != null)
+        {
+            if (building.isInBuilding(citizen.blockPosition()))
+            {
+                ((BuildingCookExtra)building).tryRegisterCustomer(citizen.getCivilianID());
+                return WAIT_FOR_FOOD;
+            }
+            else if (!EntityNavigationUtils.walkToBuilding(citizen, building))
+            {
+                // adding some speed if starved.
+                MobEffectInstance effectInstance = citizen.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
+                if(effectInstance != null){
+                    citizen.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED,effectInstance.getDuration(),3));
+                }
+            }
+        }
+        return GO_TO_RESTAURANT;
+    }
+
+    private NewEatingState waitForFood()
+    {
+        final ICitizenData citizenData = citizen.getCitizenData();
+        final IColony colony = citizenData.getColony();
+        restaurantPos = colony.getBuildingManager().getBestBuilding(citizen, BuildingCook.class);
+
+        if (restaurantPos == null)
+        {
+            return GO_TO_RESTAURANT;
+        }
+
+        restaurant = colony.getBuildingManager().getBuilding(restaurantPos);
+        if (!restaurant.isInBuilding(citizen.blockPosition()))
+        {
+            return GO_TO_RESTAURANT;
+        }
+
+        eatPos = findPlaceToEat();
+        if (restaurant != null)
+        {
+            timeOutWalking = 0;
+            return GO_TO_EAT_POS;
+        }
+
+        if (hasFood(true))
+        {
+            return EAT;
+        }
+
+        return WAIT_FOR_FOOD;
+    }
+
+    private NewEatingState getFoodYourself()
+    {
+        if (restaurantPos == null)
+        {
+            return GO_TO_RESTAURANT;
+        }
+
+        final IColony colony = citizen.getCitizenColonyHandler().getColonyOrRegister();
+        assert colony != null;
+        final IBuilding cookBuilding = colony.getBuildingManager().getBuilding(restaurantPos);
+        if (cookBuilding instanceof BuildingCook)
+        {
+            if (!EntityNavigationUtils.walkToBuilding(citizen, cookBuilding))
+            {
+                return GET_FOOD_YOURSELF;
+            }
+
+            final ItemStorage storageToGet = FoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, cookBuilding);
+            if (storageToGet != null)
+            {
+                int qty = ((int) ((FULL_SATURATION - citizen.getCitizenData().getSaturation()) / FoodUtils.getFoodValue(storageToGet.getItemStack(), citizen))) + 1;
+                if(!InventoryUtils.transferItemStackIntoNextBestSlotInItemHandler(cookBuilding, storageToGet, qty, citizen.getInventoryCitizen())){
+                    // This caused by a fulfilled inventory, which means citizens can't eat by themselves, so reset to seek an assist.
+                    BuildingCookExtra restaurantExtra = ((BuildingCookExtra)restaurant);
+                    restaurantExtra.tryRegisterCustomer(citizen.getCivilianID());
+                    timeOutWalking = -5000;
+                    waitingTicks = -5000;
+                    return WAIT_FOR_FOOD;
+                }
+                return EAT;
+            }
+            else{
+                final ICitizenData citizenData = citizen.getCitizenData();
+                if (citizenData.getJob() instanceof JobCook jobCook && jobCook.getBuildingPos().equals(restaurantPos))
+                {
+                    reset();
+                    return DONE;
+                }
+                final IBuilding buildingWorker = citizenData.getWorkBuilding();
+                if (buildingWorker == null) {
+                    return GO_TO_RESTAURANT;
+                }
+                final ItemStorage storageInHut = FoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, buildingWorker);
+                if (storageInHut != null) {
+                    return GO_TO_HUT;
+                }
+            }
+        }
+        ((BuildingCookExtra)cookBuilding).tryRegisterCustomer(citizen.getCivilianID());
+        return WAIT_FOR_FOOD;
+    }
+
+    private NewEatingState goToEatingPlace()
+    {
+        IJob<?> jobCitizen = citizen.getCitizenData().getJob();
+        BuildingCookExtra restaurantExtra = ((BuildingCookExtra)restaurant);
+        if(!restaurantExtra.checkCustomerRegistry(citizen.getCivilianID()) || !WorldUtil.isPastTime(citizen.level(), NIGHT - 2100) || (jobCitizen != null && JOBS_EAT_IMMEDIATELY.contains(jobCitizen.getClass())) || eatPos == null){
+            restaurantExtra.deleteCustomer(citizen.getCivilianID());
+            if (hasFood(false)) return EAT;
+            else return GET_FOOD_YOURSELF;
+        }
+
+        // A state reset if they are full.
+        if(citizen.getCitizenData().getSaturation() == FULL_SATURATION){
+            reset();
+            return DONE;
+        }
+
+        if ( timeOutWalking++ > 400 )
+        {
+            restaurantExtra.deleteCustomer(citizen.getCivilianID());
+            return GET_FOOD_YOURSELF;
+        }
+
+        if (EntityNavigationUtils.walkToPos(citizen, eatPos, 2, true))
+        {
+            SittingEntity.sitDown(eatPos, citizen, TICKS_SECOND * SECONDS_A_MINUTE);
+            if (!hasFood(true))
+            {
+                waitingTicks++;
+                if (waitingTicks > SECONDS_A_MINUTE * WAITING_MINUTES)
+                {
+                    waitingTicks = 0;
+                    restaurantExtra.deleteCustomer(citizen.getCivilianID());
+                    return GET_FOOD_YOURSELF;
+                }
+            }
+            else {
+                timeOutWalking = 0;
+                restaurantExtra.deleteCustomer(citizen.getCivilianID());
+                return EAT;
+            }
+        }
+        return GO_TO_EAT_POS;
+    }
+
+    private IState eat()
+    {
+        if (!hasFood(false))
+        {
+            return CHECK_FOOD;
+        }
+
+        final ICitizenData citizenData = citizen.getCitizenData();
+        final ItemStack foodStack = citizenData.getInventory().getStackInSlot(foodSlot);
+        if (!FoodUtils.canEat(foodStack, citizenData.getHomeBuilding(), citizenData.getWorkBuilding()))
+        {
+            return CHECK_FOOD;
+        }
+
+        citizen.setItemInHand(InteractionHand.MAIN_HAND, foodStack);
+
+        citizen.swing(InteractionHand.MAIN_HAND);
+        citizen.playSound(SoundEvents.GENERIC_EAT, (float) BASIC_VOLUME, (float) SoundUtils.getRandomPitch(citizen.getRandom()));
+        new ItemParticleEffectMessage(foodStack.copy(), citizen.getX(), citizen.getY(), citizen.getZ(), citizen.getXRot(), citizen.getYRot(), citizen.getEyeHeight()).sendToTrackingEntity(citizen);
+
+        waitingTicks++;
+        if (waitingTicks < REQUIRED_TIME_TO_EAT)
+        {
+            return EAT;
+        }
+
+        final ICitizenFoodHandler foodHandler = citizenData.getCitizenFoodHandler();
+        if (eatenFood.isEmpty())
+        {
+            foodHandler.addLastEaten(foodStack.getItem());
+        }
+        eatenFood.add(foodStack.getItem());
+
+        ItemStackUtils.consumeFood(foodStack, citizen, null);
+        citizen.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+
+        if (citizenData.getSaturation() < FULL_SATURATION && !citizenData.getInventory().getStackInSlot(foodSlot).isEmpty())
+        {
+            waitingTicks = 0;
+            return EAT;
+        }
+
+        for (final Item foodItem : eatenFood)
+        {
+            if (foodHandler.getLastEaten() != foodItem)
+            {
+                foodHandler.addLastEaten(foodItem);
+            }
+        }
+        eatenFood.clear();
+        citizenData.setJustAte(true);
+        return DONE;
+    }
+
+    private IState endEating(){
+        reset();
+        if (citizen.getCitizenJobHandler().getColonyJob() != null) {
+            citizen.getCitizenData().setVisibleStatus(VisibleCitizenStatus.WORKING);
+            return CitizenAIState.WORK;
+        }
+        citizen.getCitizenData().setVisibleStatus(VisibleCitizenStatus.HOUSE);
+        return CitizenAIState.IDLE;
+    }
+}

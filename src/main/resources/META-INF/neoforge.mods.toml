@@ -59,7 +59,7 @@ config="${mod_id}.mixins.json"
 # The coremods config file path is not configurable and is always loaded from META-INF/coremods.json
 
 # A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
-[[dependencies.${mod_id}]] #optional
+[[dependencies."${mod_id}"]] #optional
     # the modid of the dependency
     modId="neoforge" #mandatory
     # The type of the dependency. Can be one of "required", "optional", "incompatible" or "discouraged" (case insensitive).
@@ -78,7 +78,7 @@ config="${mod_id}.mixins.json"
     side="BOTH"
 
 # Here's another dependency
-[[dependencies.${mod_id}]]
+[[dependencies."${mod_id}"]]
     modId="minecraft"
     type="required"
     # This version range declares a minimum of the current minecraft version up to but not including the next major version
@@ -89,7 +89,7 @@ config="${mod_id}.mixins.json"
 [[dependencies."${mod_id}"]]
     modId="minecolonies"
     type="required"
-    versionRange="[${minecolonies_version},)"
+    versionRange="[${minecolonies_version},1.1.1168-1.21.1-snapshot)"
     ordering="NONE"
     side="BOTH"
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares

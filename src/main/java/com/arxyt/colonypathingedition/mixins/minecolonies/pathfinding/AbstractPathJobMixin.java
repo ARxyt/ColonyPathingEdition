@@ -70,7 +70,6 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) protected int maxNodes;
 
     @Shadow(remap = false) public abstract Mob getEntity();
-    @Shadow(remap = false) protected abstract void recalcHeuristic(final MNode node);
     @Shadow(remap = false) protected abstract boolean isPassable(int x, int y, int z, boolean head, MNode parent);
     @Shadow(remap = false) public abstract PathingOptions getPathingOptions();
     @Shadow(remap = false) protected abstract boolean canLeaveBlock(int x, int y, int z, int parentX, int parentY, int parentZ, boolean head);
@@ -87,6 +86,7 @@ public abstract class AbstractPathJobMixin{
 
     @Unique private BlockEntity townhall;
     @Unique protected int actualMaxNodes;
+    @Unique private Queue<MNode> pathNodesToVisit;
     @Unique public double ladderSwitchCost = PathingConfig.LADDER_SWITCH_COST_DEFINER.get();
     @Unique public double shingleCost = PathingConfig.SHINGLE_COST_DEFINER.get();
     @Unique public double destroyingFarmlandCost = PathingConfig.FARMLAND_COST_DEFINER.get();
@@ -275,24 +275,28 @@ public abstract class AbstractPathJobMixin{
     protected Path search()
     {
         this.actualMaxNodes = this.maxNodes;
+        this.pathNodesToVisit = new PriorityQueue<>();
         MNode bestNode = getAndSetupStartNode();
         double bestNodeEndScore = getEndNodeScore(bestNode);
         // Node count since we found a better end node than the current one
         int nodesSinceEndNode = 0;
 
         boolean shouldSkip = false;
-        while (!nodesToVisit.isEmpty())
-        {
-            if (Thread.currentThread().isInterrupted())
-            {
-                return null;
+        while (!nodesToVisit.isEmpty()) {
+            Queue<MNode> cheapestNodelist = new ArrayDeque<>();
+            if(nodesToVisit.peek() != null) {
+                pathNodesToVisit.remove(nodesToVisit.peek());
+                cheapestNodelist.add(nodesToVisit.poll());
             }
 
-            Queue<MNode> cheapestNodelist = new ArrayDeque<>();
-            for (int i = 0; i < extendCount; i++) {
-                if(nodesToVisit.peek() != null) cheapestNodelist.add(nodesToVisit.poll());
+            for (int i = 0; i < extendCount - 1; i++) {
+                if(pathNodesToVisit.peek() != null) {
+                    nodesToVisit.remove(pathNodesToVisit.peek());
+                    cheapestNodelist.add(pathNodesToVisit.poll());
+                }
                 else break;
             }
+
             while (!cheapestNodelist.isEmpty()) {
                 final MNode node = cheapestNodelist.poll();
 
@@ -534,7 +538,7 @@ public abstract class AbstractPathJobMixin{
             if (SurfaceType.getSurfaceType(world, below, tempWorldPos.set(x, y - i, z), getPathingOptions()) == SurfaceType.WALKABLE) {
                 //  Level path
                 return y - i + 1;
-            } else if (!below.isAir() || below.getCollisionShape(world, new BlockPos(x, y-1, z)).isEmpty()) {
+            } else if (!(below.isAir() || below.getCollisionShape(world, new BlockPos(x, y-1, z)).isEmpty())) {
                 if (PathfindingUtils.isLadder(below, pathingOptions)) {
                     return y - i + 1;
                 } else {
@@ -685,6 +689,9 @@ public abstract class AbstractPathJobMixin{
                 extraNextNode.setHeuristic(modifyHeuristic(extraNextNode, nextNode.getHeuristic(), state));
             }
             nodesToVisit.offer(extraNextNode);
+            if(onRoad || onRails){
+                pathNodesToVisit.offer(extraNextNode);
+            }
         }
         else
         {
@@ -848,6 +855,7 @@ public abstract class AbstractPathJobMixin{
             return;
         }
         nodesToVisit.remove(nextNode);
+        pathNodesToVisit.remove(nextNode);
         if (cost < nextNode.getCost()) {
             nextNode.parent = node;
             nextNode.setCost(cost);
@@ -863,7 +871,6 @@ public abstract class AbstractPathJobMixin{
             }
         }
         nextNode.setHeuristic(heuristic);
-
         nodesToVisit.offer(nextNode);
     }
 

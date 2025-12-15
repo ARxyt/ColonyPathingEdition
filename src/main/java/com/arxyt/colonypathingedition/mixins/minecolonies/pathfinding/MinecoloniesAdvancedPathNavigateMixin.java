@@ -70,11 +70,18 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
             ourEntity.teleportTo(pEx.x + 0.5, pEx.y, pEx.z + 0.5);
             return;
         }
+        int nextNodeIndex = nodeIndex + 1;
+        if(nextNodeIndex < this.getPath().getNodeCount() - 1) {
+            final PathPointExtended pEx2 = (PathPointExtended) (this.getPath().getNode(nextNodeIndex));
+            if (pEx2.isOnRails()) {
+                this.getPath().advance();
+            }
+        }
         //增加脱轨补偿，一旦拐弯处脱轨将会tp到更远的位置，取决于当前车速
         if(!minecoloniesMinecart.isOnRails()) {
             Vec3 movement = minecoloniesMinecart.getDeltaMovement();
             double speed = movement.length();
-            nodeIndex = Math.min(this.getPath().getNodeCount() - 1, nodeIndex + (int)Math.floor(speed / 0.4F));
+            nodeIndex = Math.min(this.getPath().getNodeCount() - 1, this.getPath().getNextNodeIndex() + (int)Math.ceil(speed / 0.4F));
             @NotNull final PathPointExtended tpPlace = (PathPointExtended) (Objects.requireNonNull(this.getPath())).getNode(nodeIndex);
             if(!tpPlace.isOnRails()){
                 ourEntity.stopRiding();

@@ -13,6 +13,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 import static com.arxyt.colonypathingedition.core.config.PathingConfig.READ_MIND_ITEM;
+import static com.minecolonies.api.entity.ai.statemachine.states.CitizenAIState.WORKING;
 
 /**
  * 此功能为从简易殖民地迁移而来。
@@ -32,11 +33,9 @@ public class ReadMindEvent {
         event.setCanceled(true);
         event.setCancellationResult(InteractionResult.SUCCESS);
         if (event.getSide().isClient()) return;
-        IState stat;
+        IState stat = citizen.getCitizenAI().getState();
         ITickingStateAI workAI = citizen.getCitizenJobHandler().getWorkAI();
-        if (workAI == null) {
-            stat = citizen.getCitizenAI().getState();
-        } else {
+        if (stat == WORKING && workAI != null) {
             stat = workAI.getState();
         }
         Component msg = Component.translatable(AdditionalContants.READ_MIND)

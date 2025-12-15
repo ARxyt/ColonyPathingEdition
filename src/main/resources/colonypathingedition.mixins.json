@@ -81,6 +81,8 @@
     "minecolonies.workersetting.RegisteredStructureManagerMixin",
     "minecraft.AbstractMinecartMixin",
     "minecraft.DamageSourcesAccessor",
+    "minecraft.DoorBlockMixin",
+    "minecraft.FenceGateBlockMixin",
     "minecraft.FurnaceBlockEntityMixin"
   ],
   "client": [
