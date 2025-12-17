@@ -68,13 +68,15 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         }
 
         // Path correction: after dismounting, citizens will always teleport to the next path point, preventing path recalculation caused by random dismount positions.
-        int nodeIndex = this.getPath().getNextNodeIndex();
-        @NotNull final PathPointExtended pEx = (PathPointExtended) (this.getPath().getNode(nodeIndex));
-        if (!pEx.isOnRails()) {
-            ourEntity.stopRiding();
-            entity.remove(Entity.RemovalReason.DISCARDED);
-            ourEntity.teleportTo(pEx.x + 0.5, pEx.y, pEx.z + 0.5);
-            return;
+        int nodeIndex = this.getPath().getNextNodeIndex() + 1;
+        if(nodeIndex < this.getPath().getNodeCount()) {
+            final PathPointExtended pEx = (PathPointExtended) (this.getPath().getNode(nodeIndex));
+            if (!pEx.isOnRails()) {
+                ourEntity.stopRiding();
+                entity.remove(Entity.RemovalReason.DISCARDED);
+                ourEntity.teleportTo(pEx.x + 0.5, pEx.y, pEx.z + 0.5);
+                return;
+            }
         }
         int nextNodeIndex = nodeIndex + 1;
         if(nextNodeIndex < this.getPath().getNodeCount() - 1) {
@@ -87,7 +89,7 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         if(entity instanceof MinecoloniesMinecart minecoloniesMinecart && !minecoloniesMinecart.isOnRails()) {
             Vec3 movement = minecoloniesMinecart.getDeltaMovement();
             double speed = movement.length();
-            nodeIndex = Math.min(this.getPath().getNodeCount() - 1, this.getPath().getNextNodeIndex() + (int)Math.floor(speed / 0.4F));
+            nodeIndex = Math.min(this.getPath().getNodeCount() - 1, this.getPath().getNextNodeIndex() + (int)Math.ceil(speed / 0.4F));
             @NotNull final PathPointExtended tpPlace = (PathPointExtended) (Objects.requireNonNull(this.getPath())).getNode(nodeIndex);
             if(!tpPlace.isOnRails()){
                 ourEntity.stopRiding();

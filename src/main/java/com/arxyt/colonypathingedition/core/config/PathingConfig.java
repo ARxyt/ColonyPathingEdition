@@ -79,7 +79,7 @@ public class PathingConfig {
     public static ForgeConfigSpec init(ForgeConfigSpec.Builder builder) {
         builder.push("Module Opener #模块特性开关#");
         EATING_AI_MODULE = builder
-                .comment("Open the module to use the remastered eating AI system (default: true)\n =开启此模块将会启用重制的市民进食AI (默认开启)")
+                .comment("Open the module to use the remastered eating AI system (default: true)\n 开启此模块将会启用重制的市民进食AI (默认开启)")
                 .define("enableNewEatingModule", true);
         builder.pop();
         builder.push("Easycolony Feature #简易殖民地相关特性开关#");

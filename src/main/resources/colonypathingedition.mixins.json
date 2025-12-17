@@ -42,6 +42,7 @@
     "minecolonies.healer.EntityCitizenMoveAwayMixin",
     "minecolonies.healer.PatientMixin",
     "minecolonies.herder.AbstractEntityAIHerderMixin",
+    "minecolonies.herder.EntityAIWorkBeekeeperMixin",
     "minecolonies.herder.EntityAIWorkChickenHerderMixin",
     "minecolonies.herder.EntityAIWorkCowboyMixin",
     "minecolonies.herder.EntityAIWorkRabbitHerderMixin",

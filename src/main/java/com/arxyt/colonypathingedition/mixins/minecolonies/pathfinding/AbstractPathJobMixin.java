@@ -719,7 +719,7 @@ public abstract class AbstractPathJobMixin{
             else {
                 nextNode.setHeuristic(modifyHeuristic(nextNode, nextNode.getHeuristic(), state));
             }
-            updateNode(node, nextNode, heuristic, cost, onRails);
+            updateNode(node, nextNode, heuristic, cost, onRails, onRoad);
         }
     }
 
@@ -878,7 +878,7 @@ public abstract class AbstractPathJobMixin{
     }
 
     @Unique
-    private void updateNode(@NotNull final MNode node, @NotNull final MNode nextNode, final double heuristic, final double cost, boolean onRails)
+    private void updateNode(@NotNull final MNode node, @NotNull final MNode nextNode, final double heuristic, final double cost, boolean onRails, boolean onRoad)
     {
         IMNodeExtras extras = (IMNodeExtras) node;
         //  This node already exists
@@ -904,6 +904,9 @@ public abstract class AbstractPathJobMixin{
         }
         nextNode.setHeuristic(heuristic);
         nodesToVisit.offer(nextNode);
+        if(onRails || onRoad) {
+            pathNodesToVisit.offer(nextNode);
+        }
     }
 
     // special tag support
