@@ -70,6 +70,8 @@
     "minecolonies.sleep.EntityAISleepHealerSpecialMixin",
     "minecolonies.smelt.AbstractEntityAIRequestSmelterMixin",
     "minecolonies.smelt.AbstractEntityAIUsesFurnaceMixin",
+    "minecolonies.tavern.RecruitmentInteractionMixin",
+    "minecolonies.tavern.TavernBuildingModuleMixin",
     "minecolonies.workersetting.BuildingConcreteMixerMixin",
     "minecolonies.workersetting.BuildingCookMixin",
     "minecolonies.workersetting.BuildingExtensionsModuleMixin",

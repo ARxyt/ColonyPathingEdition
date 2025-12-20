@@ -27,5 +27,7 @@
     "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.fail0": "%s 的墓碑左右晃了晃，似乎在拒绝你。",
     "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.fail1": "%s 不愿醒来。",
     "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.fail2": "%s 的灵魂没有回应...",
-    "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.fail3": "%s 想要就此长眠。"
+    "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.fail3": "%s 想要就此长眠。",
+    "com.arxyt.colonypathingedition.core.tavern.recruit": "招募",
+    "com.arxyt.colonypathingedition.core.tavern_recruit": "招募"
 }

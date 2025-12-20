@@ -3,6 +3,7 @@ package com.arxyt.colonypathingedition.core.minecolonies.module;
 import com.minecolonies.api.colony.buildings.ModBuildings;
 import com.minecolonies.api.colony.buildings.registry.BuildingEntry;
 
+import static com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModels.*;
 import static com.minecolonies.core.colony.buildings.modules.BuildingModules.*;
 
 public class ModBuildingInitializer {
@@ -22,6 +23,7 @@ public class ModBuildingInitializer {
         insertBefore(ModBuildings.concreteMixer.get(), STATS_MODULE, MIN_STOCK);
         insertBefore(ModBuildings.simpleQuarry.get(), SIMPLE_QUARRY, MIN_STOCK);
         insertBefore(ModBuildings.mediumQuarry.get(), MEDIUM_QUARRY, MIN_STOCK);
+        insertBefore(ModBuildings.tavern.get(), BED, TAVERN_RECRUIT);
     }
 
     public static void insertBefore(

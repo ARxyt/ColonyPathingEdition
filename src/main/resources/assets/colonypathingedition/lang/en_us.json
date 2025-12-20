@@ -27,5 +27,7 @@
   "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.fail0": "%s refused.",
   "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.fail1": "%s reluctant to return.",
   "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.fail2": "%s's soul did not respond.",
-  "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.fail3": "%s reluctant to wake up."
+  "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.fail3": "%s reluctant to wake up.",
+  "com.arxyt.colonypathingedition.core.tavern.recruit": "Recruit",
+  "com.arxyt.colonypathingedition.core.tavern_recruit": "Recruit"
 }
