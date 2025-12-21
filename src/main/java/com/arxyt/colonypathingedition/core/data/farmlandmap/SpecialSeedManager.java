@@ -1,6 +1,9 @@
 package com.arxyt.colonypathingedition.core.data.farmlandmap;
 
 import com.arxyt.colonypathingedition.ColonyPathingEdition;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
@@ -27,6 +30,10 @@ public class SpecialSeedManager {
 
     @SubscribeEvent
     public void onTagsUpdated(TagsUpdatedEvent event) {
+        if (event.getUpdateCause() != TagsUpdatedEvent.UpdateCause.SERVER_DATA_LOAD) {
+            return;
+        }
+
         ColonyPathingEdition.LOGGER.info("[SpecialSeeds] Checking available seed-soil pairs...");
 
         SPECIAL_SEEDS.clear();
@@ -35,15 +42,20 @@ public class SpecialSeedManager {
             ResourceLocation seedId = entry.getKey();
             ResourceLocation soilId = entry.getValue();
 
-            Item seed = ForgeRegistries.ITEMS.getValue(seedId);
-            Block soil = ForgeRegistries.BLOCKS.getValue(soilId);
+            RegistryAccess access = event.getRegistryAccess();
+
+            Registry<Item> itemRegistry = access.registryOrThrow(Registries.ITEM);
+            Registry<Block> blockRegistry = access.registryOrThrow(Registries.BLOCK);
+
+            Item seed = itemRegistry.get(seedId);
+            Block soil = blockRegistry.get(soilId);
 
             if (seed == null || seed == Items.AIR) {
                 ColonyPathingEdition.LOGGER.info("[SpecialSeeds] No seed {}", seedId);
                 continue;
             }
             if (soil == null || soil == Blocks.AIR) {
-                ColonyPathingEdition.LOGGER.info("[SpecialSeeds] No farmland {}", seedId);
+                ColonyPathingEdition.LOGGER.info("[SpecialSeeds] No farmland {}", soilId);
                 continue;
             }
 

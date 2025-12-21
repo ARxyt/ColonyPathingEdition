@@ -19,6 +19,8 @@ import com.minecolonies.api.util.*;
 import com.minecolonies.api.util.constant.CitizenConstants;
 import com.minecolonies.core.Network;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingCook;
+import com.minecolonies.core.colony.buildings.workerbuildings.BuildingDeliveryman;
+import com.minecolonies.core.colony.buildings.workerbuildings.BuildingWareHouse;
 import com.minecolonies.core.colony.interactionhandling.StandardInteraction;
 import com.minecolonies.core.colony.jobs.JobCook;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
@@ -34,15 +36,13 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
-import java.util.LinkedHashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEatTask.NewEatingState.*;
 import static com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEatTask.EatingCheckState.*;
 import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.JOBS_EAT_IMMEDIATELY;
 import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.JOBS_FORCE_EAT_AT_HUT;
-import static com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra.getRecalLocalScore;
 import static com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra.getShouldEatAtHut;
 import static com.minecolonies.api.util.constant.CitizenConstants.FULL_SATURATION;
 import static com.minecolonies.api.util.constant.CitizenConstants.NIGHT;
@@ -55,6 +55,9 @@ public class NewEntityAIEatTask implements IStateAI {
 
     private final double WAITING_MINUTES = PathingConfig.RESTAURANT_WAITING_TIME.get();
     private static final int REQUIRED_TIME_TO_EAT = 3;
+    private static final int MAX_SCORE_DISTANCE = 200;
+    private static final int CROWD_PENALTY = 10;
+    private IBuilding buildingToGo = null;
 
     public enum NewEatingState implements IState
     {
@@ -122,6 +125,7 @@ public class NewEntityAIEatTask implements IStateAI {
         eatPos = null;
         foodSlot = -1;
         eatenFood.clear();
+        buildingToGo = null;
     }
 
     private boolean hasFood(boolean needRestaurantCheck){
@@ -182,11 +186,24 @@ public class NewEntityAIEatTask implements IStateAI {
                 final IColony colony = citizenData.getColony();
                 final BlockPos bestRestaurantPos = colony.getBuildingManager().getBestBuilding(citizen, BuildingCook.class);
                 final BlockPos citizenPos = citizen.blockPosition();
-                final BlockPos buildingPos = buildingWorker.getPosition();
+                final BlockPos buildingPos;
+                final IBuilding buildingToCheck;
+                if (buildingWorker instanceof BuildingDeliveryman){
+                    buildingPos = colony.getBuildingManager().getBestBuilding(citizen, BuildingWareHouse.class);
+                    buildingToCheck = colony.getBuildingManager().getBuilding(buildingPos);
+                }
+                else {
+                    buildingPos = buildingWorker.getPosition();
+                    buildingToCheck = buildingWorker;
+                }
+                if(buildingToCheck == null){
+                    return  GO_TO_RESTAURANT;
+                }
+                buildingToGo = buildingToCheck;
                 // For citizens working outside their work huts, maybe more efficient to eat nearby.
                 // Chefs should eat at their workplace more often, as they are producers of food.
                 if ( bestRestaurantPos == null || BlockPosUtil.dist(citizenPos, buildingPos) < BlockPosUtil.dist(citizenPos, bestRestaurantPos) || (citizenData.getJob() != null && JOBS_FORCE_EAT_AT_HUT.contains(citizenData.getJob().getClass()))) {
-                    final ItemStorage storageToGet = FoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, buildingWorker);
+                    final ItemStorage storageToGet = FoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, buildingToCheck);
                     if (storageToGet != null) {
                         boolean niceFood = getShouldEatAtHut(citizenData, storageToGet.getItem());
                         if (niceFood) {
@@ -198,9 +215,35 @@ public class NewEntityAIEatTask implements IStateAI {
             }
             case CHECK_RESTAURANT : {
                 // There should be some complex simulation to find the best restaurant.
+                // We get those restaurants that close enough (<=200 blocks) to citizen.
+                // Then calculate score, for example we now uses distance + min(customer,0) * 10.
+                // Citizen will go to the restaurant with minimum score.
+                // If there doesn't have qualified restaurant, drop back to original.
                 final ICitizenData citizenData = citizen.getCitizenData();
                 final IColony colony = citizenData.getColony();
-                restaurantPos = colony.getBuildingManager().getBestBuilding(citizen, BuildingCook.class);
+                final Map<BlockPos,BuildingCook> alteredRestaurantPos = colony.getBuildingManager().getBuildings().entrySet()
+                        .stream()
+                        .filter(e -> e.getValue() instanceof BuildingCook && e.getKey().distManhattan(citizen.getOnPos()) <= MAX_SCORE_DISTANCE)
+                        .collect(Collectors.toMap(
+                                Map.Entry::getKey,
+                                e -> (BuildingCook) e.getValue()
+                        ));
+                final BlockPos citizenPos = citizen.getOnPos();
+                restaurantPos = alteredRestaurantPos.entrySet()
+                        .stream()
+                        .min(Comparator.comparingInt(e -> {
+                            int distance = (int) e.getKey().distManhattan(citizenPos);
+                            int people = ((BuildingCookExtra)(e.getValue())).getCustomerCount(); // 实际方法名
+                            return distance + Math.max(people - 5, 0) * CROWD_PENALTY;
+                        }))
+                        .map(Map.Entry::getKey)
+                        .orElse(colony.getBuildingManager().getBestBuilding(citizen, BuildingCook.class));
+                if(restaurantPos != null){
+                    final IBuilding building = Objects.requireNonNull(citizen.getCitizenColonyHandler().getColonyOrRegister()).getBuildingManager().getBuilding(restaurantPos);
+                    if(building instanceof BuildingCook cook){
+                        ((BuildingCookExtra)(cook)).preorderTable(citizen.getCivilianID());
+                    }
+                }
                 return GO_TO_RESTAURANT;
             }
         }
@@ -211,11 +254,10 @@ public class NewEntityAIEatTask implements IStateAI {
         restaurantPos = null;
         restaurant = null;
         final ICitizenData citizenData = citizen.getCitizenData();
-        final IBuilding buildingWorker = citizenData.getWorkBuilding();
-        if(buildingWorker == null){
+        if(buildingToGo == null){
             return GO_TO_RESTAURANT;
         }
-        if (!EntityNavigationUtils.walkToBuilding(citizen, buildingWorker)) {
+        if (!EntityNavigationUtils.walkToBuilding(citizen, buildingToGo)) {
             // adding some speed if starved.
             MobEffectInstance effectInstance = citizen.getEffect(MobEffects.MOVEMENT_SLOWDOWN);
             if(effectInstance != null){
@@ -223,14 +265,14 @@ public class NewEntityAIEatTask implements IStateAI {
             }
             return GO_TO_HUT;
         }
-        final ItemStorage storageToGet = FoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, buildingWorker);
+        final ItemStorage storageToGet = FoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, buildingToGo);
         if (storageToGet != null)
         {
             // When restaurants out of food, would trigger "Force Eat At Hut".
             // Worker would return to work hut to eat, regardless of food condition.
             // If there isn't food at hut, go back to restaurants to wait for player.
             int qty = ((int) ((FULL_SATURATION - citizen.getCitizenData().getSaturation()) / FoodUtils.getFoodValue(storageToGet.getItemStack(), citizen))) + 1;
-            InventoryUtils.transferItemStackIntoNextBestSlotInItemHandler(buildingWorker, storageToGet, qty, citizen.getInventoryCitizen());
+            InventoryUtils.transferItemStackIntoNextBestSlotInItemHandler(buildingToGo, storageToGet, qty, citizen.getInventoryCitizen());
             return EAT;
         }
         return GO_TO_RESTAURANT;
@@ -345,13 +387,13 @@ public class NewEntityAIEatTask implements IStateAI {
                     reset();
                     return DONE;
                 }
-                final IBuilding buildingWorker = citizenData.getWorkBuilding();
-                if (buildingWorker == null) {
-                    return GO_TO_RESTAURANT;
-                }
-                final ItemStorage storageInHut = FoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, buildingWorker);
-                if (storageInHut != null) {
+                checkState = CHECK_HUT;
+                checkFood();
+                if(buildingToGo != null){
                     return GO_TO_HUT;
+                }
+                else{
+                    return GO_TO_RESTAURANT;
                 }
             }
         }

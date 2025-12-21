@@ -1,6 +1,7 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.food;
 
 import com.arxyt.colonypathingedition.api.workersetting.BuildingCookExtra;
+import com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEatTask;
 import com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra;
 import com.arxyt.colonypathingedition.mixins.minecolonies.AbstractEntityAIBasicMixin;
 import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.AbstractEntityAIBasicAccessor;
@@ -9,6 +10,7 @@ import com.minecolonies.api.colony.interactionhandling.ChatPriority;
 import com.minecolonies.api.colony.permissions.Action;
 import com.minecolonies.api.crafting.ItemStorage;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
+import com.minecolonies.api.entity.ai.statemachine.states.IState;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.entity.citizen.VisibleCitizenStatus;
 import com.minecolonies.api.inventory.InventoryCitizen;
@@ -19,6 +21,7 @@ import com.minecolonies.core.colony.buildings.workerbuildings.BuildingCook;
 import com.minecolonies.core.colony.interactionhandling.StandardInteraction;
 import com.minecolonies.core.colony.jobs.JobCook;
 import com.minecolonies.core.entity.ai.workers.service.EntityAIWorkCook;
+import com.minecolonies.core.entity.citizen.EntityCitizen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -207,6 +210,17 @@ public abstract class EntityAIWorkCookMixin extends AbstractEntityAIBasicMixin<B
             getWorker().getCitizenData().triggerInteraction(new StandardInteraction(Component.translatable(POOR_MENU_INTERACTION), ChatPriority.BLOCKING));
         }
 
+        final BuildingCookExtra cookExtra = (BuildingCookExtra) building;
+        //检查在路上的客人是否已经取消预订或已到店
+        for(int customerId : cookExtra.getOrders()) {
+            ICitizenData citizenData = building.getColony().getCitizenManager().getCivilian(customerId);
+            if(citizenData.getEntity().isPresent() &&  citizenData.getEntity().get() instanceof EntityCitizen citizen){
+                IState state = citizen.getCitizenAI().getState();
+                if( state != NewEntityAIEatTask.NewEatingState.CHECK_FOOD && state != NewEntityAIEatTask.NewEatingState.GO_TO_RESTAURANT) {
+                    cookExtra.reached(customerId);
+                }
+            }
+        }
 
         if (!playerToServe.isEmpty())
         {
@@ -224,7 +238,7 @@ public abstract class EntityAIWorkCookMixin extends AbstractEntityAIBasicMixin<B
             return;
         }
 
-        final BuildingCookExtra cookExtra = (BuildingCookExtra) building;
+
         final int customerSize = cookExtra.checkSize();
         if (initailCitizenToServe.isEmpty() && citizenToServe.isEmpty() && customerSize > 0) {
             final int canServeInRow = canServeInRow();
