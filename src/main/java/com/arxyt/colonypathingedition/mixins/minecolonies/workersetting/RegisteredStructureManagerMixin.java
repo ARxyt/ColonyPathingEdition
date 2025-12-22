@@ -13,20 +13,22 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static net.minecraft.world.level.Level.TICKS_PER_DAY;
+import static net.minecraftforge.fml.loading.FMLEnvironment.dist;
 
 
 @Mixin(value = RegisteredStructureManager.class, remap = false)
 public class RegisteredStructureManagerMixin {
     @Unique private int trueDate = -1;
 
-    @Inject(method = "onColonyTick",at = @At("TAIL"),remap = false)
+    @Inject(method = "onColonyTick",at = @At("HEAD"),remap = false)
     void onFieldDateChange(IColony colony, CallbackInfo ci){
         Level colonyWorld = colony.getWorld();
         if(colonyWorld.getDayTime() / TICKS_PER_DAY != trueDate){
             trueDate = (int)(colonyWorld.getDayTime() / TICKS_PER_DAY);
-            ((RegisteredStructureManager)(Object)this).getMatchingBuildingExtension(f -> f.getBuildingExtensionType().equals(BuildingExtensionRegistries.farmField.get()))
+            ((RegisteredStructureManager)(Object)this).getBuildingExtensions(f -> f.getBuildingExtensionType().equals(BuildingExtensionRegistries.farmField.get()))
+                    .stream()
                     .map(m -> (FarmFieldExtra) m)
-                    .ifPresent(field -> field.advanceDay(trueDate));
+                    .forEach(field -> field.advanceDay(trueDate));
         }
     }
 
