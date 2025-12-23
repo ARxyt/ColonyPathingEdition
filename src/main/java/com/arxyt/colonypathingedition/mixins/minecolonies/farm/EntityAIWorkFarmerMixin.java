@@ -211,6 +211,8 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
             }
             worker.getCitizenData().setVisibleStatus(FARMING_ICON);
             worker.getCitizenData().setJobStatus(JobStatus.WORKING);
+            building.setCell(-1);
+            building.setWorkingOffset(null);
             IAIState state = checkNextWorkspaceAndState(farmField,
                     pos -> this.newFindHarvestableSurface(pos, farmField) != null,
                     pos -> this.newFindHoeableSurface(pos, farmField) != null,
@@ -325,6 +327,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
                 setDelay(getLevelDelay());
             }
 
+            building.setCell(-1);
             building.setWorkingOffset(nextValidCell(farmField));
             IAIState state = checkNextWorkspaceAndState(farmField,
                     pos -> this.newFindHarvestableSurface(pos, farmField) != null,
@@ -363,6 +366,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
     {
         BlockPos position;
         if(building.getWorkingOffset() == null){
+            building.setCell(-1);
             building.setWorkingOffset(nextValidCell(farmField));
         }
         while(building.getWorkingOffset() != null)
