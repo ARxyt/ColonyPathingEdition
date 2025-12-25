@@ -31,8 +31,11 @@ public class SpecialSeedManager {
      */
     @SubscribeEvent
     public void onTagsUpdated(TagsUpdatedEvent event) {
-        ColonyPathingEdition.LOGGER.info("[SpecialSeeds] Checking available seed-soil pairs...");
+        if (event.getUpdateCause() != TagsUpdatedEvent.UpdateCause.SERVER_DATA_LOAD) {
+            return;
+        }
 
+        ColonyPathingEdition.LOGGER.info("[SpecialSeeds] Checking available seed-soil pairs...");
         SPECIAL_SEEDS.clear();
 
         for (var entry : FarmlandMapLoader.getMappings().entrySet()) {

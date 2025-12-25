@@ -96,10 +96,9 @@ public class ResurrectEvent {
         if (gData.getCitizenDataNBT() == null) return;
         if (level.random.nextDouble() <= getResurrectChance(colony)) {
             final ICitizenData citizenData = colony.getCitizenManager().resurrectCivilianData(gData.getCitizenDataNBT(), true, level, pos);
-            citizenData.getInventory().forceClearArmorInSlot(FEET,citizenData.getInventory().getArmorInSlot(FEET));
-            citizenData.getInventory().forceClearArmorInSlot(LEGS,citizenData.getInventory().getArmorInSlot(LEGS));
-            citizenData.getInventory().forceClearArmorInSlot(CHEST,citizenData.getInventory().getArmorInSlot(CHEST));
-            citizenData.getInventory().forceClearArmorInSlot(HEAD,citizenData.getInventory().getArmorInSlot(HEAD));
+            for(int i = 0; i < citizenData.getInventory().getSlots(); i++) {
+                citizenData.getInventory().shrinkInventoryItem(i);
+            }
             colony.getCitizenManager().updateCitizenMourn(citizenData, false);
             level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
             player.playSound(SoundEvents.TOTEM_USE, 1.0f, 1.0f);

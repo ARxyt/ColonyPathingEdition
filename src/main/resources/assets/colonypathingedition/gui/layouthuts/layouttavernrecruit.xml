@@ -1,0 +1,36 @@
+<window size="190 244" pause="false" lightbox="false">
+  <image source="minecolonies:textures/gui/builderhut/builder_paper.png" size="190 244"/>
+  <text size="130 11" pos="30 14" textalign="MIDDLE" color="black"
+         label="$(com.arxyt.colonypathingedition.core.tavern_recruit)"/>
+  <list id="visitors" size="164 200" pos="14 30">
+    <box size="100% 60" linewidth="1">
+      <text id="name" size="100% 11" pos="3 2" color="black"/>
+      <image pos="3 15" size="10 10" source="minecolonies:textures/entity/skills/small/athletics.png"/>
+      <image pos="17 15" size="10 10" source="minecolonies:textures/entity/skills/small/dexterity.png"/>
+      <image pos="31 15" size="10 10" source="minecolonies:textures/entity/skills/small/strength.png"/>
+      <image pos="45 15" size="10 10" source="minecolonies:textures/entity/skills/small/agility.png"/>
+      <image pos="59 15" size="10 10" source="minecolonies:textures/entity/skills/small/stamina.png"/>
+      <image pos="73 15" size="10 10" source="minecolonies:textures/entity/skills/small/mana.png"/>
+      <image pos="87 15" size="10 10" source="minecolonies:textures/entity/skills/small/adaptability.png"/>
+      <image pos="101 15" size="10 10" source="minecolonies:textures/entity/skills/small/focus.png"/>
+      <image pos="115 15" size="10 10" source="minecolonies:textures/entity/skills/small/creativity.png"/>
+      <image pos="129 15" size="10 10" source="minecolonies:textures/entity/skills/small/knowledge.png"/>
+      <image pos="143 15" size="10 10" source="minecolonies:textures/entity/skills/small/intelligence.png"/>
+
+      <text id="athletics" pos="2 26" size="12 11" color="black" textalign="MIDDLE" label="99"/>
+      <text id="dexterity" pos="16 26" size="12 11" color="black" textalign="MIDDLE" label="99"/>
+      <text id="strength" pos="30 26" size="12 11" color="black" textalign="MIDDLE" label="99"/>
+      <text id="agility" pos="44 26" size="12 11" color="black" textalign="MIDDLE" label="99"/>
+      <text id="stamina" pos="58 26" size="12 11" color="black" textalign="MIDDLE" label="99"/>
+      <text id="mana" pos="72 26" size="12 11" color="black" textalign="MIDDLE" label="99"/>
+      <text id="adaptability" pos="86 26" size="12 11" color="black" textalign="MIDDLE" label="99"/>
+      <text id="focus" pos="100 26" size="12 11" color="black" textalign="MIDDLE" label="99"/>
+      <text id="creativity" pos="114 26" size="12 11" color="black" textalign="MIDDLE" label="99"/>
+      <text id="knowledge" pos="128 26" size="12 11" color="black" textalign="MIDDLE" label="99"/>
+      <text id="intelligence" pos="142 26" size="12 11" color="black" textalign="MIDDLE" label="99"/>
+
+      <itemicon id="recruitCost" size="16 16" pos="92 40" item="minecraft:command_block"/>
+      <button id="recruitBtn" source="minecolonies:textures/gui/builderhut/builder_button_quite_small.png" size="44 16" pos="110 40" label="$(com.arxyt.colonypathingedition.core.tavern.recruit)" color="black"/>
+    </box>
+  </list>
+</window>

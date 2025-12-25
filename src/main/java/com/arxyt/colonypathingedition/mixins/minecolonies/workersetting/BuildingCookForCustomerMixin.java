@@ -5,10 +5,7 @@ import com.minecolonies.core.colony.buildings.workerbuildings.BuildingCook;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -16,6 +13,27 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class BuildingCookForCustomerMixin implements BuildingCookExtra {
     @Unique private final Queue<Integer> customerQueue = new ConcurrentLinkedQueue<>();
     @Unique private final Set<Integer> processingCustomers = ConcurrentHashMap.newKeySet();
+    @Unique private final HashSet<Integer> customersOnTheWay = new HashSet<>();
+
+    // 预定餐桌
+    public void preorderTable(int customerId){
+        customersOnTheWay.add(customerId);
+    }
+
+    // 客人到店
+    public void reached(int customerId){
+        customersOnTheWay.remove(customerId);
+    }
+
+    // 查询用餐人数
+    public int getCustomerCount(){
+        return customersOnTheWay.size() + this.checkSize();
+    }
+
+    // 查询预定人员
+    public List<Integer> getOrders(){
+        return customersOnTheWay.stream().toList();
+    }
 
     // 分片获取 Customers
     public List<Integer> getCustomers(int maxCount) {
@@ -45,6 +63,7 @@ public class BuildingCookForCustomerMixin implements BuildingCookExtra {
 
     // 顾客注册
     public void tryRegisterCustomer(int citizenId) {
+        reached(citizenId);
         if (!customerQueue.contains(citizenId) && !processingCustomers.contains(citizenId)) {
             customerQueue.offer(citizenId);
         }

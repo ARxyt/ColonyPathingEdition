@@ -689,7 +689,7 @@ public abstract class AbstractPathJobMixin{
                 extraNextNode.setHeuristic(modifyHeuristic(extraNextNode, nextNode.getHeuristic(), state));
             }
             nodesToVisit.offer(extraNextNode);
-            if(onRoad || onRails){
+            if(onRoad || onRails && Math.abs(dY) <= 2){
                 pathNodesToVisit.offer(extraNextNode);
             }
         }
@@ -701,7 +701,7 @@ public abstract class AbstractPathJobMixin{
             else {
                 nextNode.setHeuristic(modifyHeuristic(nextNode, nextNode.getHeuristic(), state));
             }
-            updateNode(node, nextNode, heuristic, cost, onRails);
+            updateNode(node, nextNode, heuristic, cost, onRails, onRoad, Math.abs(dY) <= 2);
         }
     }
 
@@ -846,7 +846,7 @@ public abstract class AbstractPathJobMixin{
     }
 
     @Unique
-    private void updateNode(@NotNull final MNode node, @NotNull final MNode nextNode, final double heuristic, final double cost, boolean onRails)
+    private void updateNode(@NotNull final MNode node, @NotNull final MNode nextNode, final double heuristic, final double cost, boolean onRails, boolean onRoad, boolean noDrop)
     {
         IMNodeExtras extras = (IMNodeExtras) node;
         //  This node already exists
@@ -871,7 +871,9 @@ public abstract class AbstractPathJobMixin{
             }
         }
         nextNode.setHeuristic(heuristic);
-        nodesToVisit.offer(nextNode);
+        if((onRails || onRoad) && noDrop) {
+            pathNodesToVisit.offer(nextNode);
+        }
     }
 
     @Inject(method = "<init>*", at = @At("RETURN"))

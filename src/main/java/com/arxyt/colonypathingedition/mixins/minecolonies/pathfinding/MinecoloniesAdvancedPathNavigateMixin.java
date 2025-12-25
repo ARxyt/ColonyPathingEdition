@@ -62,13 +62,15 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
             return;
         }
         //路径修正，市民下车后一定会tp到下一个路径点处，阻止因下车随机性导致路径重算
-        int nodeIndex = this.getPath().getNextNodeIndex();
-        @NotNull final PathPointExtended pEx = (PathPointExtended) (this.getPath().getNode(nodeIndex));
-        if (!pEx.isOnRails()) {
-            ourEntity.stopRiding();
-            entity.remove(Entity.RemovalReason.DISCARDED);
-            ourEntity.teleportTo(pEx.x + 0.5, pEx.y, pEx.z + 0.5);
-            return;
+        int nodeIndex = this.getPath().getNextNodeIndex() + 1;
+        if(nodeIndex < this.getPath().getNodeCount()) {
+            final PathPointExtended pEx = (PathPointExtended) (this.getPath().getNode(nodeIndex));
+            if (!pEx.isOnRails()) {
+                ourEntity.stopRiding();
+                entity.remove(Entity.RemovalReason.DISCARDED);
+                ourEntity.teleportTo(pEx.x + 0.5, pEx.y, pEx.z + 0.5);
+                return;
+            }
         }
         int nextNodeIndex = nodeIndex + 1;
         if(nextNodeIndex < this.getPath().getNodeCount() - 1) {
@@ -85,6 +87,7 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
             @NotNull final PathPointExtended tpPlace = (PathPointExtended) (Objects.requireNonNull(this.getPath())).getNode(nodeIndex);
             if(!tpPlace.isOnRails()){
                 ourEntity.stopRiding();
+                entity.remove(Entity.RemovalReason.DISCARDED);
                 ourEntity.teleportTo(tpPlace.x + 0.5, tpPlace.y, tpPlace.z + 0.5);
                 return;
             }

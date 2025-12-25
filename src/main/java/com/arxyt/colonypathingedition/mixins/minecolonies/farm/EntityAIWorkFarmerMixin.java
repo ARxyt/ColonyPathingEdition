@@ -55,10 +55,7 @@ import net.neoforged.neoforge.common.ItemAbilities;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import org.jetbrains.annotations.NotNull;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -87,7 +84,6 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
     @Shadow(remap = false) protected abstract BlockPos getSurfacePos(final BlockPos position);
     @Shadow(remap = false) protected abstract boolean isCompost(final ItemStack itemStack);
     @Shadow(remap = false) protected abstract int getLevelDelay();
-    @Shadow(remap = false) protected abstract BlockPos nextValidCell(FarmField farmField);
     @Shadow(remap = false) protected abstract boolean isRightFarmLandForCrop(FarmField farmField, BlockState blockState);
     @Shadow(remap = false) protected abstract void equipHoe();
 
@@ -120,6 +116,75 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
     public EntityAIWorkFarmerMixin(@NotNull final JobFarmer job)
     {
         super(job);
+    }
+
+
+
+    /**
+     * @author ARxyt
+     * @reason algorithm fix to avoid /0.
+     */
+    @Overwrite(remap = false)
+    protected BlockPos nextValidCell(FarmField farmField)
+    {
+        if (building.getWorkingOffset() == null)
+        {
+            building.setWorkingOffset(BlockPos.ZERO);
+        }
+
+        int x = building.getWorkingOffset().getX();
+        int z = building.getWorkingOffset().getZ();
+        boolean flag1,flag2,flag3,flag4;
+
+        do
+        {
+            if (z > farmField.getMaxRadius())
+            {
+                return null;
+            }
+
+            flag1 = Math.abs(x) == Math.abs(z);
+            flag2 = x >= 0;
+            flag3 = z > 0;
+            if(flag1){
+                if(flag2) {
+                    z++;
+                }
+                else if(flag3){
+                    z--;
+                }
+                else{
+                    x++;
+                }
+                continue;
+            }
+
+            flag4 = Math.abs(x) > Math.abs(z);
+            if(flag4){
+                if(flag2){
+                    z++;
+                }
+                else{
+                    z--;
+                }
+            }
+            else{
+                if(flag3){
+                    x--;
+                }
+                else{
+                    x++;
+                }
+            }
+        }
+        while (
+                -z > farmField.getRadius(Direction.NORTH)
+                        || x > farmField.getRadius(Direction.EAST)
+                        || z > farmField.getRadius(Direction.SOUTH)
+                        || -x > farmField.getRadius(Direction.WEST)
+        );
+
+        return new BlockPos(x, 0, z);
     }
 
     @Inject(method = "prepareForFarming",at = @At("HEAD"),remap = false,cancellable = true)
