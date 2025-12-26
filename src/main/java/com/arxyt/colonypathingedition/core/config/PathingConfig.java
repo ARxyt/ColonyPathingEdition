@@ -5,6 +5,7 @@ import net.minecraftforge.common.ForgeConfigSpec;
 
 public class PathingConfig {
     public static ForgeConfigSpec.BooleanValue EATING_AI_MODULE;
+    public static ForgeConfigSpec.BooleanValue SMELTERY_AI_MODULE;
 
     public static ForgeConfigSpec.BooleanValue HURT_ALERT;
     public static ForgeConfigSpec.BooleanValue ALLOW_RESURRECT;
@@ -81,7 +82,9 @@ public class PathingConfig {
         EATING_AI_MODULE = builder
                 .comment("Open the module to use the remastered eating AI system (default: true)\n 开启此模块将会启用重制的市民进食AI (默认开启)")
                 .define("enableNewEatingModule", true);
-        builder.pop();
+        SMELTERY_AI_MODULE = builder
+                .comment("Open the module to use the remastered smeltery AI system for chef and stone smeltery(default: true)\n 开启此模块将会启用重制的厨师和冶炼工人AI (默认开启)")
+                .define("enableNewEatingModule", true);
         builder.push("Easycolony Feature #简易殖民地相关特性开关#");
         HURT_ALERT = builder
                 .comment("Is citizen alert when get hurt? (default: true)\n 市民是否警告玩家自己受伤？(默认开启)")
@@ -240,13 +243,13 @@ public class PathingConfig {
         builder.push("Builder Mode Modifier #土木人修改#");
         BUILDER_MODE = builder
                 .comment("""
-                        Builder mode (default: NORMAL), optional below: 建筑工人模式, (默认: 常规)，可选项如下：
-                        NORMAL: Normal mode, authentic. 常规: 默认选项，原汁原味的殖民地体验。
+                        Builder mode (default: GIBBON), optional below: 建筑工人模式, (默认: 长臂猿)，可选项如下：
+                        NORMAL: Normal mode, authentic. 常规: 原汁原味的殖民地体验。
                         FORMALIST: Play as a formalist, jumping up and down on the construction site, but work when they just leave their hut. 形式主义者：像个形式主义者一样在工地上蹿下跳，但是会在离开土木小屋后立即开始工作。
                         SENTRY: Play as a sentry, stand at a stable position to build. 哨兵：像一个哨兵一样，站在工地的固定位置工作。
                         GOD: GOD SHOULD BUILD ANYWHERE THEY WANT. 创世神：神就应该想在哪儿干就在那儿干。
-                        GIBBON: Play as a gibbon, jumping up and down with a large building range. 长臂猿：像猿猴一样上蹿下跳，但是只在一定建造范围内工作。""")
-                .defineEnum("builderMode", BuilderModeEnum.NORMAL);
+                        GIBBON: Play as a gibbon, jumping up and down with a large building range. 长臂猿：默认选项，像猿猴一样上蹿下跳，但是只在一定建造范围内工作。""")
+                .defineEnum("builderMode", BuilderModeEnum.GIBBON);
         BUILDER_GIBBON_RANGE = builder.comment("Building range of gibbon mode. 长臂猿模式下的建造范围。")
                         .defineInRange("builderGibbonRange", 20, 0, 128);
         BUILDER_TAKE_ORDERS_EVERYWHERE = builder.comment("Can builder take orders everywhere. 打灰人能否随时随地接单。")

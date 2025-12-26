@@ -21,6 +21,7 @@ public class ModBuildingInitializer {
         insertBefore(ModBuildings.mechanic.get(), STATS_MODULE, MIN_STOCK);
         insertBefore(ModBuildings.plantation.get(), STATS_MODULE, MIN_STOCK);
         insertBefore(ModBuildings.concreteMixer.get(), STATS_MODULE, MIN_STOCK);
+        insertBefore(ModBuildings.cook.get(), STATS_MODULE, MIN_STOCK);
         insertBefore(ModBuildings.simpleQuarry.get(), SIMPLE_QUARRY, MIN_STOCK);
         insertBefore(ModBuildings.mediumQuarry.get(), MEDIUM_QUARRY, MIN_STOCK);
         insertBefore(ModBuildings.tavern.get(), BED, TAVERN_RECRUIT);

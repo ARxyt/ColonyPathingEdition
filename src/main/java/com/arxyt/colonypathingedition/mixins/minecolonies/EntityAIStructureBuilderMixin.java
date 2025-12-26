@@ -76,7 +76,7 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
      */
     @Unique
     private boolean sentry() {
-        BlockPos workPos = job.getWorkOrder().getLocation();
+        BlockPos workPos = building.getWorkOrder().getLocation();
         if (workFrom == null) {
             if (gotoPath == null || gotoPath.isCancelled()) {
                 final PathJobMoveCloseToXNearY pathJob = new PathJobMoveCloseToXNearY(world,
@@ -187,18 +187,6 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
             repathCounter = 0;
         }
         return returnState;
-    }
-
-    /**
-     * Lower drop cost
-     */
-    @ModifyConstant(
-            method = "walkToConstructionSite(Lnet/minecraft/core/BlockPos;)Z",
-            constant = @Constant(doubleValue = 200.0),
-            remap = false
-    )
-    private double modifyDropCost(double original) {
-        return 1.5d;
     }
 
     /**

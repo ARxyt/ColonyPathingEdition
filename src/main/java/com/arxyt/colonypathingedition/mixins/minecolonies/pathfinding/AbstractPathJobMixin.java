@@ -13,8 +13,6 @@ import com.minecolonies.api.util.BlockPosUtil;
 import com.minecolonies.api.util.Log;
 import com.minecolonies.api.util.ShapeUtil;
 import com.minecolonies.api.util.constant.ColonyConstants;
-import com.minecolonies.core.colony.jobs.JobBuilder;
-import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.entity.pathfinding.MNode;
 import com.minecolonies.core.entity.pathfinding.PathfindingUtils;
 import com.minecolonies.core.entity.pathfinding.PathingOptions;
@@ -90,16 +88,13 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) protected abstract boolean stopOnNodeLimit(int totalNodesVisited, MNode bestNode, int nodesSinceEndNode);
     @Shadow(remap = false) protected abstract void visitNode(MNode node);
     @Shadow(remap = false) @NotNull protected abstract Path finalizePath(MNode targetNode);
-
-    @Shadow
-    @Nullable
-    protected Mob entity;
+    @Shadow(remap = false) private MNode bestNode;
 
     @Invoker(value="getGroundHeight",remap = false)
     public abstract int invokeGetGroundHeight(final MNode node, final int x, final int y, final int z);
 
     @Invoker(value="createNode",remap = false)
-    public abstract MNode invokeCreateNode(final MNode parent, final int x, final int y, final int z, final int nodeKey, final double heuristic, final double cost);
+    public abstract MNode invokeCreateNode(final MNode parent, final int x, final int y, final int z, final double heuristic, final double cost);
 
     @Invoker(value="calculateSwimming",remap = false)
     public abstract boolean invokeCalculateSwimming(final BlockState below, final BlockState state, final BlockState above, @Nullable final MNode node);
@@ -284,7 +279,7 @@ public abstract class AbstractPathJobMixin{
     {
         this.actualMaxNodes = this.maxNodes;
         this.pathNodesToVisit = new PriorityQueue<>();
-        MNode bestNode = getAndSetupStartNode();
+        bestNode = getAndSetupStartNode();
         double bestNodeEndScore = getEndNodeScore(bestNode);
         // Node count since we found a better end node than the current one
         int nodesSinceEndNode = 0;
@@ -525,9 +520,6 @@ public abstract class AbstractPathJobMixin{
      */
     @Overwrite(remap = false)
     private int checkDrop(@Nullable final MNode parent, final int x, final int y, final int z, final boolean isSwimming) {
-        if(entity instanceof EntityCitizen citizen && citizen.getCitizenJobHandler().getColonyJob() instanceof JobBuilder){
-            int a = 1;
-        }
         final boolean canDrop = parent != null && !parent.isLadder();
         //  Nothing to stand on
         if (!canDrop || ((parent.x != x || parent.z != z) && isPassable(parent.x, parent.y - 1, parent.z, false, parent)
@@ -610,7 +602,7 @@ public abstract class AbstractPathJobMixin{
             MNode conerNode = nodes.get(nodeKey);
             if (conerNode == null){
                 boolean isPassable = checkConerCollision(conerX, conerY, conerZ);
-                conerNode = invokeCreateNode(null, conerX, conerY, conerZ, nodeKey, node.getHeuristic(), node.getCost());
+                conerNode = invokeCreateNode(null, conerX, conerY, conerZ, node.getHeuristic(), node.getCost());
                 conerNode.setCornerNode(isPassable);
                 conerNode.increaseVisited();
                 if(!isPassable && checkPossiblyPassing(node, nextX, newY, nextZ, conerNode, dX, newY - node.y, dZ)) {
@@ -686,7 +678,7 @@ public abstract class AbstractPathJobMixin{
 
         if (nextNode == null)
         {
-            nextNode = invokeCreateNode(node, nextX, nextY, nextZ, nodeKey, heuristic, cost);
+            nextNode = invokeCreateNode(node, nextX, nextY, nextZ, heuristic, cost);
             nextNode.setOnRails(onRails);
             nextNode.setCornerNode(false);
 

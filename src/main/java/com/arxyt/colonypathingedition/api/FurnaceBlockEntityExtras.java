@@ -45,6 +45,11 @@ public interface FurnaceBlockEntityExtras{
     void tickProtect();
 
     /**
+     * Furnace serverTick() injects for protect time
+     */
+    void setProtectTime(int protectTime);
+
+    /**
      * Initialize furnace protect time
      * @param pBlockEntity: furnace's BlockEntity
      */

@@ -7,8 +7,10 @@ import com.minecolonies.api.colony.buildings.modules.IBuildingModuleView;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class TavernRecruitModuleView extends AbstractBuildingModuleView implements IBuildingModuleView {
     private final List<VisitorData> visitorData = new ArrayList<>();
@@ -41,12 +43,12 @@ public class TavernRecruitModuleView extends AbstractBuildingModuleView implemen
 
     @Override
     public BOWindow getWindow() {
-        return new TavernRecruitModuleWindow(buildingView, this);
+        return new TavernRecruitModuleWindow(this);
     }
 
     @Override
-    public String getDesc() {
-        return "com.arxyt.colonypathingedition.core.tavern_recruit";
+    public @Nullable Component getDesc() {
+        return Component.translatable("com.arxyt.colonypathingedition.core.tavern_recruit");
     }
 
     public List<VisitorData> getVisitorData() {

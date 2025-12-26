@@ -1,5 +1,6 @@
 package com.arxyt.colonypathingedition.core.window;
 
+import com.arxyt.colonypathingedition.ColonyPathingEdition;
 import com.arxyt.colonypathingedition.api.FarmFieldExtra;
 import com.arxyt.colonypathingedition.core.data.farmlandmap.SpecialSeedManager;
 import com.arxyt.colonypathingedition.core.manager.LinkageManager;
@@ -19,6 +20,7 @@ import com.minecolonies.core.items.ItemCrop;
 import com.teamtea.eclipticseasons.api.constant.solar.SolarTerm;
 import com.teamtea.eclipticseasons.api.util.EclipticUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.CropBlock;
@@ -30,8 +32,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.MOD_ID;
 
 @OnlyIn(Dist.CLIENT)
 public class WindowCropRotation extends AbstractWindowSkeleton {
@@ -77,7 +77,7 @@ public class WindowCropRotation extends AbstractWindowSkeleton {
      * @param tileEntityScarecrow the scarecrow tile entity.
      */
     public WindowCropRotation(@NotNull AbstractTileEntityScarecrow tileEntityScarecrow, @NotNull FarmField farmField, @Nullable final BOWindow parent) {
-        super(MOD_ID + WINDOW_RESOURCE, parent);
+        super(parent, new ResourceLocation(ColonyPathingEdition.MODID + WINDOW_RESOURCE));
         this.tileEntityScarecrow = tileEntityScarecrow;
         this.farmField = farmField;
         accessFieldData();

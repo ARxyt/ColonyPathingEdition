@@ -87,7 +87,7 @@ public class NewEntityAIEatTask implements IStateAI {
     private int timeOutWalking = 0;
     private int waitingTicks = 0;
     private int foodSlot = -1;
-    private Set<Item> eatenFood = new LinkedHashSet<>();
+    private final Set<Item> eatenFood = new LinkedHashSet<>();
     /**
      * Instantiates this task.
      *
@@ -232,7 +232,7 @@ public class NewEntityAIEatTask implements IStateAI {
                 restaurantPos = alteredRestaurantPos.entrySet()
                         .stream()
                         .min(Comparator.comparingInt(e -> {
-                            int distance = (int) e.getKey().distManhattan(citizenPos);
+                            int distance = e.getKey().distManhattan(citizenPos);
                             int people = ((BuildingCookExtra)(e.getValue())).getCustomerCount(); // 实际方法名
                             return distance + Math.max(people - 5, 0) * CROWD_PENALTY;
                         }))
@@ -253,7 +253,6 @@ public class NewEntityAIEatTask implements IStateAI {
     private NewEatingState goToHut(){
         restaurantPos = null;
         restaurant = null;
-        final ICitizenData citizenData = citizen.getCitizenData();
         if(buildingToGo == null){
             return GO_TO_RESTAURANT;
         }

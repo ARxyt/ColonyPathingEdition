@@ -33,15 +33,9 @@ public class FoodUtilExtra {
             final float lastDensity = lastFoodProperties == null ? 0 : lastFoodProperties.getSaturationModifier();
             final float qualityChange = thisDensity + (isMinecolfood? 0.5F : 0) - lastDensity - (isLastMinecolfood? 0.5F : 0);
             final float diversityChange = (localScore <= 0 ? Math.min(2 * thisDensity + (isMinecolfood? 0.5F : 0), 1.0F) : 0) - (lastLocalScore == 0 ? Math.min(2 * lastDensity + (isLastMinecolfood? 0.5F : 0), 1.0F) : 0);
-            if((foodStats.quality() + qualityChange > qualityRequirement && foodStats.diversity() + diversityChange > diversityRequirement) || (qualityChange > 0 && diversityChange > 0)){
-                return true;
-            }
-            return false;
+            return (foodStats.quality() + qualityChange > qualityRequirement && foodStats.diversity() + diversityChange > diversityRequirement) || (qualityChange > 0 && diversityChange > 0);
         }
-        else if (foodStats.quality() > qualityRequirement && foodStats.diversity() > diversityRequirement){
-            return true;
-        }
-        return false;
+        else return foodStats.quality() > qualityRequirement && foodStats.diversity() > diversityRequirement;
     }
 
     public static float getRecalLocalScore(ICitizenData citizenData, Item food){

@@ -97,6 +97,11 @@ public abstract class FurnaceBlockEntityMixin implements FurnaceBlockEntityExtra
     }
 
     @Unique
+    public void setProtectTime(int protectTime){
+        this.protectTime = protectTime;
+    }
+
+    @Unique
     public boolean atProtectTime() {
         return protectTime > 0;
     }

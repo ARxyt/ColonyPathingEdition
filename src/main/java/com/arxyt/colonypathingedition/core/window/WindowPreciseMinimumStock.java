@@ -1,5 +1,6 @@
 package com.arxyt.colonypathingedition.core.window;
 
+import com.arxyt.colonypathingedition.ColonyPathingEdition;
 import com.arxyt.colonypathingedition.core.costants.AdditionalContants;
 import com.ldtteam.blockui.Pane;
 import com.ldtteam.blockui.controls.Button;
@@ -26,7 +27,7 @@ import static com.minecolonies.api.util.constant.WindowConstants.*;
 import static com.minecolonies.api.util.constant.WindowConstants.QUANTITY_LABEL;
 import static com.minecolonies.api.util.constant.WindowConstants.RESOURCE_ICON;
 
-public class WindowPreciseMinimumStock extends AbstractModuleWindow {
+public class WindowPreciseMinimumStock extends AbstractModuleWindow<IMinimumStockModuleView> {
     /**
      * The resource string.
      */
@@ -50,14 +51,12 @@ public class WindowPreciseMinimumStock extends AbstractModuleWindow {
     /**
      * Constructor for the minimum stock window view.
      *
-     * @param building class extending
      * @param moduleView the module view.
      */
     public WindowPreciseMinimumStock(
-            final IBuildingView building,
             final IMinimumStockModuleView moduleView)
     {
-        super(building, AdditionalContants.MOD_ID + RESOURCE_STRING);
+        super(moduleView, new ResourceLocation(ColonyPathingEdition.MODID + RESOURCE_STRING));
 
         resourceList = this.window.findPaneOfTypeByID("resourcesstock", ScrollingList.class);
         this.moduleView = moduleView;
