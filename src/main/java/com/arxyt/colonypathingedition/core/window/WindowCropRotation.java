@@ -118,7 +118,7 @@ public class WindowCropRotation extends AbstractWindowSkeleton {
         // 获取每个节气的持续时间
         int lastingTime = EclipticUtil.INSTANCE.getLastingDaysOfEachTerm(this.mc.level);
         // 计算每个季节的持续时间
-        int seasonLastingTime = lastingTime * 4;
+        int seasonLastingTime = lastingTime * 6;
         // 获取当前季节的枚举顺序
         int nowSeasonIndex = nowTerm.getSeason().ordinal();
         // 获取当前季节的日期
