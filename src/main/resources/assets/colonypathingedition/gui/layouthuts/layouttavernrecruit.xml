@@ -1,6 +1,6 @@
 <window size="190 244" pause="false" lightbox="false">
   <image source="minecolonies:textures/gui/builderhut/builder_paper.png" size="190 244"/>
-  <label size="130 11" pos="30 14" textalign="MIDDLE" color="black"
+  <text size="130 11" pos="30 14" textalign="MIDDLE" color="black"
          label="$(com.arxyt.colonypathingedition.core.tavern_recruit)"/>
   <list id="visitors" size="164 200" pos="14 30">
     <box size="100% 60" linewidth="1">

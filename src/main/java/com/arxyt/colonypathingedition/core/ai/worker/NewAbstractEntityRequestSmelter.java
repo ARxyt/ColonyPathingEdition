@@ -102,27 +102,6 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
         ((FurnaceBlockEntityExtras)furnace).setFurnaceWorker(civilianID);
     }
 
-    private int countOfUsableFurnaces()
-    {
-        int count = 0;
-        final Level world = building.getColony().getWorld();
-        for (final BlockPos pos : building.getFirstModuleOccurance(FurnaceUserModule.class).getFurnaces())
-        {
-            if (WorldUtil.isBlockLoaded(world, pos))
-            {
-                final BlockEntity entity = world.getBlockEntity(pos);
-                if (entity instanceof final FurnaceBlockEntity furnace)
-                {
-                    if (furnace.getItem(SMELTABLE_SLOT).isEmpty() && (isFurnaceNotOccupied(furnace) || isFurnaceCanReoccupied(furnace)))
-                    {
-                        count += 1;
-                    }
-                }
-            }
-        }
-        return count;
-    }
-
     private void accelerateRandomFurnaces(FurnaceUserModule module) {
         final int size = module.getFurnaces().size();
         if (randomFurnace < 0 || randomFurnace >= size) {
@@ -156,7 +135,7 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
                 && InventoryUtils.hasBuildingEnoughElseCount(building, isCorrectFuel(possibleFuels), 1) < 1
                 && !building.hasWorkerOpenRequestsOfType(worker.getCitizenData().getId(), TypeToken.of(StackList.class)))
         {
-            worker.getCitizenData().createRequestAsync(new StackList(possibleFuels, RequestSystemTranslationConstants.REQUESTS_TYPE_BURNABLE, STACKSIZE * module.getFurnaces().size(), 1));
+            worker.getCitizenData().createRequestAsync(new StackList(possibleFuels, RequestSystemTranslationConstants.REQUESTS_TYPE_BURNABLE, STACKSIZE * (1 + module.getFurnaces().size() / building.getAllAssignedCitizen().size()), 1));
         }
 
         return false;
@@ -669,10 +648,11 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
         int count = 0;
         for (final BlockPos pos : building.getModule(FURNACE).getFurnaces())
         {
-            final BlockEntity entity = world.getBlockEntity(pos);
-            if (entity instanceof FurnaceBlockEntity furnace && !furnace.getItem(FUEL_SLOT).isEmpty())
-            {
-                count++;
+            if (WorldUtil.isBlockLoaded(world, pos)) {
+                final BlockEntity entity = world.getBlockEntity(pos);
+                if (entity instanceof FurnaceBlockEntity furnace && !furnace.getItem(FUEL_SLOT).isEmpty() && furnace.getItem(SMELTABLE_SLOT).isEmpty() && (isFurnaceNotOccupied(furnace) || isFurnaceCanReoccupied(furnace))) {
+                    count += 1;
+                }
             }
         }
 

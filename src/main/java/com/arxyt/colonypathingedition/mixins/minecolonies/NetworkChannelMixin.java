@@ -16,7 +16,7 @@ import java.util.function.Supplier;
 public abstract class NetworkChannelMixin {
     @Shadow(remap = false) protected abstract <MSG extends IMessage> void registerMessage(int id, Class<MSG> msgClazz, Supplier<MSG> msgCreator);
 
-    @Inject(method = "registerCommonMessages",at = @At("TAIL"),locals = LocalCapture.CAPTURE_FAILEXCEPTION, remap = false)
+    @Inject(method = "registerCommonMessages",at = @At("TAIL"),locals = LocalCapture.CAPTURE_FAILHARD, remap = false)
     void registerNewMessage(CallbackInfo ci, int idx){
         registerMessage(++idx, CropRotationLengthUpdateMessage.class, CropRotationLengthUpdateMessage::new);
         registerMessage(++idx, CropRotationCurrentDayMessage.class, CropRotationCurrentDayMessage::new);

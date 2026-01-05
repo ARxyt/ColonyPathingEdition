@@ -3,6 +3,7 @@ package com.arxyt.colonypathingedition.core.data.farmlandmap;
 import com.arxyt.colonypathingedition.ColonyPathingEdition;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -11,6 +12,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.TagsUpdatedEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 
@@ -29,11 +31,7 @@ public class SpecialSeedManager {
     }
 
     @SubscribeEvent
-    public void onTagsUpdated(TagsUpdatedEvent event) {
-        if (event.getUpdateCause() != TagsUpdatedEvent.UpdateCause.SERVER_DATA_LOAD) {
-            return;
-        }
-
+    public void onServerStarted(ServerStartedEvent event) {
         ColonyPathingEdition.LOGGER.info("[SpecialSeeds] Checking available seed-soil pairs...");
 
         SPECIAL_SEEDS.clear();
@@ -42,13 +40,8 @@ public class SpecialSeedManager {
             ResourceLocation seedId = entry.getKey();
             ResourceLocation soilId = entry.getValue();
 
-            RegistryAccess access = event.getRegistryAccess();
-
-            Registry<Item> itemRegistry = access.registryOrThrow(Registries.ITEM);
-            Registry<Block> blockRegistry = access.registryOrThrow(Registries.BLOCK);
-
-            Item seed = itemRegistry.get(seedId);
-            Block soil = blockRegistry.get(soilId);
+            Item seed = ForgeRegistries.ITEMS.getValue(seedId);
+            Block soil = ForgeRegistries.BLOCKS.getValue(soilId);
 
             if (seed == null || seed == Items.AIR) {
                 ColonyPathingEdition.LOGGER.info("[SpecialSeeds] No seed {}", seedId);

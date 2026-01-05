@@ -7,6 +7,9 @@ public class PathingConfig {
     public static ForgeConfigSpec.BooleanValue EATING_AI_MODULE;
     public static ForgeConfigSpec.BooleanValue SMELTERY_AI_MODULE;
 
+    public static ForgeConfigSpec.BooleanValue TAVERN_ASSIGNMENT_MODULE;
+    public static ForgeConfigSpec.BooleanValue ADDITIONAL_MINIMUM_STOCK_MODULE;
+
     public static ForgeConfigSpec.BooleanValue HURT_ALERT;
     public static ForgeConfigSpec.BooleanValue ALLOW_RESURRECT;
     public static ForgeConfigSpec.ConfigValue<String> RESURRECT_ITEM;
@@ -52,7 +55,6 @@ public class PathingConfig {
     public static ForgeConfigSpec.BooleanValue LUMBERJACK_BREAK_LEAVES_TO_GATHER;
     public static ForgeConfigSpec.IntValue LUMBERJACK_GATHER_WAITING_TIME;
 
-
     public static ForgeConfigSpec.EnumValue<BuilderModeEnum> BUILDER_MODE;
     public static ForgeConfigSpec.IntValue BUILDER_GIBBON_RANGE;
     public static ForgeConfigSpec.BooleanValue BUILDER_TAKE_ORDERS_EVERYWHERE;
@@ -84,7 +86,17 @@ public class PathingConfig {
                 .define("enableNewEatingModule", true);
         SMELTERY_AI_MODULE = builder
                 .comment("Open the module to use the remastered smeltery AI system for chef and stone smeltery(default: true)\n 开启此模块将会启用重制的厨师和冶炼工人AI (默认开启)")
-                .define("enableNewEatingModule", true);
+                .define("enableNewSmelteryModule", true);
+
+        builder.pop();
+        builder.push("Building Module Opener #房屋模块特性开关#");
+        TAVERN_ASSIGNMENT_MODULE = builder
+                .comment("Open this to assign visitors directly trough tavern block, conflict with Tweaks addon for Minecolonies (default: false)\n 开启这个可以直接在酒馆雇佣游客，但是与 Tweaks addon for Minecolonies 有冲突 (默认关闭)")
+                .define("enableTavernAssignmentModule", false);
+        ADDITIONAL_MINIMUM_STOCK_MODULE = builder
+                .comment("Open this to add minimum stock module to most of huts, may affect Compatibility addon for MineColonies‘s module (default: true)\n 开启这个可以直接在酒馆雇佣游客，但是可能影响某些 Compatibility addon for MineColonies 内容的工作 (默认开启)")
+                .define("enableTavernAssignmentModule", false);
+        builder.pop();
         builder.push("Easycolony Feature #简易殖民地相关特性开关#");
         HURT_ALERT = builder
                 .comment("Is citizen alert when get hurt? (default: true)\n 市民是否警告玩家自己受伤？(默认开启)")
