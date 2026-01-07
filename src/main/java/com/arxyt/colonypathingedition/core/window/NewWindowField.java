@@ -1,5 +1,7 @@
 package com.arxyt.colonypathingedition.core.window;
 
+import com.arxyt.colonypathingedition.ColonyPathingEdition;
+import com.arxyt.colonypathingedition.core.message.FarmFieldResizeMessage;
 import com.ldtteam.blockui.PaneBuilders;
 import com.ldtteam.blockui.controls.Button;
 import com.ldtteam.blockui.controls.ButtonImage;
@@ -14,8 +16,6 @@ import com.minecolonies.api.util.constant.Constants;
 import com.minecolonies.core.Network;
 import com.minecolonies.core.client.gui.AbstractWindowSkeleton;
 import com.minecolonies.core.colony.buildingextensions.FarmField;
-import com.minecolonies.core.network.messages.server.colony.building.fields.FarmFieldPlotResizeMessage;
-import com.minecolonies.core.network.messages.server.colony.building.fields.FarmFieldUpdateSeedMessage;
 import com.minecolonies.core.tileentities.TileEntityScarecrow;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -23,7 +23,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
@@ -96,14 +95,15 @@ public class NewWindowField extends AbstractWindowSkeleton {
      */
     public NewWindowField(@NotNull TileEntityScarecrow tileEntityScarecrow)
     {
-        super(new ResourceLocation(Constants.MOD_ID, "gui/windowfield.xml"));
+        super(new ResourceLocation(ColonyPathingEdition.MODID, "gui/windowfield.xml"));
         this.tileEntityScarecrow = tileEntityScarecrow;
 
         registerButton(SELECT_SEED_BUTTON_ID, this::selectSeed);
-//        for (Direction dir : Direction.Plane.HORIZONTAL)
-//        {
-//            registerButton(DIRECTIONAL_BUTTON_ID_PREFIX + dir.getName(), this::onDirectionalButtonClick);
-//        }
+        for (Direction dir : Direction.Plane.HORIZONTAL)
+        {
+            registerButton(DIRECTIONAL_BUTTON_ID_PREFIX + dir.getName() + "-up", this::onDirectionalButtonClick);
+            registerButton(DIRECTIONAL_BUTTON_ID_PREFIX + dir.getName() + "-down", this::onDirectionalButtonClick);
+        }
 
         updateAll();
     }
@@ -131,23 +131,26 @@ public class NewWindowField extends AbstractWindowSkeleton {
         }
 
         String directionName = button.getID().replace(DIRECTIONAL_BUTTON_ID_PREFIX, "");
-        Optional<Direction> direction = Direction.Plane.HORIZONTAL.stream().filter(f -> f.getName().equals(directionName)).findFirst();
+        boolean up_down = directionName.matches(".*down");; // false -> up . true-> down;
+
+        Optional<Direction> direction = Direction.Plane.HORIZONTAL.stream().filter(f -> directionName.matches(f.getName()+".*")).findFirst();
 
         if (direction.isEmpty())
         {
             return;
         }
 
-        final int sum = Arrays.stream(tileEntityScarecrow.getFieldSize()).sum();
-        final int leftOver = MAX_RANGE - sum;
-
         final int currentValue = tileEntityScarecrow.getFieldSize()[direction.get().get2DDataValue()];
 
-        int newRadius = (currentValue % Math.min(currentValue+leftOver, MAX_RANGE)) + 1;
+        int newRadius = ((currentValue + (up_down? -2 : 0)) % MAX_RANGE) + 1;
+        newRadius = newRadius <= 0 ? newRadius + MAX_RANGE : newRadius;
         tileEntityScarecrow.setFieldSize(direction.get(), newRadius);
-        button.setText(Component.literal(String.valueOf(newRadius)));
+        button.setText(Component.literal(up_down? "-" : "+"));
 
-        Network.getNetwork().sendToServer(new FarmFieldPlotResizeMessage(newRadius, direction.get(), tileEntityScarecrow.getBlockPos()));
+        if (tileEntityScarecrow.getCurrentColony() instanceof IColonyView colonyView)
+        {
+            Network.getNetwork().sendToServer(new FarmFieldResizeMessage(colonyView, newRadius, direction.get(), tileEntityScarecrow.getBlockPos()));
+        }
     }
 
     private void updateAll()
@@ -157,22 +160,6 @@ public class NewWindowField extends AbstractWindowSkeleton {
         updateOwner();
         updateSeed();
         updateButtons();
-    }
-
-    /**
-     * Sends a message to the server to update the seed of the field.
-     *
-     * @param stack the provided item stack with the seed.
-     */
-    private void setSeed(ItemStack stack)
-    {
-        IColonyView colonyView = getCurrentColony();
-        if (colonyView != null && farmField != null)
-        {
-            Network.getNetwork().sendToServer(new FarmFieldUpdateSeedMessage(colonyView, stack, farmField.getPosition()));
-
-            farmField.setSeed(stack);
-        }
     }
 
     /**
@@ -264,22 +251,41 @@ public class NewWindowField extends AbstractWindowSkeleton {
     {
         for (Direction dir : Direction.Plane.HORIZONTAL)
         {
-            ButtonImage button = findPaneOfTypeByID(DIRECTIONAL_BUTTON_ID_PREFIX + dir.getName(), ButtonImage.class);
-            button.setText(Component.literal(Integer.toString(tileEntityScarecrow.getFieldSize()[dir.get2DDataValue()])));
+            Text text = findPaneOfTypeByID(DIRECTIONAL_BUTTON_ID_PREFIX + dir.getName(), Text.class);
+            text.setText(Component.literal(Integer.toString(tileEntityScarecrow.getFieldSize()[dir.get2DDataValue()])));
 
-            int buttonState = 1;
-            if (!button.isEnabled())
+            ButtonImage button1 = findPaneOfTypeByID(DIRECTIONAL_BUTTON_ID_PREFIX + dir.getName() +"-up", ButtonImage.class);
+            ButtonImage button2 = findPaneOfTypeByID(DIRECTIONAL_BUTTON_ID_PREFIX + dir.getName() +"-down", ButtonImage.class);
+            int buttonState1 = 1;
+            int buttonState2 = 1;
+            if (!button1.isEnabled())
             {
-                buttonState = 0;
+                buttonState1 = 0;
             }
-            else if (button.wasCursorInPane())
+            else if (button1.wasCursorInPane())
             {
-                buttonState = 2;
+                buttonState1 = 2;
             }
 
-            button.setImage(TEXTURE, dir.get2DDataValue() * BUTTON_SIZE, buttonState * BUTTON_SIZE, BUTTON_SIZE, BUTTON_SIZE);
+            if (!button2.isEnabled())
+            {
+                buttonState2 = 0;
+            }
+            else if (button2.wasCursorInPane())
+            {
+                buttonState2 = 2;
+            }
+
+            button1.setImage(TEXTURE, Direction.NORTH.get2DDataValue() * BUTTON_SIZE, buttonState1 * BUTTON_SIZE, BUTTON_SIZE, BUTTON_SIZE);
+            button2.setImage(TEXTURE, Direction.SOUTH.get2DDataValue() * BUTTON_SIZE, buttonState2 * BUTTON_SIZE, BUTTON_SIZE, BUTTON_SIZE);
+
             PaneBuilders.tooltipBuilder()
-                    .hoverPane(button)
+                    .hoverPane(button1)
+                    .append(Component.translatable(PARTIAL_BLOCK_HUT_FIELD_DIRECTION_ABSOLUTE + dir.getSerializedName()))
+                    .appendNL(Component.translatable(getDirectionalTranslationKey(dir)).setStyle(Style.EMPTY.withItalic(true).withColor(ChatFormatting.GRAY)))
+                    .build();
+            PaneBuilders.tooltipBuilder()
+                    .hoverPane(button2)
                     .append(Component.translatable(PARTIAL_BLOCK_HUT_FIELD_DIRECTION_ABSOLUTE + dir.getSerializedName()))
                     .appendNL(Component.translatable(getDirectionalTranslationKey(dir)).setStyle(Style.EMPTY.withItalic(true).withColor(ChatFormatting.GRAY)))
                     .build();

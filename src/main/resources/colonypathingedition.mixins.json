@@ -48,6 +48,7 @@
     "minecolonies.herder.EntityAIWorkChickenHerderMixin",
     "minecolonies.herder.EntityAIWorkCowboyMixin",
     "minecolonies.herder.EntityAIWorkRabbitHerderMixin",
+    "minecolonies.item.ItemLargeBottleMixin",
     "minecolonies.job.JobChefMixin",
     "minecolonies.job.JobStoneSmelteryMixin",
     "minecolonies.lumberjack.EntityAIWorkLumberjackMixin",

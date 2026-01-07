@@ -87,7 +87,6 @@ public class PathingConfig {
         SMELTERY_AI_MODULE = builder
                 .comment("Open the module to use the remastered smeltery AI system for chef and stone smeltery(default: true)\n 开启此模块将会启用重制的厨师和冶炼工人AI (默认开启)")
                 .define("enableNewSmelteryModule", true);
-
         builder.pop();
         builder.push("Building Module Opener #房屋模块特性开关#");
         TAVERN_ASSIGNMENT_MODULE = builder
@@ -95,7 +94,7 @@ public class PathingConfig {
                 .define("enableTavernAssignmentModule", false);
         ADDITIONAL_MINIMUM_STOCK_MODULE = builder
                 .comment("Open this to add minimum stock module to most of huts, may affect Compatibility addon for MineColonies‘s module (default: true)\n 开启这个可以直接在酒馆雇佣游客，但是可能影响某些 Compatibility addon for MineColonies 内容的工作 (默认开启)")
-                .define("enableTavernAssignmentModule", false);
+                .define("additionalMinimumStockModule", true);
         builder.pop();
         builder.push("Easycolony Feature #简易殖民地相关特性开关#");
         HURT_ALERT = builder

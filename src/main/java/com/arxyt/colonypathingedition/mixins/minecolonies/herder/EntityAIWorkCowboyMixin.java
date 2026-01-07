@@ -95,7 +95,7 @@ public abstract class EntityAIWorkCowboyMixin extends AbstractEntityAIHerder<Job
                 milkTimes = 0;
                 return INVENTORY_FULL;
             }
-            if(++ milkTimes > getPrimarySkillLevel() / 10 || !building.getFirstModuleOccurance(BuildingCowboy.HerdingModule.class).canTryToMilk()){
+            if(++milkTimes > getPrimarySkillLevel() / 10 || !building.getFirstModuleOccurance(BuildingCowboy.HerdingModule.class).canTryToMilk()){
                 milkTimes = 0;
                 return INVENTORY_FULL;
             }

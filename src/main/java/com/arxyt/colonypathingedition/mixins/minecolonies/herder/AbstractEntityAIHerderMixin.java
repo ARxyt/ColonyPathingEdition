@@ -29,7 +29,12 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraftforge.common.util.FakePlayer;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -39,6 +44,7 @@ import java.util.function.Predicate;
 
 import static com.arxyt.colonypathingedition.core.costants.states.HerderCheckState.*;
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.*;
+import static com.minecolonies.api.research.util.ResearchConstants.LOOTING;
 import static com.minecolonies.api.util.constant.Constants.TICKS_SECOND;
 import static com.minecolonies.api.util.constant.StatisticsConstants.ITEM_USED;
 
@@ -64,6 +70,18 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
     @Shadow(remap = false)
     protected static boolean isBreedAble(final Animal entity) {
         return !entity.isBaby() && (entity.isInLove() || entity.canFallInLove());
+    }
+
+    @Shadow(remap = false) private static void ensureLootingI(ItemStack stack) {
+        Map<Enchantment, Integer> ench = new HashMap<>(EnchantmentHelper.getEnchantments(stack));
+        int current = ench.getOrDefault(Enchantments.MOB_LOOTING, 0);
+
+        // Force at least Looting I
+        if (current < 1)
+        {
+            ench.put(Enchantments.MOB_LOOTING, 1);
+            EnchantmentHelper.setEnchantments(ench, stack);
+        }
     }
 
     @Unique final private boolean isMaxAnimalChange = PathingConfig.MAX_ANIMAL_MODIFIER.get();
@@ -276,10 +294,7 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
 
         walkingToAnimal(toKill);
         if (BlockPosUtil.getDistance2D(center,toKill.blockPosition()) < 4 && !ItemStackUtils.isEmpty(this.worker.getMainHandItem())) {
-            this.worker.swing(InteractionHand.MAIN_HAND);
-            DamageSource ds = toKill.level().damageSources().playerAttack(getFakePlayer());
-            toKill.hurt(ds, PathingConfig.BUTCHER_INSTANT_KILL.get()? 999.0F : 3.0F * building.getBuildingLevel());
-            CitizenItemUtils.damageItemInHand(this.worker, InteractionHand.MAIN_HAND, 1);
+            butcherAnimalCopy(toKill);
         }
 
         if (!toKill.isAlive()) {
@@ -293,6 +308,52 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
         return AIWorkerState.HERDER_BUTCHER;
     }
 
+    @Unique
+    protected void butcherAnimalCopy(@Nullable final Animal animal)
+    {
+        if (animal != null && !walkingToAnimal(animal) && !ItemStackUtils.isEmpty(worker.getMainHandItem()))
+        {
+            boolean looting = worker.getCitizenColonyHandler().getColonyOrRegister().getResearchManager().getResearchEffects().getEffectStrength(LOOTING) > 0;
+
+            if (looting)
+            {
+                final FakePlayer fp = getFakePlayer();
+                if (fp == null) return;
+
+                // Ensure the worker’s weapon has Looting I
+                ItemStack workerWeapon = worker.getMainHandItem();
+
+                // Temporarily mirror the weapon onto the fake player
+                ItemStack prev = fp.getMainHandItem();
+                ItemStack temp = workerWeapon.copy();
+                ensureLootingI(temp);
+                fp.setItemInHand(InteractionHand.MAIN_HAND, temp);
+
+                try
+                {
+                    newButcherSwing(fp, animal);
+                }
+                finally
+                {
+                    // Restore whatever the fake player had (usually empty) to avoid dupes/leaks
+                    fp.setItemInHand(InteractionHand.MAIN_HAND, prev);
+                }
+            }
+            else
+            {
+                newButcherSwing(getFakePlayer(), animal);
+            }
+        }
+    }
+
+    protected void newButcherSwing(FakePlayer fakePlayer, Animal animal)
+    {
+        worker.swing(InteractionHand.MAIN_HAND); // visual only
+        DamageSource ds = animal.level().damageSources().playerAttack(fakePlayer);
+        if(animal.hurt(ds, PathingConfig.BUTCHER_INSTANT_KILL.get()? 999.0F : 3.0F * building.getBuildingLevel())) {
+            CitizenItemUtils.damageItemInHand(worker, InteractionHand.MAIN_HAND, 1);
+        }
+    }
 
     /**
      * @author ARxyt

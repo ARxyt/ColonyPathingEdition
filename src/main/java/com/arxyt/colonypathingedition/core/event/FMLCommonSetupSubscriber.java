@@ -1,6 +1,7 @@
 package com.arxyt.colonypathingedition.core.event;
 
 import com.arxyt.colonypathingedition.ColonyPathingEdition;
+import com.arxyt.colonypathingedition.core.manager.LargeBottleCauldronInteractions;
 import com.arxyt.colonypathingedition.core.manager.LinkageManager;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
@@ -20,6 +21,7 @@ public class FMLCommonSetupSubscriber {
     @SubscribeEvent
     public static void onFMLCommonSetup(FMLCommonSetupEvent event) {
         event.enqueueWork(() -> LinkageManager.getInstance().loadMods(ModList.get()));
+        event.enqueueWork(LargeBottleCauldronInteractions::register);
     }
 
 }
