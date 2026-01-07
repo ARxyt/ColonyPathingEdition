@@ -10,6 +10,7 @@ import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.neoforged.neoforge.event.TagsUpdatedEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -26,15 +27,8 @@ public class SpecialSeedManager {
         event.addListener(new FarmlandMapLoader());
     }
 
-    /**
-     * Called after datapack reload (includes tags), instead of TagsUpdatedEvent.
-     */
     @SubscribeEvent
-    public void onTagsUpdated(TagsUpdatedEvent event) {
-        if (event.getUpdateCause() != TagsUpdatedEvent.UpdateCause.SERVER_DATA_LOAD) {
-            return;
-        }
-
+    public void onServerStarted(ServerStartedEvent event) {
         ColonyPathingEdition.LOGGER.info("[SpecialSeeds] Checking available seed-soil pairs...");
         SPECIAL_SEEDS.clear();
 

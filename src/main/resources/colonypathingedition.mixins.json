@@ -46,6 +46,8 @@
     "minecolonies.herder.EntityAIWorkChickenHerderMixin",
     "minecolonies.herder.EntityAIWorkCowboyMixin",
     "minecolonies.herder.EntityAIWorkRabbitHerderMixin",
+    "minecolonies.home.BedHandlingModuleMixin",
+    "minecolonies.home.LivingBuildingModuleMixin",
     "minecolonies.lumberjack.EntityAIWorkLumberjackMixin",
     "minecolonies.lumberjack.MangroveTreeMixin",
     "minecolonies.miner.EntityAIMinerMixin",
