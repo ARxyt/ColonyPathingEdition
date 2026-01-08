@@ -114,7 +114,7 @@ dependencies {
     implementation "com.ldtteam:multipiston:${multipiston_version}"
     implementation "com.ldtteam:blockui:${blockui_version}"
     //implementation "com.ldtteam:domum_ornamentum:${domumornamentum_version}"
-    implementation "curse.maven:domum-ornamentum-527361:6688449"
+    implementation "curse.maven:domum-ornamentum-527361:7231908"
 
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime

@@ -16,7 +16,7 @@ public abstract class MinimumStockViewMixin extends AbstractBuildingModuleView{
     public void getWindow(CallbackInfoReturnable<BOWindow> cir)
     {
         if(PathingConfig.MINIMUM_STOCK_PRECISE.get()){
-            cir.setReturnValue(new WindowPreciseMinimumStock(buildingView, (MinimumStockModuleView)((Object)this)));
+            cir.setReturnValue(new WindowPreciseMinimumStock((MinimumStockModuleView)((Object)this)));
         }
     }
 }

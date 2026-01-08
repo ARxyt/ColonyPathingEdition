@@ -148,7 +148,7 @@ public abstract class EntityAIWorkEnchanterMixin extends AbstractEntityAICraftin
         for (final IToken<?> token : craftingModule.getRecipes())
         {
             final IRecipeStorage storage = IColonyManager.getInstance().getRecipeManager().getRecipes().get(token);
-            if (storage != null && !storage.getInput().isEmpty() && storage.getInput().get(0).getItem() == ModItems.ancientTome && craftingModule.isDisabled(token))
+            if (storage != null && !storage.getInput().isEmpty() && storage.getInput().getFirst().getItem() == ModItems.ancientTome && craftingModule.isDisabled(token))
             {
                 ancientTomeCraftingDisabled = true;
             }
@@ -220,7 +220,7 @@ public abstract class EntityAIWorkEnchanterMixin extends AbstractEntityAICraftin
                     resetDraining();
                     return START_WORKING;
                 }
-                citizen = workers.get(0);
+                citizen = workers.getFirst();
             }
 
             citizenToGatherFrom = citizen.getCitizenData();

@@ -138,7 +138,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
 
         do
         {
-            if (z > farmField.getMaxRadius())
+            if (z > FarmField.MAX_RANGE)
             {
                 return null;
             }

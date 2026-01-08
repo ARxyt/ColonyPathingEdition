@@ -5,6 +5,9 @@ import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class PathingConfig {
     public static ModConfigSpec.BooleanValue EATING_AI_MODULE;
+    public static ModConfigSpec.BooleanValue SMELTERY_AI_MODULE;
+    public static ModConfigSpec.BooleanValue TAVERN_ASSIGNMENT_MODULE;
+    public static ModConfigSpec.BooleanValue ADDITIONAL_MINIMUM_STOCK_MODULE;
 
     public static ModConfigSpec.BooleanValue HURT_ALERT;
     public static ModConfigSpec.BooleanValue ALLOW_RESURRECT;
@@ -79,6 +82,17 @@ public class PathingConfig {
         EATING_AI_MODULE = builder
                 .comment("Open the module to use the remastered eating AI system (default: true)\n 开启此模块将会启用重制的市民进食AI (默认开启)")
                 .define("enableNewEatingModule", true);
+        SMELTERY_AI_MODULE = builder
+                .comment("Open the module to use the remastered smeltery AI system for chef and stone smeltery(default: true)\n 开启此模块将会启用重制的厨师和冶炼工人AI (默认开启)")
+                .define("enableNewSmelteryModule", true);
+        builder.pop();
+        builder.push("Building Module Opener #房屋模块特性开关#");
+        TAVERN_ASSIGNMENT_MODULE = builder
+                .comment("Open this to assign visitors directly trough tavern block, conflict with Tweaks addon for Minecolonies (default: false)\n 开启这个可以直接在酒馆雇佣游客，但是与 Tweaks addon for Minecolonies 有冲突 (默认关闭)")
+                .define("enableTavernAssignmentModule", false);
+        ADDITIONAL_MINIMUM_STOCK_MODULE = builder
+                .comment("Open this to add minimum stock module to most of huts, may affect Compatibility addon for MineColonies‘s module (default: true)\n 开启这个可以直接在酒馆雇佣游客，但是可能影响某些 Compatibility addon for MineColonies 内容的工作 (默认开启)")
+                .define("additionalMinimumStockModule", true);
         builder.pop();
         builder.push("Easycolony Feature #简易殖民地相关特性开关#");
         HURT_ALERT = builder

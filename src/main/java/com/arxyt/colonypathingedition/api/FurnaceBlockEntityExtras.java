@@ -4,44 +4,54 @@ import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 
 public interface FurnaceBlockEntityExtras{
     /**
-     * 直接给当前熔炉的 Progress 加 adder
-     * @return 如果 adder 大于实际上熔炉还未完成的部分，会返回剩余的 adder
+     * An adder on target furnace's Progress
+     * @return remain adder.
      */
     int addProgress(int adder);
 
     /**
-     * 直接给当前熔炉的 Lit Time 加 adder
+     *  An adder on target furnace's Lit Time
      */
     void addLitTime(int adder);
 
     /**
-     * @return 返回工人的 Civilian ID
+     * @return citizen Civilian ID
      */
     int getFurnaceWorker();
 
     /**
-     * 输入需要使用工人的 Civilian ID
+     * @param workerID: citizen Civilian ID
      */
     void setFurnaceWorker(int workerID);
 
     /**
-     * @return 返回工人的 Civilian ID
+     * @return citizen Civilian ID
      */
     int getFurnacePicker();
 
     /**
-     * 输入需要使用工人的 Civilian ID
+     * @param workerID: Civilian ID
      */
     void setFurnacePicker(int workerID);
 
     /**
-     * @return 如函数名
+     * @return furnace protect time
      */
     boolean atProtectTime();
 
-    // 这是 protectTime 相关的 servertick 事件
+    /**
+     * Furnace serverTick() injects for protect time
+     */
     void tickProtect();
 
-    // 设置拿取人为当前占用熔炉的工人
+    /**
+     * Furnace serverTick() injects for protect time
+     */
+    void setProtectTime(int protectTime);
+
+    /**
+     * Initialize furnace protect time
+     * @param pBlockEntity: furnace's BlockEntity
+     */
     void setPickup(AbstractFurnaceBlockEntity pBlockEntity);
 }

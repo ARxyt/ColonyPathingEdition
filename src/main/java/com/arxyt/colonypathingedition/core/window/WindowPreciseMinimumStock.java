@@ -1,19 +1,19 @@
 package com.arxyt.colonypathingedition.core.window;
 
-import com.arxyt.colonypathingedition.core.costants.AdditionalContants;
+import com.arxyt.colonypathingedition.ColonyPathingEdition;
 import com.ldtteam.blockui.Pane;
 import com.ldtteam.blockui.controls.Button;
 import com.ldtteam.blockui.controls.ButtonImage;
 import com.ldtteam.blockui.controls.ItemIcon;
 import com.ldtteam.blockui.controls.Text;
 import com.ldtteam.blockui.views.ScrollingList;
+import com.ldtteam.structurize.client.gui.WindowSelectRes;
+import com.minecolonies.api.colony.IColonyManager;
 import com.minecolonies.api.colony.buildings.modules.IMinimumStockModuleView;
-import com.minecolonies.api.colony.buildings.views.IBuildingView;
 import com.minecolonies.api.crafting.ItemStorage;
 import com.minecolonies.api.util.Tuple;
 import com.minecolonies.api.util.constant.Constants;
 import com.minecolonies.core.client.gui.AbstractModuleWindow;
-import com.minecolonies.core.client.gui.WindowSelectRes;
 import com.minecolonies.core.network.messages.server.colony.building.AddMinimumStockToBuildingModuleMessage;
 import com.minecolonies.core.network.messages.server.colony.building.RemoveMinimumStockFromBuildingModuleMessage;
 import net.minecraft.network.chat.Component;
@@ -23,7 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 import static com.minecolonies.api.util.constant.WindowConstants.*;
 
-public class WindowPreciseMinimumStock extends AbstractModuleWindow {
+public class WindowPreciseMinimumStock extends AbstractModuleWindow<IMinimumStockModuleView> {
     /**
      * The resource string.
      */
@@ -47,14 +47,11 @@ public class WindowPreciseMinimumStock extends AbstractModuleWindow {
     /**
      * Constructor for the minimum stock window view.
      *
-     * @param building class extending
      * @param moduleView the module view.
      */
-    public WindowPreciseMinimumStock(
-            final IBuildingView building,
-            final IMinimumStockModuleView moduleView)
+    public WindowPreciseMinimumStock(final IMinimumStockModuleView moduleView)
     {
-        super(building, AdditionalContants.MOD_ID + RESOURCE_STRING);
+        super(moduleView, ResourceLocation.parse(ColonyPathingEdition.MODID + RESOURCE_STRING));
 
         resourceList = this.window.findPaneOfTypeByID("resourcesstock", ScrollingList.class);
         this.moduleView = moduleView;
@@ -91,7 +88,14 @@ public class WindowPreciseMinimumStock extends AbstractModuleWindow {
     {
         if (!moduleView.hasReachedLimit())
         {
-            new WindowSelectRes(this, (stack) -> true, (stack, qty) -> new AddMinimumStockToBuildingModuleMessage(buildingView, stack, qty).sendToServer(), true).open();
+            new WindowSelectRes(this,
+                    Component.empty(),
+                    null,
+                    IColonyManager.getInstance().getCompatibilityManager().getListOfAllItems(),
+                    (stack, qty) -> new AddMinimumStockToBuildingModuleMessage(buildingView, stack, qty).sendToServer(),
+                    true,
+                    Component.translatable("com.minecolonies.coremod.gui.scan.select.stack")
+            ).open();
         }
     }
 

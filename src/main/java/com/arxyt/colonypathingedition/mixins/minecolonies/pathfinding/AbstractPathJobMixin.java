@@ -68,6 +68,7 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) protected CachingBlockLookup cachedBlockLookup;
     @Shadow(remap = false) protected BlockPos.MutableBlockPos tempWorldPos;
     @Shadow(remap = false) protected int maxNodes;
+    @Shadow(remap = false) private MNode bestNode;
 
     @Shadow(remap = false) public abstract Mob getEntity();
     @Shadow(remap = false) protected abstract boolean isPassable(int x, int y, int z, boolean head, MNode parent);
@@ -104,7 +105,7 @@ public abstract class AbstractPathJobMixin{
     public abstract int invokeGetGroundHeight(final MNode node, final int x, final int y, final int z);
 
     @Invoker(value="createNode",remap = false)
-    public abstract MNode invokeCreateNode(final MNode parent, final int x, final int y, final int z, final int nodeKey, final double heuristic, final double cost);
+    public abstract MNode invokeCreateNode(final MNode parent, final int x, final int y, final int z, final double heuristic, final double cost);
 
     @Invoker(value="calculateSwimming",remap = false)
     public abstract boolean invokeCalculateSwimming(final BlockState below, final BlockState state, final BlockState above, @Nullable final MNode node);
@@ -276,13 +277,18 @@ public abstract class AbstractPathJobMixin{
     {
         this.actualMaxNodes = this.maxNodes;
         this.pathNodesToVisit = new PriorityQueue<>();
-        MNode bestNode = getAndSetupStartNode();
+        bestNode = getAndSetupStartNode();
         double bestNodeEndScore = getEndNodeScore(bestNode);
         // Node count since we found a better end node than the current one
         int nodesSinceEndNode = 0;
 
         boolean shouldSkip = false;
         while (!nodesToVisit.isEmpty()) {
+            if (Thread.currentThread().isInterrupted())
+            {
+                return null;
+            }
+
             Queue<MNode> cheapestNodelist = new ArrayDeque<>();
             if(nodesToVisit.peek() != null) {
                 pathNodesToVisit.remove(nodesToVisit.peek());
@@ -591,7 +597,7 @@ public abstract class AbstractPathJobMixin{
             MNode conerNode = nodes.get(nodeKey);
             if (conerNode == null){
                 boolean isPassable = checkConerCollision(conerX, conerY, conerZ);
-                conerNode = invokeCreateNode(null, conerX, conerY, conerZ, nodeKey, node.getHeuristic(), node.getCost());
+                conerNode = invokeCreateNode(null, conerX, conerY, conerZ, node.getHeuristic(), node.getCost());
                 conerNode.setCornerNode(isPassable);
                 conerNode.increaseVisited();
                 if(!isPassable && checkPossiblyPassing(node, nextX, newY, nextZ, conerNode, dX, newY - node.y, dZ)){
@@ -668,7 +674,7 @@ public abstract class AbstractPathJobMixin{
 
         if (nextNode == null)
         {
-            nextNode = invokeCreateNode(node, nextX, nextY, nextZ, nodeKey, heuristic, cost);
+            nextNode = invokeCreateNode(node, nextX, nextY, nextZ, heuristic, cost);
             nextNode.setOnRails(onRails);
             nextNode.setCornerNode(false);
 

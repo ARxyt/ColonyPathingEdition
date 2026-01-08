@@ -5,12 +5,11 @@ import com.ldtteam.blockui.views.BOWindow;
 import com.minecolonies.api.colony.buildings.modules.AbstractBuildingModuleView;
 import com.minecolonies.api.colony.buildings.modules.IBuildingModuleView;
 import com.minecolonies.api.util.Utils;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,12 +44,12 @@ public class TavernRecruitModuleView extends AbstractBuildingModuleView implemen
 
     @Override
     public BOWindow getWindow() {
-        return new TavernRecruitModuleWindow(buildingView, this);
+        return new TavernRecruitModuleWindow(this);
     }
 
     @Override
-    public String getDesc() {
-        return "com.arxyt.colonypathingedition.core.tavern_recruit";
+    public Component getDesc() {
+        return Component.translatable("com.arxyt.colonypathingedition.core.tavern_recruit");
     }
 
     public List<VisitorData> getVisitorData() {

@@ -98,6 +98,11 @@ public abstract class FurnaceBlockEntityMixin implements FurnaceBlockEntityExtra
     }
 
     @Unique
+    public void setProtectTime(int protectTime){
+        this.protectTime = protectTime;
+    }
+
+    @Unique
     public boolean atProtectTime() {
         return protectTime > 0;
     }
@@ -107,8 +112,8 @@ public abstract class FurnaceBlockEntityMixin implements FurnaceBlockEntityExtra
         tag.putInt("WorkerID", workerID);
     }
 
-    @Inject(method = "load", at = @At("RETURN"))
-    private void onLoad(CompoundTag tag, CallbackInfo ci) {
+    @Inject(method = "loadAdditional", at = @At("RETURN"))
+    private void onLoad(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
         if (tag.contains("WorkerID")) {
             workerID = tag.getInt("WorkerID");
         }

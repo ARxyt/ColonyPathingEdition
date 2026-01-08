@@ -113,7 +113,7 @@ public class UpdateManager {
 
         List<String> stableVersions = responseJson.getAsJsonArray("history_stable_version").asList().stream()
                 .map(JsonElement::getAsString)
-                .collect(Collectors.toList());
+                .toList();
         if(stableVersions.contains(currentVersion)){
             if(!responseJson.has("latest_stable_changelog")) return;
             JsonObject content = responseJson.getAsJsonObject("latest_stable_changelog");
@@ -125,7 +125,7 @@ public class UpdateManager {
 
         List<String> unstableVersions = responseJson.getAsJsonArray("history_unstable_version").asList().stream()
                 .map(JsonElement::getAsString)
-                .collect(Collectors.toList());
+                .toList();
         if(unstableVersions.contains(currentVersion)){
             if(!responseJson.has("latest_changelog")) return;
             JsonObject content = responseJson.getAsJsonObject("latest_changelog");

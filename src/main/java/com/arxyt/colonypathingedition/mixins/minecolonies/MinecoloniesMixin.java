@@ -20,6 +20,7 @@ public class MinecoloniesMixin {
         CropRotationLengthUpdateMessage.TYPE.register(registry);
         CropRotationSeasonCountMessage.TYPE.register(registry);
         CropRotationSeedUpdateMessage.TYPE.register(registry);
+        FarmFieldResizeMessage.TYPE.register(registry);
         TavernRecruitMessage.TYPE.register(registry);
     }
 }

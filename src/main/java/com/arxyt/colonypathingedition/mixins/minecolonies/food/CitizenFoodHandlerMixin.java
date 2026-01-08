@@ -36,7 +36,7 @@ public class CitizenFoodHandlerMixin {
             {
                 if (foodItem instanceof IMinecoloniesFoodItem)
                 {
-                    qualityFoodCounter += 0.5;
+                    qualityFoodCounter += 0.5F;
                 }
                 FoodProperties foodProperties = foodItem.getFoodProperties(new ItemStack(foodItem),null);
                 if(foodProperties != null){
@@ -47,7 +47,7 @@ public class CitizenFoodHandlerMixin {
             for (final Item foodItem : uniqueFoods){
                 if (foodItem instanceof IMinecoloniesFoodItem)
                 {
-                    diversityFoodCounter += 0.5;
+                    diversityFoodCounter += 0.5F;
                 }
                 FoodProperties foodProperties = foodItem.getFoodProperties(new ItemStack(foodItem),null);
                 if(foodProperties != null){

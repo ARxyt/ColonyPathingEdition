@@ -1,7 +1,7 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.linkage;
 
 import com.arxyt.colonypathingedition.core.easycolony.manager.LinkageManager;
-import com.minecolonies.core.client.gui.modules.RestaurantMenuModuleWindow;
+import com.minecolonies.core.client.gui.modules.building.RestaurantMenuModuleWindow;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;

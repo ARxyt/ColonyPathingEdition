@@ -1,5 +1,6 @@
 package com.arxyt.colonypathingedition.core.window;
 
+import com.arxyt.colonypathingedition.ColonyPathingEdition;
 import com.arxyt.colonypathingedition.api.FarmFieldExtra;
 import com.arxyt.colonypathingedition.core.data.farmlandmap.SpecialSeedManager;
 import com.arxyt.colonypathingedition.core.data.tag.ModTag;
@@ -8,15 +9,20 @@ import com.ldtteam.blockui.controls.Button;
 import com.ldtteam.blockui.controls.ItemIcon;
 import com.ldtteam.blockui.controls.TextField;
 import com.ldtteam.blockui.views.BOWindow;
+import com.minecolonies.api.colony.IColonyManager;
 import com.minecolonies.api.colony.IColonyView;
 import com.minecolonies.api.tileentities.AbstractTileEntityScarecrow;
 import com.minecolonies.core.client.gui.AbstractWindowSkeleton;
-import com.minecolonies.core.client.gui.WindowSelectRes;
+import com.ldtteam.structurize.client.gui.WindowSelectRes;
 import com.minecolonies.core.colony.buildingextensions.FarmField;
 import com.minecolonies.core.items.ItemCrop;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.CropBlock;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
@@ -26,8 +32,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.MOD_ID;
 
 @OnlyIn(Dist.CLIENT)
 public class WindowCropRotation extends AbstractWindowSkeleton {
@@ -73,7 +77,7 @@ public class WindowCropRotation extends AbstractWindowSkeleton {
      */
     public WindowCropRotation(@NotNull AbstractTileEntityScarecrow tileEntityScarecrow, @NotNull FarmField farmField, @Nullable final BOWindow parent)
     {
-        super(MOD_ID + WINDOW_RESOURCE, parent);
+        super(parent, ResourceLocation.parse(ColonyPathingEdition.MODID + WINDOW_RESOURCE));
         this.tileEntityScarecrow = tileEntityScarecrow;
         this.farmField = farmField;
         accessFieldData();
@@ -179,15 +183,18 @@ public class WindowCropRotation extends AbstractWindowSkeleton {
      */
     private void addSeed(final int slot)
     {
+        final Holder<Biome> biomeHolder = Minecraft.getInstance().level.getBiome(tileEntityScarecrow.getBlockPos());
         new WindowSelectRes(
                 this,
-                stack -> stack.is(Tags.Items.SEEDS)
+                Component.translatable("com.minecolonies.coremod.gui.field.selectseed"),
+                farmField.getSeed(),
+                IColonyManager.getInstance().getCompatibilityManager().getListOfMatchingItems(stack -> stack.is(Tags.Items.SEEDS)
                         || stack.is(ModTag.ADDITIONAL_SEEDS)
                         || SpecialSeedManager.isSpecialSeed(stack.getItem())
                         || (stack.getItem() instanceof BlockItem item && item.getBlock() instanceof CropBlock)
-                        || (stack.getItem() instanceof ItemCrop itemCrop && Minecraft.getInstance().level != null && itemCrop.canBePlantedIn(Minecraft.getInstance().level.getBiome(tileEntityScarecrow.getBlockPos()))),
-                (stack, qty) -> setSeed(slot,stack),
-                false).open();
+                        || (stack.getItem() instanceof ItemCrop itemCrop && itemCrop.canBePlantedIn(biomeHolder))),
+                (stack, qty) -> setSeed(slot,stack)
+        ).open();
     }
 
     /**

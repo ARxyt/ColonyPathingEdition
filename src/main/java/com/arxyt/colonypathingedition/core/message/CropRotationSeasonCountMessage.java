@@ -1,7 +1,6 @@
 package com.arxyt.colonypathingedition.core.message;
 
 import com.arxyt.colonypathingedition.api.FarmFieldExtra;
-import com.arxyt.colonypathingedition.core.costants.AdditionalContants;
 import com.ldtteam.common.network.PlayMessageType;
 import com.minecolonies.api.colony.IColony;
 import com.minecolonies.api.colony.buildingextensions.registry.BuildingExtensionRegistries;
