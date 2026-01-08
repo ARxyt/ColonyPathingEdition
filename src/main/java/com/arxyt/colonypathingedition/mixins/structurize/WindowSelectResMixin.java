@@ -1,7 +1,7 @@
-package com.arxyt.colonypathingedition.mixins.minecolonies.linkage;
+package com.arxyt.colonypathingedition.mixins.structurize;
 
 import com.arxyt.colonypathingedition.core.easycolony.manager.LinkageManager;
-import com.minecolonies.core.client.gui.WindowSelectRes;
+import com.ldtteam.structurize.client.gui.WindowSelectRes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
