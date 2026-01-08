@@ -101,7 +101,7 @@
     "minecolonies.linkage.RestaurantMenuModuleWindowMixin",
     "minecolonies.linkage.WindowHutAllInventoryMixin",
     "minecolonies.linkage.WindowPostBoxMixin",
-    "minecolonies.linkage.WindowSelectResMixin",
+    "structurize.WindowSelectResMixin",
     "minecolonies.workersetting.MinimumStockViewMixin",
     "structurize.WindowReplaceBlockMixin"
   ],

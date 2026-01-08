@@ -10,19 +10,23 @@ import com.ldtteam.blockui.controls.Button;
 import com.ldtteam.blockui.controls.ItemIcon;
 import com.ldtteam.blockui.controls.TextField;
 import com.ldtteam.blockui.views.BOWindow;
+import com.minecolonies.api.colony.IColonyManager;
 import com.minecolonies.api.colony.IColonyView;
 import com.minecolonies.api.tileentities.AbstractTileEntityScarecrow;
 import com.minecolonies.core.Network;
 import com.minecolonies.core.client.gui.AbstractWindowSkeleton;
-import com.minecolonies.core.client.gui.WindowSelectRes;
+import com.ldtteam.structurize.client.gui.WindowSelectRes;
 import com.minecolonies.core.colony.buildingextensions.FarmField;
 import com.minecolonies.core.items.ItemCrop;
 import com.teamtea.eclipticseasons.api.constant.solar.SolarTerm;
 import com.teamtea.eclipticseasons.api.util.EclipticUtil;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -227,15 +231,18 @@ public class WindowCropRotation extends AbstractWindowSkeleton {
      */
     private void addSeed(final int slot)
     {
+        final Holder<Biome> biomeHolder = Minecraft.getInstance().level.getBiome(tileEntityScarecrow.getBlockPos());
         new WindowSelectRes(
                 this,
-                stack -> stack.is(Tags.Items.SEEDS)
+                Component.translatable("com.minecolonies.coremod.gui.field.selectseed"),
+                farmField.getSeed(),
+                IColonyManager.getInstance().getCompatibilityManager().getListOfMatchingItems(stack -> stack.is(Tags.Items.SEEDS)
                         || stack.is(ModTag.ADDITIONAL_SEEDS)
                         || SpecialSeedManager.isSpecialSeed(stack.getItem())
                         || (stack.getItem() instanceof BlockItem item && item.getBlock() instanceof CropBlock)
-                        || (stack.getItem() instanceof ItemCrop itemCrop && itemCrop.canBePlantedIn(Minecraft.getInstance().level.getBiome(tileEntityScarecrow.getBlockPos()))),
-                (stack, qty) -> setSeed(slot,stack),
-                false).open();
+                        || (stack.getItem() instanceof ItemCrop itemCrop && itemCrop.canBePlantedIn(biomeHolder))),
+                (stack, qty) -> setSeed(slot,stack)
+        ).open();
     }
 
     /**

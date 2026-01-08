@@ -73,6 +73,7 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) private double maxCost;
     @Shadow(remap = false) private int visitedLevel;
     @Shadow(remap = false) private Queue<MNode> nodesToVisit;
+    @Shadow(remap = false) private MNode bestNode;
 
     @Shadow(remap = false) public abstract Mob getEntity();
     @Shadow(remap = false) protected abstract boolean isPassable(int x, int y, int z, boolean head, MNode parent);
@@ -88,7 +89,7 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) protected abstract boolean stopOnNodeLimit(int totalNodesVisited, MNode bestNode, int nodesSinceEndNode);
     @Shadow(remap = false) protected abstract void visitNode(MNode node);
     @Shadow(remap = false) @NotNull protected abstract Path finalizePath(MNode targetNode);
-    @Shadow(remap = false) private MNode bestNode;
+
 
     @Invoker(value="getGroundHeight",remap = false)
     public abstract int invokeGetGroundHeight(final MNode node, final int x, final int y, final int z);
@@ -336,7 +337,6 @@ public abstract class AbstractPathJobMixin{
                     bestNodeEndScore = getEndNodeScore(node);
                     result.setPathReachesDestination(true);
                     handleDebugPathReach(bestNode);
-
                     reachesDestination = true;
                     shouldSkip = true;
                     break;
@@ -493,11 +493,11 @@ public abstract class AbstractPathJobMixin{
             RailShape railShape;
             if (railState.hasProperty(BlockStateProperties.RAIL_SHAPE))
             {
-                railShape=railState.getValue(BlockStateProperties.RAIL_SHAPE);
+                railShape = railState.getValue(BlockStateProperties.RAIL_SHAPE);
             }
             else if(railState.hasProperty(BlockStateProperties.RAIL_SHAPE_STRAIGHT))
             {
-                railShape=railState.getValue(BlockStateProperties.RAIL_SHAPE_STRAIGHT);
+                railShape = railState.getValue(BlockStateProperties.RAIL_SHAPE_STRAIGHT);
             }
             else{
                 return true;
