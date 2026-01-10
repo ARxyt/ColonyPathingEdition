@@ -25,6 +25,9 @@ import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Objects;
 
@@ -41,14 +44,12 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
         super(type, world);
     }
 
-    @Override
-    public void addAdditionalSaveData(@NotNull CompoundTag tag) {
-        super.addAdditionalSaveData(tag);
-
+    @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
+    public void addAdditionalSaveData(CompoundTag compound, CallbackInfo ci) {
         //市民全局状态信息
-        tag.putString("aiState", getCitizenAI().getState().toString());
+        compound.putString("aiState", getCitizenAI().getState().toString());
         if(getCitizenColonyHandler() != null && getCitizenColonyHandler().getColony() != null) {
-            tag.putString("owner", getCitizenColonyHandler().getColony().getPermissions().getOwner().toString());
+            compound.putString("owner", getCitizenColonyHandler().getColony().getPermissions().getOwner().toString());
         }
     }
 

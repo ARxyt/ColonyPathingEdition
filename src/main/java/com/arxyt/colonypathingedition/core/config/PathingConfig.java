@@ -1,7 +1,22 @@
 package com.arxyt.colonypathingedition.core.config;
 
+import com.arxyt.colonypathingedition.ColonyPathingEdition;
 import com.arxyt.colonypathingedition.core.config.enums.BuilderModeEnum;
+import com.minecolonies.api.crafting.ItemStorage;
+import com.minecolonies.api.util.FoodUtils;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
+import net.minecraftforge.registries.ForgeRegistries;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class PathingConfig {
     public static ForgeConfigSpec.BooleanValue EATING_AI_MODULE;
@@ -9,7 +24,7 @@ public class PathingConfig {
 
     public static ForgeConfigSpec.BooleanValue TAVERN_ASSIGNMENT_MODULE;
     public static ForgeConfigSpec.BooleanValue ADDITIONAL_MINIMUM_STOCK_MODULE;
-
+    public static ForgeConfigSpec.BooleanValue FOOD_BLACK_LIST_MODULE;
     public static ForgeConfigSpec.BooleanValue HURT_ALERT;
     public static ForgeConfigSpec.BooleanValue ALLOW_RESURRECT;
     public static ForgeConfigSpec.ConfigValue<String> RESURRECT_ITEM;
@@ -62,6 +77,7 @@ public class PathingConfig {
     public static ForgeConfigSpec.BooleanValue MAX_ANIMAL_MODIFIER;
     public static ForgeConfigSpec.BooleanValue BUTCHER_INSTANT_KILL;
 
+    public static ForgeConfigSpec.BooleanValue DELIVERY_EAT_AT_WAREHOUSE;
     public static ForgeConfigSpec.BooleanValue USE_MAX_STOCK_FIRST;
     public static ForgeConfigSpec.BooleanValue PICK_MATERIAL_AT_HUT;
     public static ForgeConfigSpec.BooleanValue EARLY_ENCHANT;
@@ -74,8 +90,7 @@ public class PathingConfig {
     public static ForgeConfigSpec.DoubleValue FOOD_PUNISHER;
     public static ForgeConfigSpec.DoubleValue FOOD_BONUS_NORMAL;
     public static ForgeConfigSpec.DoubleValue FOOD_BONUS_MINECOLONIES;
-
-
+    public static ForgeConfigSpec.ConfigValue<List<? extends String>> GENERAL_FOOD_BLACK_LIST;
 
     public static ForgeConfigSpec.IntValue MAX_PATHING_DISTANCE;
 
@@ -95,6 +110,9 @@ public class PathingConfig {
         ADDITIONAL_MINIMUM_STOCK_MODULE = builder
                 .comment("Open this to add minimum stock module to most of huts, may affect Compatibility addon for MineColonies‘s module (default: true)\n 开启这个可以直接在酒馆雇佣游客，但是可能影响某些 Compatibility addon for MineColonies 内容的工作 (默认开启)")
                 .define("additionalMinimumStockModule", true);
+        FOOD_BLACK_LIST_MODULE = builder
+                .comment("Open this to add food black list to specific huts, you can edit exactly what workers won't eat at those huts(default: true)\n 开启这个可以给某几个特定的小屋增加员工禁食清单，这样员工就不会取食你所选定的食物 (默认开启)")
+                .define("foodBlackListModule", true);
         builder.pop();
         builder.push("Easycolony Feature #简易殖民地相关特性开关#");
         HURT_ALERT = builder
@@ -275,6 +293,9 @@ public class PathingConfig {
                 .define("butcherInstantKill",true);
         builder.pop();
         builder.push("Common Citizens Modifier #通用市民修改#");
+        DELIVERY_EAT_AT_WAREHOUSE = builder
+                .comment("Open this to enable delivery man eat at warehouse.\n 开启后快递员将会在仓库吃饭")
+                .define("deliveryEatAtWareHouse",true);
         USE_MAX_STOCK_FIRST = builder
                 .comment("Crafters will use its max stock to craft as default, no need research to unlock.\n 开启后工人会使用库存中余量最多的物品合成，无需点亮对应科技。")
                 .define("crafterUseMaxStockFirst",true);
@@ -304,6 +325,14 @@ public class PathingConfig {
                         Bonus of minecolonies' food nutrition for citizens (It's a multiplier on saturation) (default: 0.5)
                         殖民地食物奖励乘数(取决于食物饱和) (默认 : 0.5)""")
                 .defineInRange("minecoloniesFoodBonus", 0.5, 0.0, 1.0);
+        GENERAL_FOOD_BLACK_LIST = builder
+                .comment("""
+                        Write In “Foods" that you don‘t want citizen to eat at colonies.
+                        写入你不想市民在殖民地中吃的所有食物。"""
+                )
+                .defineList("generalFoodBlackList",
+                        List.of(),
+                        obj -> obj instanceof String);
         LEISURE_TIME = builder
                 .comment("""
                         Basic leisure time of citizens (s) (default: 180)
@@ -326,5 +355,29 @@ public class PathingConfig {
                 .defineInRange("pathingDistance", 1000, 500, 4095);
         builder.pop();
         return builder.build(); // 返回构建结果
+    }
+
+    public static Set<ItemStorage> food_black_list = new HashSet<>();
+
+    public static void onLoad() {
+        List<? extends String> list = PathingConfig.GENERAL_FOOD_BLACK_LIST.get();
+        if(list != null){
+            for (String itemString : list) {
+                try {
+                    ResourceLocation rl = ResourceLocation.parse(itemString);
+                    Item item = ForgeRegistries.ITEMS.getValue(rl);
+                    if (item != null && item != Items.AIR) {
+                        ItemStack itemStack = new ItemStack(item);
+                        if(FoodUtils.EDIBLE.test(itemStack)) {
+                            food_black_list.add(new ItemStorage(itemStack));
+                            continue;
+                        }
+                    }
+                    ColonyPathingEdition.LOGGER.warn("Wrong item or item not regard as food: {}", itemString);
+                } catch (Exception e) {
+                    ColonyPathingEdition.LOGGER.error("Failed to parse blacklist item: {}", itemString, e);
+                }
+            }
+        }
     }
 }

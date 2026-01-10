@@ -10,6 +10,7 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -29,6 +30,11 @@ public class ColonyPathingEdition {
         Mod.EventBusSubscriber.Bus.FORGE.bus().get().register(this.getClass());
         Mod.EventBusSubscriber.Bus.MOD.bus().get().register(this.getClass());
         LOGGER.info("Colony Pathing Edition mod loaded");
+    }
+
+    @SubscribeEvent
+    public static void onConfigLoad(@NotNull final ModConfigEvent event) {
+        PathingConfig.onLoad();
     }
 
     @SubscribeEvent

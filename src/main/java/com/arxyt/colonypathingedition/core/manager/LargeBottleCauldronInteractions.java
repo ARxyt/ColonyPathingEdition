@@ -48,11 +48,12 @@ public class LargeBottleCauldronInteractions {
             int waterLevel = state.getValue(LayeredCauldronBlock.LEVEL);
             ItemStack filled = new ItemStack(ModItems.large_water_bottle);
 
-            stack.shrink(1);
-            player.getInventory().add(filled);
+            if(!player.isCreative()) {
+                stack.shrink(1);
+                player.getInventory().add(filled);
+            }
 
             int newLevel = waterLevel - 2;
-
             if (newLevel > 0) {
                 level.setBlock(
                         pos,
@@ -78,8 +79,12 @@ public class LargeBottleCauldronInteractions {
     ) {
         if (!level.isClientSide) {
             ItemStack emptyed = new ItemStack(ModItems.large_empty_bottle);
-            stack.shrink(1);
-            player.getInventory().add(emptyed);
+
+            if(!player.isCreative()) {
+                stack.shrink(1);
+                player.getInventory().add(emptyed);
+            }
+
             level.setBlock(
                     pos,
                     Blocks.WATER_CAULDRON
@@ -106,8 +111,12 @@ public class LargeBottleCauldronInteractions {
                 return InteractionResult.PASS;
             }
             ItemStack emptyed = new ItemStack(ModItems.large_empty_bottle);
-            stack.shrink(1);
-            player.getInventory().add(emptyed);
+
+            if(!player.isCreative()) {
+                stack.shrink(1);
+                player.getInventory().add(emptyed);
+            }
+
             int newLevel = waterLevel + 2;
             if(newLevel <= 3) {
                 level.setBlock(

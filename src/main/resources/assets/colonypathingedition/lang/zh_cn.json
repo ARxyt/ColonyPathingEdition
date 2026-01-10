@@ -29,5 +29,8 @@
     "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.fail2": "%s 的灵魂没有回应...",
     "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.fail3": "%s 想要就此长眠。",
     "com.arxyt.colonypathingedition.core.tavern.recruit": "招募",
-    "com.arxyt.colonypathingedition.core.tavern_recruit": "招募"
+    "com.arxyt.colonypathingedition.core.tavern_recruit": "招募",
+    "com.arxyt.colonypathingedition.core.black_list": "食物黑名单",
+    "com.arxyt.colonypathingedition.core.black_list.title": "食物黑名单",
+    "com.arxyt.colonypathingedition.core.black_list.warning": "选择在此处工作的市民不会吃的食物"
 }

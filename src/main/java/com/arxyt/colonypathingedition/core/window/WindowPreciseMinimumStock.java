@@ -20,12 +20,15 @@ import com.minecolonies.core.network.messages.server.colony.building.RemoveMinim
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 
 import static com.minecolonies.api.util.constant.WindowConstants.*;
 import static com.minecolonies.api.util.constant.WindowConstants.QUANTITY_LABEL;
 import static com.minecolonies.api.util.constant.WindowConstants.RESOURCE_ICON;
 
+@OnlyIn(Dist.CLIENT)
 public class WindowPreciseMinimumStock extends AbstractModuleWindow<IMinimumStockModuleView> {
     /**
      * The resource string.

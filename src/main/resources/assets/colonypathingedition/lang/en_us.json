@@ -29,5 +29,8 @@
   "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.fail2": "%s's soul did not respond.",
   "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.fail3": "%s reluctant to wake up.",
   "com.arxyt.colonypathingedition.core.tavern.recruit": "Recruit",
-  "com.arxyt.colonypathingedition.core.tavern_recruit": "Recruit"
+  "com.arxyt.colonypathingedition.core.tavern_recruit": "Recruit",
+  "com.arxyt.colonypathingedition.core.black_list": "Food Black List",
+  "com.arxyt.colonypathingedition.core.black_list.title": "Food Black List",
+  "com.arxyt.colonypathingedition.core.black_list.warning": "Choose foods worker(s) can't eat at this hut"
 }
