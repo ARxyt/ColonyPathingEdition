@@ -13,6 +13,7 @@ public class LinkageManager {
     private static LinkageManager instance;
 
     private boolean eclipticSeasonsLoaded = false;
+    private boolean tweaksAddonLoaded = false;
 
     /**
      * 判断是否加载了节气mod。
@@ -35,6 +36,9 @@ public class LinkageManager {
     public void loadMods(ModList modList) {
         if (modList.isLoaded("eclipticseasons")) {
             this.eclipticSeasonsLoaded = true;
+        }
+        if (modList.isLoaded("minecolonies_tweaks")) {
+            this.tweaksAddonLoaded = true;
         }
     }
 

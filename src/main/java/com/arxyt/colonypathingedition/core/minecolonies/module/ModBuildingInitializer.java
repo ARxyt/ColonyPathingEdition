@@ -37,8 +37,7 @@ public class ModBuildingInitializer {
             insertBefore(ModBuildings.hospital.get(), STATS_MODULE, FOOD_BLACK_LIST);
             insertBefore(ModBuildings.bakery.get(), STATS_MODULE, FOOD_BLACK_LIST);
             insertBefore(ModBuildings.deliveryman.get(), STATS_MODULE, FOOD_BLACK_LIST);
-
-            // insertBefore(ModBuildings.kitchen.get(), STATS_MODULE, FOOD_BLACK_LIST);
+            insertBefore(ModBuildings.kitchen.get(), STATS_MODULE, FOOD_BLACK_LIST);
         }
     }
 

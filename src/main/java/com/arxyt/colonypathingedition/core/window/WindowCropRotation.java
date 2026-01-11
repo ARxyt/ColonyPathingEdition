@@ -6,13 +6,16 @@ import com.arxyt.colonypathingedition.core.data.farmlandmap.SpecialSeedManager;
 import com.arxyt.colonypathingedition.core.manager.LinkageManager;
 import com.arxyt.colonypathingedition.core.message.*;
 import com.arxyt.colonypathingedition.core.data.tag.ModTag;
+import com.ldtteam.blockui.PaneBuilders;
 import com.ldtteam.blockui.controls.Button;
 import com.ldtteam.blockui.controls.ItemIcon;
 import com.ldtteam.blockui.controls.TextField;
+import com.ldtteam.blockui.controls.Tooltip;
 import com.ldtteam.blockui.views.BOWindow;
 import com.minecolonies.api.colony.IColonyManager;
 import com.minecolonies.api.colony.IColonyView;
 import com.minecolonies.api.tileentities.AbstractTileEntityScarecrow;
+import com.minecolonies.api.util.MessageUtils;
 import com.minecolonies.core.Network;
 import com.minecolonies.core.client.gui.AbstractWindowSkeleton;
 import com.ldtteam.structurize.client.gui.WindowSelectRes;
@@ -20,9 +23,11 @@ import com.minecolonies.core.colony.buildingextensions.FarmField;
 import com.minecolonies.core.items.ItemCrop;
 import com.teamtea.eclipticseasons.api.constant.solar.SolarTerm;
 import com.teamtea.eclipticseasons.api.util.EclipticUtil;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
@@ -36,6 +41,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.minecolonies.api.util.constant.TranslationConstants.PARTIAL_BLOCK_HUT_FIELD_DIRECTION_ABSOLUTE;
+import static com.minecolonies.api.util.constant.TranslationConstants.WARNING_COLONY_FOUNDING_FAILED;
 
 @OnlyIn(Dist.CLIENT)
 public class WindowCropRotation extends AbstractWindowSkeleton {
@@ -64,7 +72,8 @@ public class WindowCropRotation extends AbstractWindowSkeleton {
     /**
      * The farm field instance.
      */
-    private final @NotNull FarmField farmField;
+    @NotNull
+    private final FarmField farmField;
 
     // 储存每个轮作阶段的种子
     private final Map<Integer, ItemStack> rotationSeeds = new HashMap<>();

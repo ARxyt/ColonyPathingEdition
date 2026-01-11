@@ -12,6 +12,7 @@ import com.minecolonies.api.colony.IColonyView;
 import com.minecolonies.api.colony.buildingextensions.IBuildingExtension;
 import com.minecolonies.api.colony.buildingextensions.registry.BuildingExtensionRegistries;
 import com.minecolonies.api.colony.buildings.views.IBuildingView;
+import com.minecolonies.api.util.MessageUtils;
 import com.minecolonies.api.util.constant.Constants;
 import com.minecolonies.core.Network;
 import com.minecolonies.core.client.gui.AbstractWindowSkeleton;
@@ -41,6 +42,8 @@ import static com.minecolonies.core.colony.buildingextensions.FarmField.MAX_RANG
 // This is a temporary fix dealing with conflicts to tweaks addon
 @OnlyIn(Dist.CLIENT)
 public class NewWindowField extends AbstractWindowSkeleton {
+    private static final String FARM_FIELD_IS_NULL = "com.arxyt.colonypathingedition.core.field_is_null";
+
     /**
      * The prefix ID of the directional buttons.
      */
@@ -113,7 +116,12 @@ public class NewWindowField extends AbstractWindowSkeleton {
      */
     private void selectSeed()
     {
-        assert farmField != null;
+        if (this.farmField == null) {
+            MessageUtils.format(FARM_FIELD_IS_NULL)
+                    .withPriority(MessageUtils.MessagePriority.DANGER)
+                    .sendTo(Minecraft.getInstance().player);
+            return;
+        }
         WindowCropRotation customWindow = new WindowCropRotation(tileEntityScarecrow, farmField,this);
         customWindow.open();
     }

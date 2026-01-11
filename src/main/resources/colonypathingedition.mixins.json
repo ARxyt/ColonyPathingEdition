@@ -101,9 +101,9 @@
     "minecolonies.linkage.RestaurantMenuModuleWindowMixin",
     "minecolonies.linkage.WindowHutAllInventoryMixin",
     "minecolonies.linkage.WindowPostBoxMixin",
-    "structurize.WindowSelectResMixin",
     "minecolonies.workersetting.MinimumStockViewMixin",
-    "structurize.WindowReplaceBlockMixin"
+    "structurize.WindowReplaceBlockMixin",
+    "structurize.WindowSelectResMixin"
   ],
   "server": [],
   "priority": 999

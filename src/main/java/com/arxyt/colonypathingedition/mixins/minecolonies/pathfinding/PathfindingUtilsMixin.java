@@ -21,6 +21,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
+import static net.minecraft.world.level.block.CampfireBlock.LIT;
+
 @Mixin(value = PathfindingUtils.class, remap = false)
 public abstract class PathfindingUtilsMixin {
 
@@ -163,7 +165,7 @@ public abstract class PathfindingUtilsMixin {
 
         return blockState.is(ModTags.dangerousBlocks) ||
                 block instanceof FireBlock ||
-                block instanceof CampfireBlock ||
+                (block instanceof CampfireBlock && blockState.getValue(LIT)) ||
                 block instanceof MagmaBlock ||
                 block instanceof PowderSnowBlock ||
                 block == Blocks.LAVA_CAULDRON;
