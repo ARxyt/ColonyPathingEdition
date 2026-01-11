@@ -2,6 +2,7 @@ package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding;
 
 import com.minecolonies.api.blocks.huts.AbstractBlockMinecoloniesDefault;
 import com.minecolonies.api.entity.mobs.drownedpirate.AbstractDrownedEntityPirateRaider;
+import com.minecolonies.api.items.ModTags;
 import com.minecolonies.api.util.ShapeUtil;
 import com.minecolonies.core.entity.pathfinding.PathfindingUtils;
 import com.minecolonies.core.entity.pathfinding.SurfaceType;
@@ -10,9 +11,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.FenceBlock;
-import net.minecraft.world.level.block.WallBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -21,6 +20,8 @@ import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.gen.Invoker;
+
+import static net.minecraft.world.level.block.CampfireBlock.LIT;
 
 @Mixin(value = PathfindingUtils.class, remap = false)
 public abstract class PathfindingUtilsMixin {
@@ -151,5 +152,22 @@ public abstract class PathfindingUtilsMixin {
         }
 
         return pos.immutable();
+    }
+
+    /**
+     * @author ARxyt
+     * @reason A change of dangerous block.
+     */
+    @Overwrite(remap = false)
+    public static boolean isDangerous(final BlockState blockState)
+    {
+        final Block block = blockState.getBlock();
+
+        return blockState.is(ModTags.dangerousBlocks) ||
+                block instanceof FireBlock ||
+                (block instanceof CampfireBlock && blockState.getValue(LIT)) ||
+                block instanceof MagmaBlock ||
+                block instanceof PowderSnowBlock ||
+                block == Blocks.LAVA_CAULDRON;
     }
 }

@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.structurize;
 
-import com.arxyt.colonypathingedition.core.easycolony.manager.LinkageManager;
+import com.arxyt.colonypathingedition.core.manager.LinkageManager;
 import com.ldtteam.structurize.client.gui.WindowSelectRes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

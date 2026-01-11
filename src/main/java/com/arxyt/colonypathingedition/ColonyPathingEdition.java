@@ -6,6 +6,7 @@ import com.arxyt.colonypathingedition.core.easycolony.event.HurtAlertEvent;
 import com.arxyt.colonypathingedition.core.easycolony.event.LinkageEvent;
 import com.arxyt.colonypathingedition.core.easycolony.event.ReadMindEvent;
 import com.arxyt.colonypathingedition.core.easycolony.event.ResurrectEvent;
+import com.arxyt.colonypathingedition.core.event.LargeBottleCauldronInteractions;
 import com.arxyt.colonypathingedition.core.message.*;
 import com.arxyt.colonypathingedition.core.minecolonies.module.ModBuildingInitializer;
 import com.arxyt.colonypathingedition.core.update.UpdateManager;
@@ -44,6 +45,7 @@ public class ColonyPathingEdition {
         NeoForge.EVENT_BUS.register(new HurtAlertEvent());
         NeoForge.EVENT_BUS.register(new ReadMindEvent());
         NeoForge.EVENT_BUS.register(new ResurrectEvent());
+        NeoForge.EVENT_BUS.register(new LargeBottleCauldronInteractions());
         LOGGER.info("Colony Pathing Edition mod loaded");
     }
 

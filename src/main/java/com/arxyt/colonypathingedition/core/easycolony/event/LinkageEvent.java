@@ -1,9 +1,8 @@
 package com.arxyt.colonypathingedition.core.easycolony.event;
 
-import com.arxyt.colonypathingedition.core.easycolony.manager.LinkageManager;
+import com.arxyt.colonypathingedition.core.manager.LinkageManager;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
-import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 
 /**

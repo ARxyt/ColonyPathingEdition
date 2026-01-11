@@ -453,7 +453,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
         BlockState state = world.getBlockState(pos.above());
         if(state.getBlock() instanceof BushBlock || state.getBlock() instanceof CropBlock){
             BlockHitResult hitResult = new BlockHitResult(Vec3.atCenterOf(pos.above()), Direction.UP, pos.above(), false);
-            FakePlayer fakePlayer = FakePlayerFactory.getMinecraft(world);
+            FakePlayer fakePlayer = getFakePlayer();
             ItemStack seedStack = state.getCloneItemStack(hitResult, world, pos.above(),fakePlayer);
             if(farmField.getSeed().getItem() == seedStack.getItem()){
                 InteractionResult result = state.useWithoutItem(world, fakePlayer, hitResult);
@@ -796,7 +796,7 @@ public abstract class EntityAIWorkFarmerMixin extends AbstractEntityAICrafting<J
 
         if (item.getItem() instanceof BlockItem blockItem
                 && (blockItem.getBlock() instanceof CropBlock || blockItem.getBlock() instanceof StemBlock || blockItem.getBlock() instanceof MinecoloniesCropBlock || blockItem.getBlock() instanceof BushBlock)
-                && (blockItem.getBlock().defaultBlockState().canSurvive(worker.level(), position.above()) || (isUnderWater(item) && world.getBlockState(position.above()).is(Blocks.WATER)) || SpecialSeedManager.isSpecialSeed(item.getItem())))
+                && (!isUnderWater(item) || world.getBlockState(position.above()).is(Blocks.WATER)))
         {
             @NotNull final Item seed = item.getItem();
             InteractionResult placeResult = blockItem.place(

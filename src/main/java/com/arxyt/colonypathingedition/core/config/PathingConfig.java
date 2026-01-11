@@ -62,6 +62,7 @@ public class PathingConfig {
     public static ModConfigSpec.BooleanValue MAX_ANIMAL_MODIFIER;
     public static ModConfigSpec.BooleanValue BUTCHER_INSTANT_KILL;
 
+    public static ModConfigSpec.BooleanValue DELIVERY_EAT_AT_WAREHOUSE;
     public static ModConfigSpec.BooleanValue USE_MAX_STOCK_FIRST;
     public static ModConfigSpec.BooleanValue PICK_MATERIAL_AT_HUT;
     public static ModConfigSpec.BooleanValue EARLY_ENCHANT;
@@ -273,6 +274,9 @@ public class PathingConfig {
                 .define("butcherInstantKill",true);
         builder.pop();
         builder.push("Common Citizens Modifier #通用市民修改#");
+        DELIVERY_EAT_AT_WAREHOUSE = builder
+                .comment("Open this to enable delivery man eat at warehouse.\n 开启后快递员将会在仓库吃饭")
+                .define("deliveryEatAtWareHouse",true);
         USE_MAX_STOCK_FIRST = builder
                 .comment("Crafters will use its max stock to craft as default, no need research to unlock.\n 开启后工人会使用库存中余量最多的物品合成，无需点亮对应科技。")
                 .define("crafterUseMaxStockFirst",true);

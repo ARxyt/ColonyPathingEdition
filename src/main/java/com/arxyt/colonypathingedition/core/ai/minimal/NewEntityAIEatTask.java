@@ -116,6 +116,7 @@ public class NewEntityAIEatTask implements IStateAI {
         citizen.releaseUsingItem();
         citizen.stopUsingItem();
         citizen.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        citizen.getCitizenData().setVisibleStatus(null);
         checkState = CHECK_INHAND;
         timeOutWalking = 0;
         waitingTicks = 0;
@@ -178,22 +179,21 @@ public class NewEntityAIEatTask implements IStateAI {
             }
             case CHECK_HUT : {
                 final ICitizenData citizenData = citizen.getCitizenData();
-                final IColony colony = citizenData.getColony();
-                IBuilding buildingWorker = citizenData.getWorkBuilding();
+                final IBuilding buildingWorker = citizenData.getWorkBuilding();
                 if (buildingWorker == null) {
                     return GO_TO_RESTAURANT;
                 }
+                final IColony colony = citizenData.getColony();
                 final BlockPos bestRestaurantPos = colony.getBuildingManager().getBestBuilding(citizen, BuildingCook.class);
                 final BlockPos citizenPos = citizen.blockPosition();
-                final BlockPos buildingPos;
-                final IBuilding buildingToCheck;
-                if (buildingWorker instanceof BuildingDeliveryman){
-                    buildingPos = colony.getBuildingManager().getBestBuilding(citizen, BuildingWareHouse.class);
-                    buildingToCheck = colony.getBuildingManager().getBuilding(buildingPos);
-                }
-                else {
-                    buildingPos = buildingWorker.getPosition();
-                    buildingToCheck = buildingWorker;
+                BlockPos buildingPos = buildingWorker.getPosition();
+                IBuilding buildingToCheck = buildingWorker;
+                if (PathingConfig.DELIVERY_EAT_AT_WAREHOUSE.get() && buildingWorker instanceof BuildingDeliveryman){
+                    BlockPos alterBuildingPos = colony.getBuildingManager().getBestBuilding(citizen, BuildingWareHouse.class);
+                    if(alterBuildingPos != null) {
+                        buildingPos = alterBuildingPos;
+                        buildingToCheck = colony.getBuildingManager().getBuilding(alterBuildingPos);
+                    }
                 }
                 if(buildingToCheck == null){
                     return  GO_TO_RESTAURANT;
@@ -222,7 +222,7 @@ public class NewEntityAIEatTask implements IStateAI {
                 final IColony colony = citizenData.getColony();
                 final Map<BlockPos,BuildingCook> alteredRestaurantPos = colony.getBuildingManager().getBuildings().entrySet()
                         .stream()
-                        .filter(e -> e.getValue() instanceof BuildingCook && e.getKey().distManhattan(citizen.getOnPos()) <= MAX_SCORE_DISTANCE)
+                        .filter(e -> e.getValue() instanceof BuildingCook cook && cook.getBuildingLevel() > 0)
                         .collect(Collectors.toMap(
                                 Map.Entry::getKey,
                                 e -> (BuildingCook) e.getValue()
@@ -230,13 +230,20 @@ public class NewEntityAIEatTask implements IStateAI {
                 final BlockPos citizenPos = citizen.getOnPos();
                 restaurantPos = alteredRestaurantPos.entrySet()
                         .stream()
+                        .filter(e -> e.getKey().distManhattan(citizen.getOnPos()) <= MAX_SCORE_DISTANCE)
                         .min(Comparator.comparingInt(e -> {
-                            int distance = (int) e.getKey().distManhattan(citizenPos);
+                            int distance = e.getKey().distManhattan(citizenPos);
                             int people = ((BuildingCookExtra)(e.getValue())).getCustomerCount(); // 实际方法名
                             return distance + Math.max(people - 5, 0) * CROWD_PENALTY;
                         }))
                         .map(Map.Entry::getKey)
-                        .orElse(colony.getBuildingManager().getBestBuilding(citizen, BuildingCook.class));
+                        .orElse(
+                                alteredRestaurantPos.entrySet()
+                                        .stream()
+                                        .min(Comparator.comparingInt(e -> e.getKey().distManhattan(citizen.getOnPos())))
+                                        .map(Map.Entry::getKey)
+                                        .orElse(null)
+                        );
                 if(restaurantPos != null){
                     final IBuilding building = Objects.requireNonNull(citizen.getCitizenColonyHandler().getColonyOrRegister()).getBuildingManager().getBuilding(restaurantPos);
                     if(building instanceof BuildingCook cook){
@@ -496,11 +503,11 @@ public class NewEntityAIEatTask implements IStateAI {
         }
         eatenFood.clear();
         citizenData.setJustAte(true);
+        reset();
         return DONE;
     }
 
     private IState endEating(){
-        reset();
         if (citizen.getCitizenJobHandler().getColonyJob() != null) {
             citizen.getCitizenData().setVisibleStatus(VisibleCitizenStatus.WORKING);
             return CitizenAIState.WORK;

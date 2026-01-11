@@ -6,6 +6,9 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -27,8 +30,22 @@ public class SpecialSeedManager {
         event.addListener(new FarmlandMapLoader());
     }
 
+    // 客户端世界加载时
+    @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
+    public void onClientWorldLoad(ClientPlayerNetworkEvent.LoggingIn event) {
+        if(event.getPlayer().level().isClientSide) {
+            loadMappings();
+        }
+    }
+
+    // 服务器启动时
     @SubscribeEvent
     public void onServerStarted(ServerStartedEvent event) {
+        loadMappings();
+    }
+
+    public void loadMappings() {
         ColonyPathingEdition.LOGGER.info("[SpecialSeeds] Checking available seed-soil pairs...");
         SPECIAL_SEEDS.clear();
 

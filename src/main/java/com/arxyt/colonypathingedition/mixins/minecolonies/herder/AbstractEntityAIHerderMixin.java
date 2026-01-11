@@ -74,6 +74,7 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
     @Unique private int pickupTimeOut;
     @Unique private List<Animal> toFeedList;
     @Unique private Animal currentFed;
+    @Unique private int butcherTimeOut = 0;
 
     public AbstractEntityAIHerderMixin(@NotNull J job) {
         super(job);
@@ -188,6 +189,7 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
                 case CHECK_BUTCHER : {
                     if (ColonyConstants.rand.nextDouble() < chanceToButcher(animals))
                     {
+                        butcherTimeOut = 0;
                         return HERDER_BUTCHER;
                     }
                 }
@@ -279,8 +281,11 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
         }
 
         walkingToAnimal(toKill);
-        if (BlockPosUtil.getDistance2D(center,toKill.blockPosition()) < 4 && !ItemStackUtils.isEmpty(this.worker.getMainHandItem())) {
+        if ((butcherTimeOut >= 15 || BlockPosUtil.getDistance2D(center,toKill.blockPosition()) < 4) && !ItemStackUtils.isEmpty(this.worker.getMainHandItem())) {
             butcherAnimalCopy(toKill);
+        }
+        else {
+            butcherTimeOut++;
         }
 
         if (!toKill.isAlive()) {

@@ -115,4 +115,5 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         }
     }
 
+
 }

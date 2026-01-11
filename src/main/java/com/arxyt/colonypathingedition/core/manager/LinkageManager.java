@@ -1,4 +1,4 @@
-package com.arxyt.colonypathingedition.core.easycolony.manager;
+package com.arxyt.colonypathingedition.core.manager;
 
 import com.arxyt.colonypathingedition.ColonyPathingEdition;
 
