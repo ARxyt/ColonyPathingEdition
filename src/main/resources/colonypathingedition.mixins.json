@@ -94,7 +94,6 @@
     "minecraft.FurnaceBlockEntityMixin"
   ],
   "client": [
-    "minecolonies.compatible.WindowHireWorkerMixin",
     "minecolonies.farm.BlockScarecrowMixin",
     "minecolonies.farm.FarmFieldClientMixin",
     "minecolonies.farm.FarmFieldsModuleWindowMixin",
