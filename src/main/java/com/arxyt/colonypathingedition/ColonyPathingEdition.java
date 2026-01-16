@@ -8,8 +8,10 @@ import com.arxyt.colonypathingedition.core.easycolony.event.ReadMindEvent;
 import com.arxyt.colonypathingedition.core.easycolony.event.ResurrectEvent;
 import com.arxyt.colonypathingedition.core.event.LargeBottleCauldronInteractions;
 import com.arxyt.colonypathingedition.core.message.*;
+import com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModels;
 import com.arxyt.colonypathingedition.core.minecolonies.module.ModBuildingInitializer;
 import com.arxyt.colonypathingedition.core.update.UpdateManager;
+import com.minecolonies.api.IMinecoloniesAPI;
 import com.mojang.logging.LogUtils;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
@@ -21,6 +23,7 @@ import net.neoforged.fml.javafmlmod.FMLModContainer;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.registries.RegisterEvent;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
@@ -47,6 +50,13 @@ public class ColonyPathingEdition {
         NeoForge.EVENT_BUS.register(new ResurrectEvent());
         NeoForge.EVENT_BUS.register(new LargeBottleCauldronInteractions());
         LOGGER.info("Colony Pathing Edition mod loaded");
+    }
+
+    @SubscribeEvent
+    private void onRegister(RegisterEvent e) {
+        if (e.getRegistryKey() == IMinecoloniesAPI.getInstance().getBuildingRegistry().key()) {
+            BuildingModels.init();
+        }
     }
 
     @SubscribeEvent

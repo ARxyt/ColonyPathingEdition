@@ -9,4 +9,8 @@ public class BuildingModels {
     public static final BuildingEntry.ModuleProducer<TavernRecruitModule, TavernRecruitModuleView> TAVERN_RECRUIT =
         new BuildingEntry.ModuleProducer<>("consume_stats", TavernRecruitModule::new, () -> TavernRecruitModuleView::new);
 
+
+    public static void init() {
+
+    }
 }

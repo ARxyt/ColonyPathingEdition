@@ -135,7 +135,7 @@ public abstract class EntityAIWorkCookMixin extends AbstractEntityAIBasicMixin<B
 
         if (!handler.hasSpace()) {
             for (int feedingAttempts = 0; feedingAttempts < 10; feedingAttempts++) {
-                final int foodSlot = FoodUtils.getBestFoodForCitizen(getWorker().getInventoryCitizen(), citizenData, module.getMenu());
+                final int foodSlot = FoodUtilExtra.getBestFoodForCitizenWithRestaurantCheck(getWorker().getInventoryCitizen(), citizenData, module.getMenu(), false);
                 if (foodSlot != -1) {
                     final ItemStack stack = getWorker().getInventoryCitizen().extractItem(foodSlot, 1, false);
                     citizenData.increaseSaturation(FoodUtils.getFoodValue(stack, getWorker()));
