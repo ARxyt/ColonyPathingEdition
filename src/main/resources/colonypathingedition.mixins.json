@@ -13,6 +13,7 @@
     "minecolonies.EntityAIWorkDeliverymanMixin",
     "minecolonies.EntityAIWorkEnchanterMixin",
     "minecolonies.ItemStackUtilsMixin",
+    "minecolonies.ModuleProducerMixin",
     "minecolonies.NetworkChannelMixin",
     "minecolonies.accessor.AbstractAISkeletonAccessor",
     "minecolonies.accessor.AbstractEntityAIBasicAccessor",
@@ -93,6 +94,7 @@
     "minecraft.FurnaceBlockEntityMixin"
   ],
   "client": [
+    "minecolonies.compatible.WindowHireWorkerMixin",
     "minecolonies.farm.BlockScarecrowMixin",
     "minecolonies.farm.FarmFieldClientMixin",
     "minecolonies.farm.FarmFieldsModuleWindowMixin",

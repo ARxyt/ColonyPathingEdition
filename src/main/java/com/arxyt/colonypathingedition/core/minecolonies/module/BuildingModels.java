@@ -13,4 +13,8 @@ public class BuildingModels {
 
     public static final BuildingEntry.ModuleProducer<FoodBlackListMenuModule, FoodBlackListMenuModuleView> FOOD_BLACK_LIST =
             new BuildingEntry.ModuleProducer<>("food_black_list", FoodBlackListMenuModule::new, () -> FoodBlackListMenuModuleView::new);
+
+    public static void init(){
+
+    }
 }

@@ -47,7 +47,7 @@ public abstract class WindowHireWorkerMixin extends AbstractWindowSkeleton{
         int xOffset = 15;
         for (final IAssignmentModuleView hireModule : moduleViews)
         {
-            final JobEntry entry = hireModule.getJobEntry();
+            JobEntry entry = hireModule.getJobEntry();
 
             if(entry == null){
                 continue;

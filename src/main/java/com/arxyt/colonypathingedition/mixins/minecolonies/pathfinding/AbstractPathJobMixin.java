@@ -671,10 +671,10 @@ public abstract class AbstractPathJobMixin{
         final double heuristic = computeHeuristic(nextX, nextY, nextZ);
         final double cost = node.getCost() + nextCost;
 
-        // fix to distant horizon
-        if(heuristic == 0.0 && node.getHeuristic() == 0){
-            return;
-        }
+//        // fix to distant horizon, compatibility fix.
+//        if(node.getHeuristic() == 0 && node.parent != null && node.parent.getHeuristic() == 0){
+//            return;
+//        }
 
         if (nextNode == null)
         {
