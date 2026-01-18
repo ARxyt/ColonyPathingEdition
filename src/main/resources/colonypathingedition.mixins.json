@@ -6,6 +6,7 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "minecolonies.AbstractBuildingMixin",
+    "minecolonies.AbstractBuildingViewMixin",
     "minecolonies.AbstractEntityAIBasicMixin",
     "minecolonies.AbstractEntityAICraftingMixin",
     "minecolonies.AbstractEntityAIInteractMixin",
@@ -94,6 +95,7 @@
     "minecraft.FurnaceBlockEntityMixin"
   ],
   "client": [
+    "minecolonies.compatible.WindowHireWorkerMixin",
     "minecolonies.farm.BlockScarecrowMixin",
     "minecolonies.farm.FarmFieldClientMixin",
     "minecolonies.farm.FarmFieldsModuleWindowMixin",
