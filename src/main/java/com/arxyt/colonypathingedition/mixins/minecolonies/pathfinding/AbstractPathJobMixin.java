@@ -213,10 +213,12 @@ public abstract class AbstractPathJobMixin{
                 }
                 else if ( pathingOptions.dropCost != 0)
                 {
-                    if (!(dY==1 && below.getBlock() instanceof StairBlock)) {
+                    if (!(dY == -1 && below.getBlock() instanceof StairBlock)) {
                         double basicDropCost = Math.abs(Math.pow((dYDouble + 2. / 5) , 3))- 8. / 125;
-                        if (dYDouble > -3.0 && onPath){
-                            basicDropCost *= pathingOptions.onPathCost;
+                        if (dYDouble >= -1.25){
+                            if(onPath) {
+                                basicDropCost *= pathingOptions.onPathCost;
+                            }
                         }
                         else {
                             basicDropCost *= Math.abs(dYDouble);

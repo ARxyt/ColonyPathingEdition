@@ -2,6 +2,7 @@ package com.arxyt.colonypathingedition.mixins.minecolonies;
 
 import com.arxyt.colonypathingedition.core.message.*;
 import com.arxyt.colonypathingedition.core.message.compatible.CompatibleBuildingHiringModeMessage;
+import com.arxyt.colonypathingedition.core.message.compatible.CompatibleHireFireMessage;
 import com.minecolonies.api.network.IMessage;
 import com.minecolonies.core.network.NetworkChannel;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,6 +22,7 @@ public abstract class NetworkChannelMixin {
     void registerNewMessage(CallbackInfo ci, int idx){
         registerMessage(++idx, AlterBlackListMenuItemMessage.class, AlterBlackListMenuItemMessage::new);
         registerMessage(++idx, CompatibleBuildingHiringModeMessage.class, CompatibleBuildingHiringModeMessage::new);
+        registerMessage(++idx, CompatibleHireFireMessage.class, CompatibleHireFireMessage::new);
         registerMessage(++idx, CropRotationLengthUpdateMessage.class, CropRotationLengthUpdateMessage::new);
         registerMessage(++idx, CropRotationCurrentDayMessage.class, CropRotationCurrentDayMessage::new);
         registerMessage(++idx, CropRotationCurrentSeasonMessage.class, CropRotationCurrentSeasonMessage::new);

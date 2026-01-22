@@ -95,7 +95,7 @@ public class CompatibleHireFireMessage extends AbstractBuildingServerMessage<IBu
     protected void onExecute(final NetworkEvent.Context ctxIn, final boolean isLogicalServer, final IColony colony, final IBuilding building)
     {
         IBuildingModule targetModule = building.getModule(moduleId);
-        if(!Objects.equals(targetModule.getProducer().key, moduleKey)) {
+        if(targetModule == null || !Objects.equals(targetModule.getProducer().key, moduleKey)) {
             targetModule = building.getModule(IAssignsJob.class, module -> Objects.equals(module.getProducer().key, moduleKey));
         }
         if (targetModule instanceof IAssignsJob module)

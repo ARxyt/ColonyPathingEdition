@@ -72,7 +72,7 @@ public class CompatibleBuildingHiringModeMessage extends AbstractBuildingServerM
     public void onExecute(final NetworkEvent.Context ctxIn, final boolean isLogicalServer, final IColony colony, final IBuilding building)
     {
         IBuildingModule targetModule = building.getModule(moduleId);
-        if(!Objects.equals(targetModule.getProducer().key, moduleKey)) {
+        if(targetModule == null || !Objects.equals(targetModule.getProducer().key, moduleKey)) {
             targetModule = building.getModule(IAssignsCitizen.class, module -> Objects.equals(module.getProducer().key, moduleKey));
         }
         if (targetModule instanceof IAssignsCitizen module)

@@ -90,6 +90,7 @@
     "minecolonies.workersetting.MinimumStockModuleMixin",
     "minecolonies.workersetting.RegisteredStructureManagerMixin",
     "minecraft.AbstractMinecartMixin",
+    "minecraft.BeaconBlockEntityMixin",
     "minecraft.DamageSourcesAccessor",
     "minecraft.DoorBlockMixin",
     "minecraft.FenceGateBlockMixin",
