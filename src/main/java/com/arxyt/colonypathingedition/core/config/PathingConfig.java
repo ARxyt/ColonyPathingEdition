@@ -25,6 +25,7 @@ public class PathingConfig {
     public static ForgeConfigSpec.BooleanValue TAVERN_ASSIGNMENT_MODULE;
     public static ForgeConfigSpec.BooleanValue ADDITIONAL_MINIMUM_STOCK_MODULE;
     public static ForgeConfigSpec.BooleanValue FOOD_BLACK_LIST_MODULE;
+
     public static ForgeConfigSpec.BooleanValue HURT_ALERT;
     public static ForgeConfigSpec.BooleanValue ALLOW_RESURRECT;
     public static ForgeConfigSpec.ConfigValue<String> RESURRECT_ITEM;
@@ -105,10 +106,10 @@ public class PathingConfig {
         builder.pop();
         builder.push("Building Module Opener #房屋模块特性开关#");
         TAVERN_ASSIGNMENT_MODULE = builder
-                .comment("Open this to assign visitors directly trough tavern block, conflict with Tweaks addon for Minecolonies (default: false)\n 开启这个可以直接在酒馆雇佣游客，但是与 Tweaks addon for Minecolonies 有冲突 (默认关闭)")
-                .define("enableTavernAssignmentModule", false);
+                .comment("Open this to assign visitors directly trough tavern block (default: true)\n 开启这个可以直接在酒馆雇佣游客 (默认开启)")
+                .define("enableTavernAssignmentModule", true);
         ADDITIONAL_MINIMUM_STOCK_MODULE = builder
-                .comment("Open this to add minimum stock module to most of huts, may affect Compatibility addon for MineColonies‘s module (default: true)\n 开启这个可以直接在酒馆雇佣游客，但是可能影响某些 Compatibility addon for MineColonies 内容的工作 (默认开启)")
+                .comment("Open this to add minimum stock module to most of huts (default: true)\n 开启这个使大部分最低存量可能有用的小屋开启最低存量 (默认开启)")
                 .define("additionalMinimumStockModule", true);
         FOOD_BLACK_LIST_MODULE = builder
                 .comment("Open this to add food black list to specific huts, you can edit exactly what workers won't eat at those huts(default: true)\n 开启这个可以给某几个特定的小屋增加员工禁食清单，这样员工就不会取食你所选定的食物 (默认开启)")
@@ -351,8 +352,8 @@ public class PathingConfig {
         builder.pop();
         builder.push("Basic Logic Modifier #基础逻辑修改#");
         MAX_PATHING_DISTANCE = builder
-                .comment("Max pathing distance (default: 1000, original:500)\n 民最大寻路距离,(默认 : 1000 殖民地原设置 : 500)")
-                .defineInRange("pathingDistance", 1000, 500, 4095);
+                .comment("Max pathing distance (default : 1000, original : 800)\n 民最大寻路距离,(默认 : 1000 殖民地原设置 : 800)")
+                .defineInRange("pathingDistance", 1000, 500, 65535);
         builder.pop();
         return builder.build(); // 返回构建结果
     }

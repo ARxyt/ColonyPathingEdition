@@ -1,6 +1,7 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies;
 
 import com.arxyt.colonypathingedition.core.message.*;
+import com.arxyt.colonypathingedition.core.message.compatible.CompatibleBuildingHiringModeMessage;
 import com.minecolonies.api.network.IMessage;
 import com.minecolonies.core.network.NetworkChannel;
 import org.spongepowered.asm.mixin.Mixin;
@@ -19,6 +20,7 @@ public abstract class NetworkChannelMixin {
     @Inject(method = "registerCommonMessages",at = @At("TAIL"),locals = LocalCapture.CAPTURE_FAILHARD, remap = false)
     void registerNewMessage(CallbackInfo ci, int idx){
         registerMessage(++idx, AlterBlackListMenuItemMessage.class, AlterBlackListMenuItemMessage::new);
+        registerMessage(++idx, CompatibleBuildingHiringModeMessage.class, CompatibleBuildingHiringModeMessage::new);
         registerMessage(++idx, CropRotationLengthUpdateMessage.class, CropRotationLengthUpdateMessage::new);
         registerMessage(++idx, CropRotationCurrentDayMessage.class, CropRotationCurrentDayMessage::new);
         registerMessage(++idx, CropRotationCurrentSeasonMessage.class, CropRotationCurrentSeasonMessage::new);
@@ -26,6 +28,8 @@ public abstract class NetworkChannelMixin {
         registerMessage(++idx, CropRotationSeedUpdateMessage.class, CropRotationSeedUpdateMessage::new);
         registerMessage(++idx, CropRotationAdvanceDayMessage.class, CropRotationAdvanceDayMessage::new);
         registerMessage(++idx, FarmFieldResizeMessage.class, FarmFieldResizeMessage::new);
+        registerMessage(++idx, SyncBlackListMenuItemMessage.class, SyncBlackListMenuItemMessage::new);
         registerMessage(++idx, TavernRecruitMessage.class, TavernRecruitMessage::new);
+
     }
 }

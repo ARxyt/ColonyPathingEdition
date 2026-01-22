@@ -1,7 +1,8 @@
-package com.arxyt.colonypathingedition.mixins.minecolonies;
+package com.arxyt.colonypathingedition.mixins.minecolonies.compatible;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.minecolonies.api.colony.IColonyView;
 import com.minecolonies.api.colony.buildings.modules.IBuildingModuleView;
 import com.minecolonies.api.colony.requestsystem.StandardFactoryController;
 import com.minecolonies.api.colony.requestsystem.token.IToken;
@@ -14,17 +15,16 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import org.jetbrains.annotations.NotNull;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @Mixin(value = AbstractBuildingView.class, remap = false)
-public abstract class AbstractBuildingViewMixin {
+public abstract class AbstractBuildingViewServerMixin {
+
+    @Final @Shadow(remap = false) private IColonyView colony;
 
     @Shadow(remap = false) private int buildingLevel;
     @Shadow(remap = false) private int buildingMaxLevel;
@@ -106,12 +106,10 @@ public abstract class AbstractBuildingViewMixin {
         {
             IBuildingModuleView view = entry.getValue();
             moduleViewsByKey.put(view.getProducer().key, view);
-            System.out.println("<init>:" + customName + " Has module " + view.getProducer().key + ":" + entry.getIntKey());
         }
 
         for (int i = 0, size = buf.readInt(); i < size; i++)
         {
-            boolean moduleRechecked = false;
             int id = buf.readInt();
             String key = buf.readUtf();
             IBuildingModuleView moduleView = moduleViews.get(id);
@@ -119,19 +117,12 @@ public abstract class AbstractBuildingViewMixin {
             if (moduleView == null || !Objects.equals(moduleView.getProducer().key, key))
             {
                 moduleView = moduleViewsByKey.get(key);
-                moduleRechecked = true;
             }
 
             if (moduleView == null)
             {
                 Log.getLogger().error("Problem during sync: {} missing module view, key={}, id={}",customName , key, id);
                 return;
-            }
-            else{
-                System.out.println("<init>:" + customName + " Get module " + moduleView.getProducer().key + ":" + id);
-                if(moduleRechecked) {
-                    System.out.println("Module runID now is" + moduleView.getProducer().getRuntimeID());
-                }
             }
 
             moduleView.deserialize(buf);

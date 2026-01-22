@@ -17,11 +17,6 @@ public class AlterBlackListMenuItemMessage extends AbstractBuildingServerMessage
     private ItemStack itemStack;
 
     /**
-     * Type of the owning module.
-     */
-    private int id;
-
-    /**
      * If add = true, or remove = false.
      */
     private boolean add;
@@ -38,24 +33,22 @@ public class AlterBlackListMenuItemMessage extends AbstractBuildingServerMessage
      * Add a menu item to the building.
      * @param building the building to add it to.
      * @param itemStack the stack to add.
-     * @param runtimeID the id of the module.
      * @return the message,
      */
-    public static AlterBlackListMenuItemMessage addMenuItem(final IBuildingView building, final ItemStack itemStack, final int runtimeID)
+    public static AlterBlackListMenuItemMessage addMenuItem(final IBuildingView building, final ItemStack itemStack)
     {
-        return new AlterBlackListMenuItemMessage(building, itemStack, runtimeID, true);
+        return new AlterBlackListMenuItemMessage(building, itemStack, true);
     }
 
     /**
      * Remove a menu item to the building.
      * @param building the building to remove it from.
      * @param itemStack the stack to remove.
-     * @param runtimeID the id of the module.
      * @return the message,
      */
-    public static AlterBlackListMenuItemMessage removeMenuItem(final IBuildingView building, final ItemStack itemStack, final int runtimeID)
+    public static AlterBlackListMenuItemMessage removeMenuItem(final IBuildingView building, final ItemStack itemStack)
     {
-        return new AlterBlackListMenuItemMessage(building, itemStack, runtimeID, false);
+        return new AlterBlackListMenuItemMessage(building, itemStack, false);
     }
 
     /**
@@ -65,11 +58,10 @@ public class AlterBlackListMenuItemMessage extends AbstractBuildingServerMessage
      * @param building  the building we're executing on.
      * @param add if add = true if remove = false
      */
-    private AlterBlackListMenuItemMessage(final IBuildingView building, final ItemStack itemStack, final int runtimeID, final boolean add)
+    private AlterBlackListMenuItemMessage(final IBuildingView building, final ItemStack itemStack, final boolean add)
     {
         super(building);
         this.itemStack = itemStack;
-        this.id = runtimeID;
         this.add = add;
     }
 
@@ -77,7 +69,6 @@ public class AlterBlackListMenuItemMessage extends AbstractBuildingServerMessage
     public void fromBytesOverride(@NotNull final FriendlyByteBuf buf)
     {
         itemStack = buf.readItem();
-        id = buf.readInt();
         add = buf.readBoolean();
     }
 
@@ -85,14 +76,14 @@ public class AlterBlackListMenuItemMessage extends AbstractBuildingServerMessage
     public void toBytesOverride(@NotNull final FriendlyByteBuf buf)
     {
         buf.writeItem(itemStack);
-        buf.writeInt(id);
         buf.writeBoolean(add);
     }
 
     @Override
     public void onExecute(final NetworkEvent.Context ctxIn, final boolean isLogicalServer, final IColony colony, final IBuilding building)
     {
-        if (building.getModule(id) instanceof FoodBlackListMenuModule foodBlackListMenuModule)
+        FoodBlackListMenuModule foodBlackListMenuModule = building.getModule(FoodBlackListMenuModule.class);
+        if (foodBlackListMenuModule != null)
         {
             if (add)
             {

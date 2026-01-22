@@ -4,7 +4,9 @@ import com.arxyt.colonypathingedition.ColonyPathingEdition;
 import com.arxyt.colonypathingedition.core.colony.module.FoodBlackListMenuModuleView;
 import com.arxyt.colonypathingedition.core.easycolony.manager.LinkageManager;
 import com.arxyt.colonypathingedition.core.message.AlterBlackListMenuItemMessage;
+import com.arxyt.colonypathingedition.core.message.SyncBlackListMenuItemMessage;
 import com.ldtteam.blockui.Pane;
+import com.ldtteam.blockui.PaneBuilders;
 import com.ldtteam.blockui.controls.*;
 import com.ldtteam.blockui.views.ScrollingList;
 import com.minecolonies.api.colony.IColonyManager;
@@ -12,6 +14,9 @@ import com.minecolonies.api.crafting.ItemStorage;
 import com.minecolonies.api.items.IMinecoloniesFoodItem;
 import com.minecolonies.core.Network;
 import com.minecolonies.core.client.gui.AbstractModuleWindow;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
@@ -23,12 +28,15 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Predicate;
 
+import static com.minecolonies.api.util.constant.TranslationConstants.PARTIAL_BLOCK_HUT_FIELD_DIRECTION_ABSOLUTE;
 import static com.minecolonies.api.util.constant.WindowConstants.*;
 import static org.jline.utils.AttributedStyle.WHITE;
 
 @OnlyIn(Dist.CLIENT)
 public class FoodBlackListMenuModuleWindow extends AbstractModuleWindow<FoodBlackListMenuModuleView> {
 
+    public static final String SYNC_BLACK_LIST = "sync_black_list";
+    public static final String SYNC_TOOLTIP = "com.arxyt.colonypathingedition.core.black_list.sync_tooltip";
     /**
      * Resource scrolling list.
      */
@@ -77,6 +85,7 @@ public class FoodBlackListMenuModuleWindow extends AbstractModuleWindow<FoodBlac
 
         registerButton(BUTTON_SWITCH, this::switchClicked);
         registerButton(STOCK_REMOVE, this::removeStock);
+        registerButton(SYNC_BLACK_LIST, this::syncBlackList);
 
         resourceList = window.findPaneOfTypeByID(LIST_RESOURCES, ScrollingList.class);
 
@@ -102,7 +111,18 @@ public class FoodBlackListMenuModuleWindow extends AbstractModuleWindow<FoodBlac
         final int row = menuList.getListElementIndexByPane(button);
         final ItemStorage storage = menu.get(row);
         moduleView.getMenu().remove(storage);
-        Network.getNetwork().sendToServer(AlterBlackListMenuItemMessage.removeMenuItem(buildingView, storage.getItemStack(), moduleView.getProducer().getRuntimeID()));
+        Network.getNetwork().sendToServer(AlterBlackListMenuItemMessage.removeMenuItem(buildingView, storage.getItemStack()));
+        updateStockList();
+    }
+
+    /**
+     * Sync the stock.
+     *
+     * @param button the button.
+     */
+    private void syncBlackList(final Button button)
+    {
+        Network.getNetwork().sendToServer(new SyncBlackListMenuItemMessage(buildingView));
         updateStockList();
     }
 
@@ -134,7 +154,7 @@ public class FoodBlackListMenuModuleWindow extends AbstractModuleWindow<FoodBlac
         final int row = resourceList.getListElementIndexByPane(button);
         final ItemStorage storage = currentDisplayedList.get(row);
 
-        Network.getNetwork().sendToServer(AlterBlackListMenuItemMessage.addMenuItem(buildingView, storage.getItemStack(), moduleView.getProducer().getRuntimeID()));
+        Network.getNetwork().sendToServer(AlterBlackListMenuItemMessage.addMenuItem(buildingView, storage.getItemStack()));
         moduleView.getMenu().add(storage);
         updateStockList();
 
@@ -156,6 +176,16 @@ public class FoodBlackListMenuModuleWindow extends AbstractModuleWindow<FoodBlac
         }
         else {
             findPaneByID("warning").hide();
+        }
+
+        Pane sync_button = findPaneByID(SYNC_BLACK_LIST);
+
+        if(sync_button != null) {
+            sync_button.show();
+            PaneBuilders.tooltipBuilder()
+                    .hoverPane(sync_button)
+                    .append(Component.translatable(SYNC_TOOLTIP))
+                    .build();
         }
 
         menuList.enable();

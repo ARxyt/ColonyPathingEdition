@@ -6,7 +6,6 @@
   "compatibilityLevel": "JAVA_17",
   "mixins": [
     "minecolonies.AbstractBuildingMixin",
-    "minecolonies.AbstractBuildingViewMixin",
     "minecolonies.AbstractEntityAIBasicMixin",
     "minecolonies.AbstractEntityAICraftingMixin",
     "minecolonies.AbstractEntityAIInteractMixin",
@@ -26,6 +25,7 @@
     "minecolonies.citizen.CitizenAIMixin",
     "minecolonies.citizen.CitizenDataMixinForLeisure",
     "minecolonies.citizen.CitizenSkillHandlerMixin",
+    "minecolonies.compatible.WorkerBuildingModuleViewMixin",
     "minecolonies.concretemixer.EntityAIConcreteMixerMixin",
     "minecolonies.entity.AbstractEntityCitizenMixin",
     "minecolonies.entity.EntityCitizenMixin",
@@ -85,6 +85,7 @@
     "minecolonies.workersetting.BuildingLumberjackMixin",
     "minecolonies.workersetting.BuildingModulesMixin",
     "minecolonies.workersetting.BuildingNetherWorkerMixin",
+    "minecolonies.workersetting.ColonyMixin",
     "minecolonies.workersetting.CrafterRecipeSettingMixin",
     "minecolonies.workersetting.MinimumStockModuleMixin",
     "minecolonies.workersetting.RegisteredStructureManagerMixin",
@@ -95,6 +96,7 @@
     "minecraft.FurnaceBlockEntityMixin"
   ],
   "client": [
+    "minecolonies.compatible.AbstractBuildingViewClientMixin",
     "minecolonies.compatible.WindowHireWorkerMixin",
     "minecolonies.farm.BlockScarecrowMixin",
     "minecolonies.farm.FarmFieldClientMixin",
@@ -108,6 +110,8 @@
     "structurize.WindowReplaceBlockMixin",
     "structurize.WindowSelectResMixin"
   ],
-  "server": [],
+  "server": [
+    "minecolonies.compatible.AbstractBuildingViewServerMixin"
+  ],
   "priority": 999
 }

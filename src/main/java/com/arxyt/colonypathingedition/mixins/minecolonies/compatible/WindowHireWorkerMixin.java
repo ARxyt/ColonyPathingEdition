@@ -39,7 +39,7 @@ public abstract class WindowHireWorkerMixin extends AbstractWindowSkeleton{
 
     /**
      * @author ARxyt
-     * @reason A compatible test, so use a simpler way to edit.
+     * @reason A compatible code, will not crash the client side when missing HireModule.
      */
     @Overwrite(remap = false)
     public void setupJobButtons()

@@ -20,4 +20,5 @@ public abstract class JobFarmerMixin extends AbstractJobCrafter<EntityAIWorkFarm
     public boolean ignoresDamage(@NotNull final DamageSource damageSource){
         return damageSource.is(DamageTypes.SWEET_BERRY_BUSH);
     }
+
 }

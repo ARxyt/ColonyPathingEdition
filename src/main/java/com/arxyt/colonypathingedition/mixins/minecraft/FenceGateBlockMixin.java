@@ -44,7 +44,7 @@ public abstract class FenceGateBlockMixin extends HorizontalDirectionalBlock {
         if (!(pContext instanceof EntityCollisionContext ecc)) return;
 
         Entity entity = ecc.getEntity();
-        if (!(entity instanceof Animal animal)) return;
+        if (!(entity instanceof Animal animal && !animal.isLeashed())) return;
 
         if (animal.getPersistentData().getBoolean("ColonyPathingEdition_Penned")) cir.setReturnValue(pState.getValue(FACING).getAxis() == Direction.Axis.Z ? Z_COLLISION_SHAPE : X_COLLISION_SHAPE);
     }

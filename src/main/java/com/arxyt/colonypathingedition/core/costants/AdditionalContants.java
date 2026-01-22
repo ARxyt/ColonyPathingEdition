@@ -23,4 +23,5 @@ public final class AdditionalContants {
     public static final String HURT_ALERT = "com.arxyt.colonypathingedition.core.easycolony.colony.hurt.message";
     public static final String READ_MIND = "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.message";
     public static final String RESURRECT = "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect";
+    public static final String MODULE_WARN = "com.arxyt.colonypathingedition.core.module.no_such_module";
 }
