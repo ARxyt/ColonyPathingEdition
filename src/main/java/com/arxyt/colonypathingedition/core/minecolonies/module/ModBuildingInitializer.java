@@ -4,6 +4,7 @@ import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.minecolonies.api.colony.buildings.ModBuildings;
 import com.minecolonies.api.colony.buildings.registry.BuildingEntry;
 
+import static com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModels.FOOD_BLACK_LIST;
 import static com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModels.TAVERN_RECRUIT;
 import static com.minecolonies.core.colony.buildings.modules.BuildingModules.*;
 
@@ -28,6 +29,14 @@ public class ModBuildingInitializer {
         }
         if(PathingConfig.TAVERN_ASSIGNMENT_MODULE.get()) {
             insertBefore(ModBuildings.tavern.get(), BED, TAVERN_RECRUIT);
+        }
+        if(PathingConfig.FOOD_BLACK_LIST_MODULE.get()) {
+            insertBefore(ModBuildings.farmer.get(), STATS_MODULE, FOOD_BLACK_LIST);
+            insertBefore(ModBuildings.cook.get(), STATS_MODULE, FOOD_BLACK_LIST);
+            insertBefore(ModBuildings.hospital.get(), STATS_MODULE, FOOD_BLACK_LIST);
+            insertBefore(ModBuildings.bakery.get(), STATS_MODULE, FOOD_BLACK_LIST);
+            insertBefore(ModBuildings.deliveryman.get(), STATS_MODULE, FOOD_BLACK_LIST);
+            insertBefore(ModBuildings.kitchen.get(), STATS_MODULE, FOOD_BLACK_LIST);
         }
     }
 

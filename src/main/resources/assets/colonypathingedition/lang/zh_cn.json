@@ -31,5 +31,7 @@
     "com.arxyt.colonypathingedition.core.black_list": "食物黑名单",
     "com.arxyt.colonypathingedition.core.black_list.title": "食物黑名单",
     "com.arxyt.colonypathingedition.core.black_list.warning": "选择在此处工作的市民不会吃的食物",
-    "com.arxyt.colonypathingedition.core.field_is_null": "这个农田似乎需要你略微等它一会，它会自己修好自己的。"
+    "com.arxyt.colonypathingedition.core.black_list.sync_tooltip": "同步服务端的食物黑名单，单击过一段时间后刷新页面即可显示",
+    "com.arxyt.colonypathingedition.core.field_is_null": "这个农田似乎需要你略微等它一会，它会自己修好自己的。",
+    "com.arxyt.colonypathingedition.core.module.no_such_module": "你目前缺失如下模块: %s。 这个模块已经在服务端开启，请检查殖民地附属的设置(config)并开启对应的模块!"
 }

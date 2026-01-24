@@ -1,13 +1,28 @@
 package com.arxyt.colonypathingedition.core.config;
 
+import com.arxyt.colonypathingedition.ColonyPathingEdition;
 import com.arxyt.colonypathingedition.core.config.enums.BuilderModeEnum;
+import com.minecolonies.api.crafting.ItemStorage;
+import com.minecolonies.api.util.FoodUtils;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.neoforged.neoforge.common.ModConfigSpec;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class PathingConfig {
     public static ModConfigSpec.BooleanValue EATING_AI_MODULE;
     public static ModConfigSpec.BooleanValue SMELTERY_AI_MODULE;
+
     public static ModConfigSpec.BooleanValue TAVERN_ASSIGNMENT_MODULE;
     public static ModConfigSpec.BooleanValue ADDITIONAL_MINIMUM_STOCK_MODULE;
+    public static ModConfigSpec.BooleanValue FOOD_BLACK_LIST_MODULE;
 
     public static ModConfigSpec.BooleanValue HURT_ALERT;
     public static ModConfigSpec.BooleanValue ALLOW_RESURRECT;
@@ -74,6 +89,7 @@ public class PathingConfig {
     public static ModConfigSpec.DoubleValue FOOD_PUNISHER;
     public static ModConfigSpec.DoubleValue FOOD_BONUS_NORMAL;
     public static ModConfigSpec.DoubleValue FOOD_BONUS_MINECOLONIES;
+    public static ModConfigSpec.ConfigValue<List<? extends String>> GENERAL_FOOD_BLACK_LIST;
     public static ModConfigSpec.BooleanValue MINIMUM_STOCK_PRECISE;
 
     public static ModConfigSpec.IntValue MAX_PATHING_DISTANCE;
@@ -94,6 +110,9 @@ public class PathingConfig {
         ADDITIONAL_MINIMUM_STOCK_MODULE = builder
                 .comment("Open this to add minimum stock module to most of huts, may affect Compatibility addon for MineColonies‘s module (default: true)\n 开启这个可以直接在酒馆雇佣游客，但是可能影响某些 Compatibility addon for MineColonies 内容的工作 (默认开启)")
                 .define("additionalMinimumStockModule", true);
+        FOOD_BLACK_LIST_MODULE = builder
+                .comment("Open this to add food black list to specific huts, you can edit exactly what workers won't eat at those huts(default: true)\n 开启这个可以给某几个特定的小屋增加员工禁食清单，这样员工就不会取食你所选定的食物 (默认开启)")
+                .define("foodBlackListModule", true);
         builder.pop();
         builder.push("Easycolony Feature #简易殖民地相关特性开关#");
         HURT_ALERT = builder
@@ -306,6 +325,16 @@ public class PathingConfig {
                         Bonus of minecolonies' food nutrition for citizens (It's a multiplier on saturation) (default: 0.5)
                         殖民地食物奖励乘数(取决于食物饱和) (默认 : 0.5)""")
                 .defineInRange("minecoloniesFoodBonus", 0.5, 0.0, 1.0);
+        GENERAL_FOOD_BLACK_LIST = builder
+                .comment("""
+                        Write In “Foods" that you don‘t want citizen to eat at colonies.
+                        写入你不想市民在殖民地中吃的所有食物。"""
+                )
+                .defineList("generalFoodBlackList",
+                        List.of(),
+                        () -> "",
+                        obj -> obj instanceof String
+                );
         LEISURE_TIME = builder
                 .comment("""
                         Basic leisure time of citizens (s) (default: 180)
@@ -328,5 +357,29 @@ public class PathingConfig {
                 .defineInRange("pathingDistance", 1000, 500, 4095);
         builder.pop();
         return builder.build(); // 返回构建结果
+    }
+
+    public static Set<ItemStorage> food_black_list = new HashSet<>();
+
+    public static void onLoad() {
+        List<? extends String> list = PathingConfig.GENERAL_FOOD_BLACK_LIST.get();
+        if(!list.isEmpty()){
+            for (String itemString : list) {
+                try {
+                    ResourceLocation rl = ResourceLocation.parse(itemString);
+                    Item item = BuiltInRegistries.ITEM.get(rl);
+                    if (item != Items.AIR) {
+                        ItemStack itemStack = new ItemStack(item);
+                        if(FoodUtils.EDIBLE.test(itemStack)) {
+                            food_black_list.add(new ItemStorage(itemStack));
+                            continue;
+                        }
+                    }
+                    ColonyPathingEdition.LOGGER.warn("Wrong item or item not regard as food: {}", itemString);
+                } catch (Exception e) {
+                    ColonyPathingEdition.LOGGER.error("Failed to parse blacklist item: {}", itemString, e);
+                }
+            }
+        }
     }
 }

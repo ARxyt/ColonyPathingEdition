@@ -1,6 +1,8 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies;
 
 import com.arxyt.colonypathingedition.core.message.*;
+import com.arxyt.colonypathingedition.core.message.compatible.CompatibleBuildingHiringModeMessage;
+import com.arxyt.colonypathingedition.core.message.compatible.CompatibleHireFireMessage;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.minecolonies.core.MineColonies;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
@@ -14,6 +16,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MinecoloniesMixin {
     @Inject(method = "onNetworkRegistry", at = @At("TAIL"))
     private static void onNetworkRegistry(RegisterPayloadHandlersEvent event, CallbackInfo ci, @Local final PayloadRegistrar registry){
+        AlterBlackListMenuItemMessage.TYPE.register(registry);
+        CompatibleBuildingHiringModeMessage.TYPE.register(registry);
+        CompatibleHireFireMessage.TYPE.register(registry);
         CropRotationAdvanceDayMessage.TYPE.register(registry);
         CropRotationCurrentDayMessage.TYPE.register(registry);
         CropRotationCurrentSeasonMessage.TYPE.register(registry);
@@ -21,6 +26,7 @@ public class MinecoloniesMixin {
         CropRotationSeasonCountMessage.TYPE.register(registry);
         CropRotationSeedUpdateMessage.TYPE.register(registry);
         FarmFieldResizeMessage.TYPE.register(registry);
+        SyncBlackListMenuItemMessage.TYPE.register(registry);
         TavernRecruitMessage.TYPE.register(registry);
     }
 }

@@ -22,6 +22,7 @@
     "minecolonies.citizen.CitizenAIMixin",
     "minecolonies.citizen.CitizenDataMixinForLeisure",
     "minecolonies.citizen.CitizenSkillHandlerMixin",
+    "minecolonies.compatible.WorkerBuildingModuleViewMixin",
     "minecolonies.concretemixer.EntityAIConcreteMixerMixin",
     "minecolonies.entity.AbstractEntityCitizenMixin",
     "minecolonies.entity.EntityCitizenMixin",
@@ -92,6 +93,8 @@
     "minecraft.FurnaceBlockEntityMixin"
   ],
   "client": [
+    "minecolonies.compatible.AbstractBuildingViewClientMixin",
+    "minecolonies.compatible.WindowHireWorkerMixin",
     "minecolonies.farm.BlockScarecrowMixin",
     "minecolonies.farm.FarmFieldClientMixin",
     "minecolonies.farm.FarmFieldsModuleWindowMixin",
@@ -100,11 +103,13 @@
     "minecolonies.linkage.RestaurantMenuModuleWindowMixin",
     "minecolonies.linkage.WindowHutAllInventoryMixin",
     "minecolonies.linkage.WindowPostBoxMainMixin",
-    "structurize.WindowSelectResMixin",
     "minecolonies.workersetting.CrafterRecipeSettingMixin",
-    "structurize.WindowReplaceBlockMixin"
+    "structurize.WindowReplaceBlockMixin",
+    "structurize.WindowSelectResMixin"
   ],
-  "server": [],
+  "server": [
+    "minecolonies.compatible.AbstractBuildingViewServerMixin"
+  ],
   "minVersion": "0.8.5",
   "priority": 999
 }

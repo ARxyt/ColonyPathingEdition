@@ -32,7 +32,7 @@ public abstract class LivingBuildingModuleMixin extends AbstractAssignedCitizenM
     public int getModuleMax()
     {
         if (building.getBuildingLevel() > 0 && building.hasModule(BED)){
-            BedHandlingModule module = building.getFirstModuleOccurance(BedHandlingModule.class);
+            BedHandlingModule module = building.getModule(BED);
             int bedSize = ((BedHandlingModuleExtra)module).getBedSize();
             if(bedSize <= 0){
                 bedSize = bedCount;
