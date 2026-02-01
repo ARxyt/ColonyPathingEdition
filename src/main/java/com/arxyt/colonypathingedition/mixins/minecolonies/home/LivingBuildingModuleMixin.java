@@ -48,6 +48,9 @@ public abstract class LivingBuildingModuleMixin extends AbstractAssignedCitizenM
         if(compound.contains("bed_size")) {
             bedCount = compound.getInt("bed_size");
         }
+        else{
+            bedCount = building.getBuildingLevel();
+        }
     }
 
     @Inject(method = "serializeNBT", at = @At("HEAD"), remap = false)

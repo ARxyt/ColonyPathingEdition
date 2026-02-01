@@ -35,5 +35,12 @@
     "com.arxyt.colonypathingedition.core.black_list.warning": "选择在此处工作的市民不会吃的食物",
     "com.arxyt.colonypathingedition.core.black_list.sync_tooltip": "同步服务端的食物黑名单，单击过一段时间后刷新页面即可显示",
     "com.arxyt.colonypathingedition.core.field_is_null": "这个农田似乎需要你略微等它一会，它会自己修好自己的。",
-    "com.arxyt.colonypathingedition.core.module.no_such_module": "你目前缺失如下模块: %s。 这个模块已经在服务端开启，请检查殖民地附属的设置(config)并开启对应的模块!"
+    "com.arxyt.colonypathingedition.core.module.no_such_module": "你目前缺失如下模块: %s。 这个模块已经在服务端开启，请检查殖民地附属的设置(config)并开启对应的模块!",
+    "com.minecolonies.research.technology.colonypathedition_precise_farming.name": "精耕细作 I",
+    "com.minecolonies.research.technology.colonypathedition_precise_farming.subtitle": "多劳多得，你说对吧？",
+    "com.minecolonies.research.technology.colonypathedition_precise_farming2.name": "精耕细作 II",
+    "com.minecolonies.research.technology.colonypathedition_precise_farming2.subtitle": "也许我们还能再精细一点？",
+    "com.minecolonies.research.technology.colonypathedition_precise_farming3.name": "精耕细作 III",
+    "com.minecolonies.research.technology.colonypathedition_precise_farming3.subtitle": "看来作物的潜能已经被我们榨干了……",
+    "com.minecolonies.research.effects.colonypathedition_precise_farming.description": "农夫收获 +%3$s%%作物，但收获作物的时间同样 +%3$s%%"
 }

@@ -83,6 +83,7 @@ public class PathingConfig {
     public static ForgeConfigSpec.BooleanValue PICK_MATERIAL_AT_HUT;
     public static ForgeConfigSpec.BooleanValue EARLY_ENCHANT;
     public static ForgeConfigSpec.BooleanValue MINIMUM_STOCK_PRECISE;
+    public static ForgeConfigSpec.BooleanValue BEACON_EFFECT;
     public static ForgeConfigSpec.IntValue ENCHANT_LEVEL_SCALE;
     public static ForgeConfigSpec.IntValue MAX_ADDITIONAL_LEVEL_ENCHANT;
     public static ForgeConfigSpec.IntValue LEISURE_TIME;
@@ -349,6 +350,11 @@ public class PathingConfig {
                         Defines how long would citizen decrease leisure time if their work are pretty “at leisure”, this will multiplied by their homebuilding level. (s) (default: 18)
                         这个时间会在村民空闲时累计，后面抵消它的休闲时间，此处用以控制抵消最大值，此值在实际应用时会乘以其住宅等级 (默认 : 18)""")
                 .defineInRange("maxPreLeisureTime", 18, 0, 10000);
+        BEACON_EFFECT = builder
+                .comment("""
+                        Open this to enable citizens to get beacon effect. (default: true)
+                        开启这个可以让市民获得信标效果 (默认 : 开启)""")
+                .define("beaconEffect", true);
         builder.pop();
         builder.push("Basic Logic Modifier #基础逻辑修改#");
         MAX_PATHING_DISTANCE = builder

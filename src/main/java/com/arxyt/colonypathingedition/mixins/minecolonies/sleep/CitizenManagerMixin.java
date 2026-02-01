@@ -19,7 +19,7 @@ import static com.minecolonies.api.util.constant.TranslationConstants.ALL_CITIZE
 @Mixin(value = CitizenManager.class, remap = false)
 public class CitizenManagerMixin {
 
-    @Final @Shadow(remap = false) private Map<Integer, ICitizenData> citizens = new HashMap<>();
+    @Final @Shadow(remap = false) private Map<Integer, ICitizenData> citizens;
     @Final @Shadow(remap = false) private Colony colony;
 
     @Shadow(remap = false) private boolean areCitizensSleeping;

@@ -1,12 +1,14 @@
 package com.arxyt.colonypathingedition.core.costants;
 
 
+import com.minecolonies.api.util.constant.Constants;
 import com.minecolonies.core.colony.jobs.*;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.Set;
 
 public final class AdditionalContants {
-    public static final String MOD_ID = "colonypathingedition";
+    public static final int TAG_UPDATE_INTERVAL = 200;
 
     public static final String SICK_TIME = "sick_time";
 
@@ -24,4 +26,6 @@ public final class AdditionalContants {
     public static final String READ_MIND = "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.message";
     public static final String RESURRECT = "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect";
     public static final String MODULE_WARN = "com.arxyt.colonypathingedition.core.module.no_such_module";
+
+    public static final ResourceLocation PRECISE_FARMING = new ResourceLocation(Constants.MOD_ID, "effects/colonypathedition_precise_farming");
 }

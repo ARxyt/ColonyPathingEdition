@@ -47,10 +47,11 @@ public abstract class CitizenDataMixinForLeisure implements ICitizenData {
     @Unique int coolDownTime = 0;
 
     // Rewrite as a preventing of setting change.
-    @Inject(method = "update", at = @At("HEAD"), remap = false)
+    @Inject(method = "update", at = @At("HEAD"), remap = false, cancellable = true)
     private void rewriteUpdateData(int tickRate, CallbackInfo ci){
         if (getEntity().isEmpty() || !getEntity().get().isAlive())
         {
+            ci.cancel();
             return;
         }
 
@@ -121,5 +122,6 @@ public abstract class CitizenDataMixinForLeisure implements ICitizenData {
         }
 
         citizenDiseaseHandler.update(tickRate);
+        ci.cancel();
     }
 }

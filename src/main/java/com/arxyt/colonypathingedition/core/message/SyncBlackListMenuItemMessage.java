@@ -9,11 +9,9 @@ import com.minecolonies.api.crafting.ItemStorage;
 import com.minecolonies.api.util.FoodUtils;
 import com.minecolonies.core.network.messages.server.AbstractBuildingServerMessage;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkEvent;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
 import java.util.Set;
 
 public class SyncBlackListMenuItemMessage extends AbstractBuildingServerMessage<IBuilding> {

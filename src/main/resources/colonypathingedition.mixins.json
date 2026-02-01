@@ -76,6 +76,7 @@
     "minecolonies.quarrier.EntityAIQuarrierMixin",
     "minecolonies.raider.RaiderMeleeAIMixin",
     "minecolonies.raider.RaiderRangedAIMixin",
+    "minecolonies.researches.DefaultResearchProviderMixin",
     "minecolonies.sleep.CitizenManagerMixin",
     "minecolonies.sleep.EntityAISleepHealerSpecialMixin",
     "minecolonies.smelt.AbstractEntityAIUsesFurnaceMixin",

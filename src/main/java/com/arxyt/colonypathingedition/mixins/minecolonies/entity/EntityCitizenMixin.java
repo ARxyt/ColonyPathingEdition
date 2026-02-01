@@ -25,14 +25,19 @@ import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Objects;
 
+import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.TAG_UPDATE_INTERVAL;
+
 @Mixin(value = EntityCitizen.class, remap = false)
 public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
+    @Unique private short entityCitizenIntervalCounter = -1;
+
     @Shadow(remap = false) private ICitizenColonyHandler citizenColonyHandler;
 
     @Shadow(remap = false) public abstract ITickRateStateMachine<IState> getCitizenAI();
@@ -44,12 +49,17 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
         super(type, world);
     }
 
-    @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
-    public void addAdditionalSaveData(CompoundTag compound, CallbackInfo ci) {
+    @Override
+    public void tick() {
+        super.tick();
         //市民全局状态信息
-        compound.putString("aiState", getCitizenAI().getState().toString());
-        if(getCitizenColonyHandler() != null && getCitizenColonyHandler().getColony() != null) {
-            compound.putString("owner", getCitizenColonyHandler().getColony().getPermissions().getOwner().toString());
+        if(++entityCitizenIntervalCounter <= 0 || entityCitizenIntervalCounter >= TAG_UPDATE_INTERVAL) {
+            entityCitizenIntervalCounter = 0;
+            CompoundTag tag = getPersistentData();
+            tag.putString("aiState", getCitizenAI().getState().toString());
+            if (getCitizenColonyHandler() != null && getCitizenColonyHandler().getColony() != null) {
+                tag.putString("owner", getCitizenColonyHandler().getColony().getPermissions().getOwner().toString());
+            }
         }
     }
 

@@ -1,0 +1,38 @@
+{
+  "branch": "minecolonies:technology",
+  "costs": [
+    {
+      "type": "minecolonies:item_simple",
+      "item": "minecraft:golden_hoe",
+      "quantity": 1
+    },
+    {
+      "type": "minecolonies:item_simple",
+      "item": "minecolonies:composted_dirt",
+      "quantity": 16
+    }
+  ],
+  "effects": [
+    {
+      "id": "minecolonies:effects/colonypathedition_precise_farming",
+      "level": 1
+    }
+  ],
+  "icon": "minecraft:golden_hoe",
+  "parentResearch": "minecolonies:technology/biodegradable",
+  "requirements": [
+    {
+      "type": "minecolonies:building",
+      "building": "minecolonies:farmer",
+      "level": 3
+    },
+    {
+      "type": "minecolonies:building",
+      "building": "minecolonies:composter",
+      "level": 3
+    }
+  ],
+  "researchLevel": 2,
+  "sortOrder": 8,
+  "subtitle": "com.minecolonies.research.technology.colonypathedition_precise_farming.subtitle"
+}

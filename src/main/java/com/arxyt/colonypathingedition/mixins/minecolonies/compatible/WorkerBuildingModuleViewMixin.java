@@ -8,13 +8,13 @@ import com.minecolonies.api.colony.buildings.modules.AbstractBuildingModuleView;
 import com.minecolonies.api.colony.buildings.modules.IAssignmentModuleView;
 import com.minecolonies.core.Network;
 import com.minecolonies.core.colony.buildings.moduleviews.WorkerBuildingModuleView;
-import com.minecolonies.core.network.messages.server.colony.building.HireFireMessage;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
+import java.util.Objects;
 import java.util.Set;
 
 @Mixin(value = WorkerBuildingModuleView.class, remap = false)
@@ -46,7 +46,7 @@ public abstract class WorkerBuildingModuleViewMixin extends AbstractBuildingModu
         Network.getNetwork().sendToServer(new CompatibleHireFireMessage(buildingView, true, citizen.getId(), getProducer().getRuntimeID(), getProducer().key));
         citizen.setWorkBuilding(buildingView.getPosition());
         citizen.setJobView(getJobEntry().getJobViewProducer().get().apply(buildingView.getColony(), citizen));
-        citizen.getJobView().setEntry(getJobEntry());
+        Objects.requireNonNull(citizen.getJobView()).setEntry(getJobEntry());
     }
 
     /**

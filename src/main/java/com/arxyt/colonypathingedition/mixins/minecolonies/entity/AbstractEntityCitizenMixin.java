@@ -10,9 +10,13 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
+
+import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.TAG_UPDATE_INTERVAL;
 
 @Mixin(value = AbstractEntityCitizen.class, remap = false)
 public abstract class AbstractEntityCitizenMixin extends AbstractCivilianEntity {
+    @Unique private short abstractEntityCitizenIntervalCounter = -1;
 
     @Shadow(remap = false) public abstract ICitizenJobHandler getCitizenJobHandler();
 
@@ -22,15 +26,17 @@ public abstract class AbstractEntityCitizenMixin extends AbstractCivilianEntity 
     }
 
     @Override
-    public void addAdditionalSaveData(@NotNull CompoundTag tag) {
-        super.addAdditionalSaveData(tag);
-
+    public void tick() {
+        super.tick();
         //市民职业信息
-        if(getCitizenJobHandler() != null && getCitizenJobHandler().getColonyJob() != null) {
-            tag.putString("citizenJob", getCitizenJobHandler().getColonyJob().getModel().getPath());
-        }
-        else{
-            tag.putString("citizenJob", "unemployed");
+        if(++abstractEntityCitizenIntervalCounter <= 0 || abstractEntityCitizenIntervalCounter >= TAG_UPDATE_INTERVAL) {
+            abstractEntityCitizenIntervalCounter = 0;
+            CompoundTag tag = getPersistentData();
+            if (getCitizenJobHandler() != null && getCitizenJobHandler().getColonyJob() != null) {
+                tag.putString("citizenJob", getCitizenJobHandler().getColonyJob().getModel().getPath());
+            } else {
+                tag.putString("citizenJob", "unemployed");
+            }
         }
     }
 }

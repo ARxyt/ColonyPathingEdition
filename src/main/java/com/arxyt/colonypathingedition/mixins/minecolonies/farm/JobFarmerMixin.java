@@ -1,13 +1,18 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.farm;
 
+import com.arxyt.colonypathingedition.core.ai.worker.NewEntityAIWorkChef;
+import com.arxyt.colonypathingedition.core.ai.worker.NewEntityAIWorkFarmer;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.core.colony.jobs.AbstractJobCrafter;
+import com.minecolonies.core.colony.jobs.JobChef;
 import com.minecolonies.core.colony.jobs.JobFarmer;
 import com.minecolonies.core.entity.ai.workers.production.agriculture.EntityAIWorkFarmer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
+
+import static com.arxyt.colonypathingedition.core.config.PathingConfig.SMELTERY_AI_MODULE;
 
 @Mixin(value = JobFarmer.class, remap = false)
 public abstract class JobFarmerMixin extends AbstractJobCrafter<EntityAIWorkFarmer, JobFarmer> {
@@ -19,6 +24,18 @@ public abstract class JobFarmerMixin extends AbstractJobCrafter<EntityAIWorkFarm
     @Override
     public boolean ignoresDamage(@NotNull final DamageSource damageSource){
         return damageSource.is(DamageTypes.SWEET_BERRY_BUSH);
+    }
+
+    @Override
+    public void createAI(){
+        if(SMELTERY_AI_MODULE.get()){
+            final NewEntityAIWorkFarmer tempAI = new NewEntityAIWorkFarmer((JobFarmer)((Object)this));
+            if(tempAI != null){
+                getCitizen().getEntity().get().getCitizenJobHandler().setWorkAI(tempAI);
+                return;
+            }
+        }
+        super.createAI();
     }
 
 }
