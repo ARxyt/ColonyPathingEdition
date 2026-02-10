@@ -1,12 +1,17 @@
 package com.arxyt.colonypathingedition.core.minecolonies;
 
+import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.minecolonies.api.colony.ICitizenData;
+import com.minecolonies.api.colony.buildings.IBuilding;
 import com.minecolonies.api.crafting.ItemStorage;
 import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenFoodHandler;
 import com.minecolonies.api.inventory.InventoryCitizen;
 import com.minecolonies.api.items.IMinecoloniesFoodItem;
 import com.minecolonies.api.util.FoodUtils;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingCook;
+import com.minecolonies.core.colony.buildings.workerbuildings.BuildingDeliveryman;
+import com.minecolonies.core.colony.buildings.workerbuildings.BuildingWareHouse;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -72,10 +77,18 @@ public class FoodUtilExtra {
         float bestScore = Float.MAX_VALUE;
         int bestSlot = -1;
 
+        IBuilding workBuilding = citizenData.getWorkBuilding();
+        if (PathingConfig.DELIVERY_EAT_AT_WAREHOUSE.get() && workBuilding instanceof BuildingDeliveryman && citizenData.getEntity().isPresent()) {
+            BlockPos alterBuildingPos = citizenData.getColony().getBuildingManager().getBestBuilding(citizenData.getEntity().get(), BuildingWareHouse.class);
+            if(alterBuildingPos != null) {
+                workBuilding = citizenData.getColony().getBuildingManager().getBuilding(alterBuildingPos);
+            }
+        }
+
         for (int i = 0; i < inventoryCitizen.getSlots(); i++)
         {
             final ItemStorage invStack = new ItemStorage(inventoryCitizen.getStackInSlot(i));
-            if ((menu == null || menu.contains(invStack)) && FoodUtils.canEat(invStack.getItemStack(), citizenData.getHomeBuilding(), citizenData.getWorkBuilding()))
+            if ((menu == null || menu.contains(invStack)) && FoodUtils.canEat(invStack.getItemStack(), citizenData.getHomeBuilding(), workBuilding))
             {
                 final Item food = invStack.getItem();
                 final float localScore = getRecalLocalScore(citizenData, food);
@@ -90,7 +103,7 @@ public class FoodUtilExtra {
             }
         }
         // Tried everything to maintain quality/diversity but failed, so if we have restaurants in colony, try to eat at restaurants.
-        if (needRestaurantCheck && citizenData.getColony().getBuildingManager().getBestBuilding(citizenData.getWorkBuilding() == null ? citizenData.getHomePosition() : citizenData.getWorkBuilding().getPosition(), BuildingCook.class) != null){
+        if (needRestaurantCheck && citizenData.getColony().getBuildingManager().getFirstBuildingMatching(building -> building instanceof BuildingCook) != null){
             return -1;
         }
         return bestSlot;

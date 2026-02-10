@@ -13,6 +13,7 @@ import com.minecolonies.api.util.WorldUtil;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingHospital;
 import com.minecolonies.core.colony.interactionhandling.StandardInteraction;
 import com.minecolonies.core.colony.jobs.AbstractJobGuard;
+import com.minecolonies.core.colony.jobs.JobHealer;
 import com.minecolonies.core.colony.jobs.JobNetherWorker;
 import com.minecolonies.core.colony.jobs.JobPupil;
 import com.minecolonies.core.entity.ai.minimal.EntityAIEatTask;
@@ -80,7 +81,7 @@ public class CitizenAIMixin {
             }
 
             // Sick
-            if (citizen.getCitizenData().getCitizenDiseaseHandler().isSick() && guardJob.canAIBeInterrupted())
+            if (citizen.getCitizenData().getCitizenDiseaseHandler().isSick() && !(citizen.getCitizenJobHandler().getColonyJob() instanceof JobHealer) && guardJob.canAIBeInterrupted())
             {
                 citizen.getCitizenData().setVisibleStatus(VisibleCitizenStatus.SICK);
                 cir.setReturnValue(CitizenAIState.SICK);

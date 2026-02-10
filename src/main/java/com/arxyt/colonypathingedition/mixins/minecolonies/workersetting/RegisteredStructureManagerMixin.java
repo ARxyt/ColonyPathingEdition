@@ -13,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static net.minecraft.world.level.Level.TICKS_PER_DAY;
-import static net.minecraftforge.fml.loading.FMLEnvironment.dist;
 
 
 @Mixin(value = RegisteredStructureManager.class, remap = false)

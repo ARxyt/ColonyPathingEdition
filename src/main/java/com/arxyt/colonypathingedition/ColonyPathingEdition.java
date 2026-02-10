@@ -1,13 +1,13 @@
 package com.arxyt.colonypathingedition;
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
-import com.arxyt.colonypathingedition.core.data.farmlandmap.SpecialSeedManager;
-import com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModels;
+import com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModules;
 import com.arxyt.colonypathingedition.core.minecolonies.module.ModBuildingInitializer;
+import com.arxyt.colonypathingedition.core.network.CPENetwork;
+import com.arxyt.colonypathingedition.core.network.message.SpecialSeedSyncMessage;
 import com.minecolonies.api.IMinecoloniesAPI;
 import com.mojang.logging.LogUtils;
 import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -30,8 +30,8 @@ public class ColonyPathingEdition {
                 ModConfig.Type.COMMON,
                 PathingConfig.init(new ForgeConfigSpec.Builder())
         );
-        MinecraftForge.EVENT_BUS.register(new SpecialSeedManager());
         LOGGER.info("Colony Pathing Edition mod loaded");
+        CPENetwork.register(SpecialSeedSyncMessage.class, SpecialSeedSyncMessage::new);
     }
 
     @SubscribeEvent
@@ -42,7 +42,7 @@ public class ColonyPathingEdition {
     @SubscribeEvent
     public static void onRegisterEvent(@NotNull final RegisterEvent event){
         if(event.getRegistryKey() == IMinecoloniesAPI.getInstance().getBuildingRegistry().getRegistryKey()) {
-            BuildingModels.init();
+            BuildingModules.init();
         }
     }
 

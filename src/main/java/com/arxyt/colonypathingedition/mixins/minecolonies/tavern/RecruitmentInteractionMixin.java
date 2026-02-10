@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.tavern;
 
-import static com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModels.TAVERN_RECRUIT;
+import static com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModules.TAVERN_RECRUIT;
 
 import com.minecolonies.api.colony.ICitizen;
 import com.minecolonies.api.colony.ICitizenData;

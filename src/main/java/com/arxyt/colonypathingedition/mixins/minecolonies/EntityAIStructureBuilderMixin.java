@@ -1,6 +1,7 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies;
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
+import com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra;
 import com.arxyt.colonypathingedition.core.util.DistanceUtils;
 import com.minecolonies.api.crafting.ItemStorage;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
@@ -26,6 +27,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import static com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra.getBestFoodForCitizenWithRestaurantCheck;
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.LOAD_STRUCTURE;
 import static com.minecolonies.api.util.constant.CitizenConstants.STANDARD_WORKING_RANGE;
 
@@ -50,7 +52,7 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
     @Unique
     private boolean hasFood()
     {
-        return FoodUtils.getBestFoodForCitizen(worker.getInventoryCitizen(), worker.getCitizenData(), null) != -1;
+        return FoodUtilExtra.getBestFoodForCitizenWithRestaurantCheck(worker.getInventoryCitizen(), worker.getCitizenData() ,null ,true) != -1;
     }
 
     /**

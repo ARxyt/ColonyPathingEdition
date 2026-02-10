@@ -7,6 +7,7 @@ import com.minecolonies.api.entity.ai.ITickingStateAI;
 import com.minecolonies.api.entity.ai.statemachine.states.CitizenAIState;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionResult;
@@ -43,7 +44,7 @@ public class ReadMindEvent {
             stat = workAI.getState();
         }
         Component msg = Component.translatable(AdditionalContants.READ_MIND)
-                .append(stat.toString());
+                .append(Component.translatable(AdditionalContants.READ_MIND_STATE + "." + stat.toString()).withStyle(ChatFormatting.GREEN));
         event.getEntity().sendSystemMessage(msg);
     }
 }

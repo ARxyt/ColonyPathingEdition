@@ -94,6 +94,11 @@ public class ResurrectEvent {
             player.sendSystemMessage(msg);
             return;
         }
+        if (colony.getCitizenManager().getMaxCitizens() <= colony.getCitizenManager().getCurrentCitizenCount()) {
+            msg = Component.translatable(AdditionalContants.RESURRECT + ".not_available").withStyle(ChatFormatting.GRAY);
+            player.sendSystemMessage(msg);
+            return;
+        }
         if (gData.getCitizenDataNBT() == null) return;
         if (level.random.nextDouble() <= getResurrectChance(colony)) {
             final ICitizenData citizenData = colony.getCitizenManager().resurrectCivilianData(gData.getCitizenDataNBT(), true, level, pos);

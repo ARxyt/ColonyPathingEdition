@@ -1,81 +1,88 @@
 package com.arxyt.colonypathingedition.core.data.farmlandmap;
 
 import com.arxyt.colonypathingedition.ColonyPathingEdition;
+import com.arxyt.colonypathingedition.core.network.message.SpecialSeedSyncMessage;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.event.AddReloadListenerEvent;
-import net.minecraftforge.event.server.ServerStartedEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.server.ServerLifecycleHooks;
 
 import java.util.*;
 
-/**
- * Manager of seeds with special framland。
- */
+import static com.arxyt.colonypathingedition.ColonyPathingEdition.MODID;
+
+@Mod.EventBusSubscriber(modid = MODID)
 public class SpecialSeedManager {
 
-    public static final Map<Item, Block> SPECIAL_SEEDS = new HashMap<>();
+    private static final Map<Item, Block> SPECIAL_SEEDS = new HashMap<>();
 
     @SubscribeEvent
-    public void onAddReloadListener(AddReloadListenerEvent event) {
-        event.addListener(new FarmlandMapLoader());
+    public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+
+        if (!(event.getEntity() instanceof ServerPlayer player))
+            return;
+
+        ColonyPathingEdition.LOGGER.info(
+                "[SpecialSeeds] Syncing seed data to {}",
+                player.getGameProfile().getName()
+        );
+
+        new SpecialSeedSyncMessage(FarmlandMapLoader.getMappings())
+                .syncToPlayer(player);
     }
 
-    // 客户端世界加载时
     @SubscribeEvent
-    @OnlyIn(Dist.CLIENT)
-    public void onClientWorldLoad(ClientPlayerNetworkEvent.LoggingIn event) {
-        if(event.getPlayer().level().isClientSide) {
-            loadMappings();
+    public static void onAddReloadListener(AddReloadListenerEvent event) {
+        if (event.getServerResources() != null) {
+            event.addListener(FarmlandMapLoader.INSTANCE);
+            if (ServerLifecycleHooks.getCurrentServer() != null) {
+                new SpecialSeedSyncMessage(FarmlandMapLoader.getMappings()).syncToAll();
+            }
         }
     }
 
-    // 服务器启动时
-    @SubscribeEvent
-    public void onServerStarted(ServerStartedEvent event) {
-        loadMappings();
-    }
+    public static void rebuildFromMappings(
+            Map<ResourceLocation, ResourceLocation> mappings) {
 
-    public void loadMappings() {
-        ColonyPathingEdition.LOGGER.info("[SpecialSeeds] Checking available seed-soil pairs...");
+        ColonyPathingEdition.LOGGER.info("[SpecialSeeds] Rebuilding mappings...");
 
         SPECIAL_SEEDS.clear();
 
-        for (var entry : FarmlandMapLoader.getMappings().entrySet()) {
-            ResourceLocation seedId = entry.getKey();
-            ResourceLocation soilId = entry.getValue();
+        for (var entry : mappings.entrySet()) {
 
-            Item seed = ForgeRegistries.ITEMS.getValue(seedId);
-            Block soil = ForgeRegistries.BLOCKS.getValue(soilId);
+            Item seed = ForgeRegistries.ITEMS.getValue(entry.getKey());
+            Block soil = ForgeRegistries.BLOCKS.getValue(entry.getValue());
 
             if (seed == null || seed == Items.AIR) {
-                ColonyPathingEdition.LOGGER.info("[SpecialSeeds] No seed {}", seedId);
+                ColonyPathingEdition.LOGGER.info("[SpecialSeeds] No seed {}", entry.getKey());
                 continue;
             }
             if (soil == null || soil == Blocks.AIR) {
-                ColonyPathingEdition.LOGGER.info("[SpecialSeeds] No farmland {}", soilId);
+                ColonyPathingEdition.LOGGER.info("[SpecialSeeds] No farmland {}", entry.getValue());
                 continue;
             }
 
             SPECIAL_SEEDS.put(seed, soil);
-            ColonyPathingEdition.LOGGER.info("[SpecialSeeds] Registered {} -> {}", seedId, soilId);
         }
-        ColonyPathingEdition.LOGGER.info("[SpecialSeeds] Active special seeds: {}", SPECIAL_SEEDS.size());
+
+        ColonyPathingEdition.LOGGER.info(
+                "[SpecialSeeds] Active special seeds: {}", SPECIAL_SEEDS.size());
     }
 
-    /** Is seeds active */
     public static boolean isSpecialSeed(Item seed) {
         return SPECIAL_SEEDS.containsKey(seed);
     }
 
-    /** Get farmland */
     public static Block getRequiredSoil(Item seed) {
         return SPECIAL_SEEDS.get(seed);
     }

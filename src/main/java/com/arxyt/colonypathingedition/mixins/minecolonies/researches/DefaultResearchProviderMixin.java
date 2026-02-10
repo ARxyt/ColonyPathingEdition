@@ -19,11 +19,12 @@ import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.PR
 
 @Mixin(value = DefaultResearchProvider.class, remap = false)
 public class DefaultResearchProviderMixin {
-    @Shadow @Final
+    @Shadow(remap = false) @Final
     private static ResourceLocation TECH;
 
     @Inject(method = "getTechnologyResearch", at = @At("TAIL"), remap = false)
     private void addNewResearches(Collection<AbstractResearchProvider.Research> r, CallbackInfoReturnable<Collection<AbstractResearchProvider.Research>> cir) {
+
         new AbstractResearchProvider.Research(new ResourceLocation(Constants.MOD_ID, "technology/colonypathedition_precise_farming"), TECH)
                 .addEffect(PRECISE_FARMING, 1)
                 .addToList(r);
@@ -35,6 +36,6 @@ public class DefaultResearchProviderMixin {
 
     @Inject(method = "getResearchEffectCollection", at = @At("TAIL"), remap = false, locals = LocalCapture.CAPTURE_FAILSOFT)
     private void addNewEffects(CallbackInfoReturnable<Collection<AbstractResearchProvider.ResearchEffect>> cir, List<AbstractResearchProvider.ResearchEffect> effects) {
-        effects.add(new AbstractResearchProvider.ResearchEffect(PRECISE_FARMING).setLevels(new double[] {2, 4, 10}));
+        effects.add(new AbstractResearchProvider.ResearchEffect(PRECISE_FARMING).setLevels(new double[] {1, 2, 4}));
     }
 }

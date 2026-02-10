@@ -1156,8 +1156,8 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
      * Deal with new research
      */
     private int getDelayAfterHarvest() {
-        double multiplier = 1 + worker.getCitizenColonyHandler().getColonyOrRegister().getResearchManager().getResearchEffects().getEffectStrength(PRECISE_FARMING);
-        return Math.max(5, (int)(5.0 / (1 + (Math.pow(getPrimarySkillLevel(), 1.5) / 100)) * multiplier));
+        double additional = 50 * (worker.getCitizenColonyHandler().getColonyOrRegister().getResearchManager().getResearchEffects().getEffectStrength(PRECISE_FARMING));
+        return 5 + (int) (additional / (1 + (Math.pow(getPrimarySkillLevel(), 1.5) / 100)));
     }
 
     /**

@@ -650,7 +650,7 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
         {
             if (WorldUtil.isBlockLoaded(world, pos)) {
                 final BlockEntity entity = world.getBlockEntity(pos);
-                if (entity instanceof FurnaceBlockEntity furnace && !furnace.getItem(FUEL_SLOT).isEmpty() && furnace.getItem(SMELTABLE_SLOT).isEmpty() && (isFurnaceNotOccupied(furnace) || isFurnaceCanReoccupied(furnace))) {
+                if (entity instanceof FurnaceBlockEntity furnace && !furnace.getItem(FUEL_SLOT).isEmpty() && (isFurnaceNotOccupied(furnace) || isFurnaceCanReoccupied(furnace))) {
                     count += 1;
                 }
             }

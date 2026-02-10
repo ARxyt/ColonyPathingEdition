@@ -39,7 +39,7 @@ public abstract class FarmFieldClientMixin extends AbstractBuildingExtensionModu
             farmField.setSeasonSeed(1,seed);
         }
         Level world = Minecraft.getInstance().level;
-        if(world != null){
+        if(world != null && world.getDayTime() != 0){
             final int nowDay = (int)(world.getDayTime() / TICKS_PER_DAY);
             if(nowDay != farmField.getDate()) {
                 farmField.advanceDay(nowDay);

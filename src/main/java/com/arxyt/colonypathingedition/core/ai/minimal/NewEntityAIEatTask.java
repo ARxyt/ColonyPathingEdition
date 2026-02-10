@@ -406,8 +406,7 @@ public class NewEntityAIEatTask implements IStateAI {
                 }
             }
         }
-        ((BuildingCookExtra)cookBuilding).tryRegisterCustomer(citizen.getCivilianID());
-        return WAIT_FOR_FOOD;
+        return GO_TO_RESTAURANT;
     }
 
     private NewEatingState goToEatingPlace()

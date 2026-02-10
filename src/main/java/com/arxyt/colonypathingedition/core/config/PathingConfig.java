@@ -95,6 +95,7 @@ public class PathingConfig {
     public static ForgeConfigSpec.ConfigValue<List<? extends String>> GENERAL_FOOD_BLACK_LIST;
 
     public static ForgeConfigSpec.IntValue MAX_PATHING_DISTANCE;
+    public static ForgeConfigSpec.BooleanValue CANCEL_LEVITATION;
 
     public static ForgeConfigSpec init(ForgeConfigSpec.Builder builder) {
         builder.push("Module Opener #模块特性开关#");
@@ -360,6 +361,9 @@ public class PathingConfig {
         MAX_PATHING_DISTANCE = builder
                 .comment("Max pathing distance (default : 1000, original : 800)\n 民最大寻路距离,(默认 : 1000 殖民地原设置 : 800)")
                 .defineInRange("pathingDistance", 1000, 500, 65535);
+        CANCEL_LEVITATION = builder
+                .comment("Should player levite after doing things not allowed in your colony (default : false), 玩家是否会在你殖民地中做不允许的动作后被赋予漂浮buff (default : false)")
+                .define("cancelLevitation", false);
         builder.pop();
         return builder.build(); // 返回构建结果
     }

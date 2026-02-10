@@ -8,6 +8,8 @@ import com.minecolonies.api.inventory.InventoryCitizen;
 import com.minecolonies.api.items.IMinecoloniesFoodItem;
 import com.minecolonies.api.util.FoodUtils;
 import com.minecolonies.api.util.WorldUtil;
+import com.minecolonies.core.colony.buildings.workerbuildings.BuildingDeliveryman;
+import com.minecolonies.core.colony.buildings.workerbuildings.BuildingWareHouse;
 import com.minecolonies.core.tileentities.TileEntityRack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.food.FoodProperties;
@@ -61,6 +63,11 @@ public class FoodUtilsMixin {
 
         final Level world = building.getColony().getWorld();
 
+        IBuilding workBuilding = citizenData.getWorkBuilding();
+        if (PathingConfig.DELIVERY_EAT_AT_WAREHOUSE.get() && workBuilding instanceof BuildingDeliveryman && building instanceof BuildingWareHouse) {
+            workBuilding = building;
+        }
+
         for (final BlockPos pos : building.getContainers()) {
             if (WorldUtil.isBlockLoaded(world, pos))
             {
@@ -69,7 +76,7 @@ public class FoodUtilsMixin {
                 {
                     for (final ItemStorage storage : rackEntity.getAllContent().keySet())
                     {
-                        if ((menu == null || menu.contains(storage)) && FoodUtils.canEat(storage.getItemStack(), citizenData.getHomeBuilding(), citizenData.getWorkBuilding()))
+                        if ((menu == null || menu.contains(storage)) && FoodUtils.canEat(storage.getItemStack(), citizenData.getHomeBuilding(), workBuilding))
                         {
                             final Item food = storage.getItem();
                             final float localScore = getRecalLocalScore(citizenData, food);

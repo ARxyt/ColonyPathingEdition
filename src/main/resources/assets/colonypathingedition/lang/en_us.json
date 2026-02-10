@@ -18,8 +18,208 @@
   "com.arxyt.colonypathingedition.core.farmfield.day_unit": "Days",
   "com.arxyt.colonypathingedition.core.easycolony.colony.hurt.message": "I was hurt by %s at (X: %d, Y: %d, Z: %d).",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.message": "Citizen now at state:",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.IDLE": "IDLE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.INIT": "INIT",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.INVENTORY_FULL": "INVENTORY_FULL",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.PREPARING": "PREPARING",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.START_WORKING": "START_WORKING",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.NEEDS_ITEM": "NEEDS_ITEM",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.START_BUILDING": "START_BUILDING",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.MINE_BLOCK": "MINE_BLOCK",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.LOAD_STRUCTURE": "LOAD_STRUCTURE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.BUILDING_STEP": "BUILDING_STEP",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.COMPLETE_BUILD": "COMPLETE_BUILD",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.DECIDE": "DECIDE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.PAUSED": "PAUSED",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FISHERMAN_SEARCHING_WATER": "FISHERMAN_SEARCHING_WATER",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FISHERMAN_WALKING_TO_WATER": "FISHERMAN_WALKING_TO_WATER",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FISHERMAN_CHECK_WATER": "FISHERMAN_CHECK_WATER",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FISHERMAN_START_FISHING": "FISHERMAN_START_FISHING",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.LUMBERJACK_START_WORKING": "LUMBERJACK_START_WORKING",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.LUMBERJACK_SEARCHING_TREE": "LUMBERJACK_SEARCHING_TREE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.LUMBERJACK_CHOP_TREE": "LUMBERJACK_CHOP_TREE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.LUMBERJACK_GATHERING": "LUMBERJACK_GATHERING",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.LUMBERJACK_NO_TREES_FOUND": "LUMBERJACK_NO_TREES_FOUND",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.LUMBERJACK_GATHERING_2": "LUMBERJACK_GATHERING_2",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.MINER_CHECK_MINESHAFT": "MINER_CHECK_MINESHAFT",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.MINER_WALKING_TO_LADDER": "MINER_WALKING_TO_LADDER",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.MINER_REPAIRING_LADDER": "MINER_REPAIRING_LADDER",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.MINER_MINING_SHAFT": "MINER_MINING_SHAFT",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.MINER_BUILDING_SHAFT": "MINER_BUILDING_SHAFT",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.MINER_MINING_NODE": "MINER_MINING_NODE",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.PICK_UP": "PICK_UP",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FARMER_HOE": "FARMER_HOE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FARMER_PLANT": "FARMER_PLANT",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FARMER_HARVEST": "FARMER_HARVEST",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.EMPTY_GRAVE": "EMPTY_GRAVE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.DIG_GRAVE": "DIG_GRAVE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.BURY_CITIZEN": "BURY_CITIZEN",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.TRY_RESURRECT": "TRY_RESURRECT",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GUARD_DECIDE": "GUARD_DECIDE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GUARD_ATTACK_PHYSICAL": "GUARD_ATTACK_PHYSICAL",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GUARD_ATTACK_RANGED": "GUARD_ATTACK_RANGED",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GUARD_ATTACK_PROTECT": "GUARD_ATTACK_PROTECT",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GUARD_PATROL": "GUARD_PATROL",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GUARD_SLEEP": "GUARD_SLEEP",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GUARD_WAKE": "GUARD_WAKE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GUARD_FOLLOW": "GUARD_FOLLOW",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GUARD_GUARD": "GUARD_GUARD",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GUARD_REGEN": "GUARD_REGEN",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GUARD_FLEE": "GUARD_FLEE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.HELP_CITIZEN": "HELP_CITIZEN",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.PREPARE_DELIVERY": "PREPARE_DELIVERY",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.DELIVERY": "DELIVERY",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.PICKUP": "PICKUP",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.DUMPING": "DUMPING",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.BAKER_KNEADING": "BAKER_KNEADING",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.BAKER_BAKING": "BAKER_BAKING",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.BAKER_FINISHING": "BAKER_FINISHING",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.BAKER_TAKE_OUT_OF_OVEN": "BAKER_TAKE_OUT_OF_OVEN",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FILL_UP_FURNACES": "FILL_UP_FURNACES",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GATHERING_REQUIRED_MATERIALS": "GATHERING_REQUIRED_MATERIALS",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.RETRIEVING_END_PRODUCT_FROM_FURNACE": "RETRIEVING_END_PRODUCT_FROM_FURNACE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.RETRIEVING_UNRELATED_PRODUCT_FROM_FURNACE": "RETRIEVING_UNRELATED_PRODUCT_FROM_FURNACE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.RETRIEVING_USED_FUEL_FROM_FURNACE": "RETRIEVING_USED_FUEL_FROM_FURNACE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.ADD_FUEL_TO_FURNACE": "ADD_FUEL_TO_FURNACE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.BREAK_ORES": "BREAK_ORES",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.COOK_SERVE_FOOD_TO_CITIZEN": "COOK_SERVE_FOOD_TO_CITIZEN",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.COOK_SERVE_FOOD_TO_PLAYER": "COOK_SERVE_FOOD_TO_PLAYER",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.HERDER_BREED": "HERDER_BREED",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.HERDER_BUTCHER": "HERDER_BUTCHER",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.HERDER_PICKUP": "HERDER_PICKUP",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.HERDER_FEED": "HERDER_FEED",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.COWBOY_MILK": "COWBOY_MILK",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.COWBOY_STEW": "COWBOY_STEW",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.SHEPHERD_SHEAR": "SHEPHERD_SHEAR",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.COMPOSTER_FILL": "COMPOSTER_FILL",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.COMPOSTER_HARVEST": "COMPOSTER_HARVEST",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GET_MATERIALS": "GET_MATERIALS",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.STUDY": "STUDY",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.TRAINING_WANDER": "TRAINING_WANDER",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GO_TO_TARGET": "GO_TO_TARGET",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.COMBAT_TRAINING": "COMBAT_TRAINING",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.ARCHER_FIND_SHOOTING_STAND_POSITION": "ARCHER_FIND_SHOOTING_STAND_POSITION",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.ARCHER_SELECT_TARGET": "ARCHER_SELECT_TARGET",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.ARCHER_CHECK_SHOT": "ARCHER_CHECK_SHOT",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.ARCHER_SHOOT": "ARCHER_SHOOT",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.KNIGHT_ATTACK_DUMMY": "KNIGHT_ATTACK_DUMMY",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FIND_DUMMY_PARTNER": "FIND_DUMMY_PARTNER",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FIND_TRAINING_PARTNER": "FIND_TRAINING_PARTNER",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.KNIGHT_TRAIN_WITH_PARTNER": "KNIGHT_TRAIN_WITH_PARTNER",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.KNIGHT_ATTACK_PROTECT": "KNIGHT_ATTACK_PROTECT",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GET_RECIPE": "GET_RECIPE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.QUERY_ITEMS": "QUERY_ITEMS",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.CRAFT": "CRAFT",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.CRUSH": "CRUSH",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.SIFT": "SIFT",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.NETHER_LEAVE": "NETHER_LEAVE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.NETHER_AWAY": "NETHER_AWAY",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.NETHER_RETURN": "NETHER_RETURN",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.NETHER_OPENPORTAL": "NETHER_OPENPORTAL",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.NETHER_CLOSEPORTAL": "NETHER_CLOSEPORTAL",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FLORIST_HARVEST": "FLORIST_HARVEST",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FLORIST_COMPOST": "FLORIST_COMPOST",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.ENCHANTER_DRAIN": "ENCHANTER_DRAIN",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.ENCHANT": "ENCHANT",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.REQUEST_CURE": "REQUEST_CURE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.CURE": "CURE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FREE_CURE": "FREE_CURE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.CURE_PLAYER": "CURE_PLAYER",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.TEACH": "TEACH",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.RECESS": "RECESS",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.PLANTATION_PICK_FIELD": "PLANTATION_PICK_FIELD",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.PLANTATION_MOVE_TO_FIELD": "PLANTATION_MOVE_TO_FIELD",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.PLANTATION_DECIDE_FIELD_WORK": "PLANTATION_DECIDE_FIELD_WORK",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.PLANTATION_WORK_FIELD": "PLANTATION_WORK_FIELD",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.PLANTATION_RETURN_TO_BUILDING": "PLANTATION_RETURN_TO_BUILDING",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.BEEKEEPER_HARVEST": "BEEKEEPER_HARVEST",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.START_USING_BREWINGSTAND": "START_USING_BREWINGSTAND",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.RETRIEVING_END_PRODUCT_FROM_BREWINGSTAMD": "RETRIEVING_END_PRODUCT_FROM_BREWINGSTAMD",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.RETRIEVING_USED_FUEL_FROM_BREWINGSTAND": "RETRIEVING_USED_FUEL_FROM_BREWINGSTAND",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.ADD_FUEL_TO_BREWINGSTAND": "ADD_FUEL_TO_BREWINGSTAND",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.HARVEST_MISTLETOE": "HARVEST_MISTLETOE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.HARVEST_NETHERWART": "HARVEST_NETHERWART",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.CONCRETE_MIXER_PLACING": "CONCRETE_MIXER_PLACING",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.CONCRETE_MIXER_HARVESTING": "CONCRETE_MIXER_HARVESTING",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.CHECK_FOOD": "CHECK_FOOD",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GO_TO_HUT": "GO_TO_HUT",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GO_TO_RESTAURANT": "GO_TO_RESTAURANT",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.WAIT_FOR_FOOD": "WAIT_FOR_FOOD",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GET_FOOD_YOURSELF": "GET_FOOD_YOURSELF",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GO_TO_EAT_POS": "GO_TO_EAT_POS",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.EAT": "EAT",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.DONE": "DONE",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.CHECK_ENTITIES": "CHECK_ENTITIES",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.RUNNING": "RUNNING",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GO_TO_LEISURE_SITE": "GO_TO_LEISURE_SITE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.WANDER_AT_LEISURE_SITE": "WANDER_AT_LEISURE_SITE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.READ_A_BOOK": "READ_A_BOOK",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.WALKING_TO_TOWNHALL": "WALKING_TO_TOWNHALL",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.WANDERING": "WANDERING",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.STARING": "STARING",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.WALKING_TO_GRAVEYARD": "WALKING_TO_GRAVEYARD",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.WANDER_AT_GRAVEYARD": "WANDER_AT_GRAVEYARD",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.WALK_TO_GRAVE": "WALK_TO_GRAVE",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.CHECK_FOR_CURE": "CHECK_FOR_CURE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.SEARCH_HOSPITAL": "SEARCH_HOSPITAL",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GO_TO_HOSPITAL": "GO_TO_HOSPITAL",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.WAIT_FOR_CURE": "WAIT_FOR_CURE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FIND_EMPTY_BED": "FIND_EMPTY_BED",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.APPLY_CURE": "APPLY_CURE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.WANDER": "WANDER",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.WALKING_HOME": "WALKING_HOME",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FIND_BED": "FIND_BED",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.SLEEPING": "SLEEPING",
+
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FLEE": "FLEE",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.EATING": "EATING",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.SICK": "SICK",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.SLEEP": "SLEEP",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.MOURN": "MOURN",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.WORK": "WORK",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.WORKING": "WORKING",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.INACTIVE": "INACTIVE",
+
   "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.no_grave_data": "This grave does not seem to be hosting the souls of the dead...",
   "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.no_colony": "This lonely soul seems to have lost his way...",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.not_available": "Your colony no longer has a place to shelter this wandering soul...",
   "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.success0": "%s out of hell.",
   "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.success1": "%s deliverance from hell.",
   "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.success2": "%s's lives should not be extinguished.",
@@ -35,5 +235,12 @@
   "com.arxyt.colonypathingedition.core.black_list.warning": "Choose foods worker(s) can't eat at this hut",
   "com.arxyt.colonypathingedition.core.black_list.sync_tooltip": "Sync black list on server, still need a refresh after click",
   "com.arxyt.colonypathingedition.core.field_is_null": "This field haven't “build up” now! Maybe you should… wait for a second?",
-  "com.arxyt.colonypathingedition.core.module.no_such_module": "You are missing module: %s. The module exists at server side. Please check your minecolonies addons' config and open the module!"
+  "com.arxyt.colonypathingedition.core.module.no_such_module": "You are missing module: %s. The module exists at server side. Please check your minecolonies addons' config and open the module!",
+  "com.minecolonies.research.technology.colonypathedition_precise_farming.name": "Intensive Cultivation I",
+  "com.minecolonies.research.technology.colonypathedition_precise_farming.subtitle": "You reap what you sow.",
+  "com.minecolonies.research.technology.colonypathedition_precise_farming2.name": "Intensive Cultivation II",
+  "com.minecolonies.research.technology.colonypathedition_precise_farming2.subtitle": "Hard work pays off.",
+  "com.minecolonies.research.technology.colonypathedition_precise_farming3.name": "Intensive Cultivation III",
+  "com.minecolonies.research.technology.colonypathedition_precise_farming3.subtitle": "We have pushed the land to its limits...",
+  "com.minecolonies.research.effects.colonypathedition_precise_farming.description": "Farmer gain +%3$s%% crops, but harvesting will get much slower"
 }
