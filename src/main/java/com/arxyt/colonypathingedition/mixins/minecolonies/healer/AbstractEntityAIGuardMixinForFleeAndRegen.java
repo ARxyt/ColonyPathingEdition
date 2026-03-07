@@ -45,7 +45,7 @@ public abstract class AbstractEntityAIGuardMixinForFleeAndRegen implements Abstr
         }
         final IColony colony = getWorker().getCitizenData().getColony();
         if (nearestHospital == null){
-            nearestHospital = colony.getBuildingManager().getBestBuilding(getWorker(), BuildingHospital.class);
+            nearestHospital = colony.getServerBuildingManager().getBestBuilding(getWorker(), BuildingHospital.class);
         }
 
         if (nearestHospital != null){
@@ -88,7 +88,7 @@ public abstract class AbstractEntityAIGuardMixinForFleeAndRegen implements Abstr
         }
 
         final IColony colony = getWorker().getCitizenData().getColony();
-        if( nearestHospital != null && colony.getBuildingManager().getBuilding(nearestHospital) instanceof BuildingHospital hospital){
+        if( nearestHospital != null && colony.getServerBuildingManager().getBuilding(nearestHospital) instanceof BuildingHospital hospital){
             hospital.checkOrCreatePatientFile(getWorker().getCivilianID());
         }
 

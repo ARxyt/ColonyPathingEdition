@@ -66,7 +66,7 @@ public class FarmFieldResizeMessage extends AbstractColonyServerMessage
             scarecrow.setFieldSize(direction, size);
             if (colony != null)
             {
-                colony.getBuildingManager()
+                colony.getServerBuildingManager()
                         .getMatchingBuildingExtension(f -> f.getBuildingExtensionType().equals(BuildingExtensionRegistries.farmField.get()) && f.getPosition().equals(position))
                         .map(m -> (FarmField) m)
                         .ifPresent(field -> field.setRadius(direction, size));

@@ -66,7 +66,9 @@ public abstract class CitizenDataMixinForLeisure implements ICitizenData {
             if (leisureTime > -TICKS_SECOND * MAX_PRE_LEISURE_TIME * homeBuildingLevel && jobStatus == JobStatus.IDLE) {
                 leisureTime -= tickRate;
             }
-            if ((coolDownTime -= tickRate) < 0 && MathUtils.RANDOM.nextInt(TICKS_SECOND * LEISURE_RATIO ) <= tickRate) {
+
+            int randomBond = TICKS_SECOND * LEISURE_RATIO;
+            if ((coolDownTime -= tickRate) < 0 && MathUtils.RANDOM.nextInt(randomBond > 0 ? randomBond : Integer.MAX_VALUE) <= tickRate) {
                 leisureTime += TICKS_SECOND * LEISURE_TIME;
             }
         }

@@ -30,7 +30,7 @@ public class CropRotationAdvanceDayMessage extends AbstractColonyServerMessage {
     {
         if (!isLogicalServer || ctx.getSender() == null) return;
 
-        colony.getBuildingManager()
+        colony.getServerBuildingManager()
                 .getMatchingBuildingExtension(f -> f.getBuildingExtensionType().equals(BuildingExtensionRegistries.farmField.get()) && f.getPosition().equals(position))
                 .map(m -> (FarmFieldExtra) m)
                 .ifPresent(field -> field.updateAdvanceDay(currentDate,currentDay,currentSeason));

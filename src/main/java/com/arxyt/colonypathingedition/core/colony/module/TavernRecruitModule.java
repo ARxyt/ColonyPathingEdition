@@ -72,7 +72,7 @@ public class TavernRecruitModule extends AbstractBuildingModule implements IBuil
                 data.setHomeBuilding(null);
                 data.setJob(null);
 
-                final IBuilding tavern = colony.getBuildingManager().getFirstBuildingMatching(b -> b.getBuildingType() == ModBuildings.tavern.get());
+                final IBuilding tavern = colony.getServerBuildingManager().getFirstBuildingMatching(b -> b.getBuildingType() == ModBuildings.tavern.get());
 
                 if (colony.getWorld().random.nextInt(100) <= BAD_VISITOR_CHANCE) {
                     StatsUtil.trackStat(tavern, VISITORS_ABSCONDED, 1);

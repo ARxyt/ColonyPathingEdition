@@ -24,6 +24,7 @@
     "minecolonies.accessor.AbstractJobAccessor",
     "minecolonies.accessor.GraveyardManagementModuleAccessor",
     "minecolonies.accessor.MinecoloniesAdvancedPathNavigateAccessor",
+    "minecolonies.builder.BuildingBuilderMixin",
     "minecolonies.citizen.CitizenAIMixin",
     "minecolonies.citizen.CitizenDataMixinForLeisure",
     "minecolonies.citizen.CitizenSkillHandlerMixin",

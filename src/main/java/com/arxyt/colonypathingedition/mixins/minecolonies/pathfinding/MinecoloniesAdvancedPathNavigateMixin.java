@@ -78,13 +78,6 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
                 return;
             }
         }
-        int nextNodeIndex = nodeIndex + 1;
-        if(nextNodeIndex < this.getPath().getNodeCount() - 1) {
-            final PathPointExtended pEx2 = (PathPointExtended) (this.getPath().getNode(nextNodeIndex));
-            if (pEx2.isOnRails()) {
-                this.getPath().advance();
-            }
-        }
         // Added derailment compensation: if derailed at a turn, they will teleport farther ahead, depending on the current speed.
         if(entity instanceof MinecoloniesMinecart minecoloniesMinecart && !minecoloniesMinecart.isOnRails()) {
             Vec3 movement = minecoloniesMinecart.getDeltaMovement();

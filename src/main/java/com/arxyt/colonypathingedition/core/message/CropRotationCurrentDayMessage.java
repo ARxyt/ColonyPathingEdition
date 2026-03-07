@@ -26,7 +26,7 @@ public class CropRotationCurrentDayMessage extends AbstractColonyServerMessage {
     {
         if (!isLogicalServer || ctx.getSender() == null) return;
 
-        colony.getBuildingManager()
+        colony.getServerBuildingManager()
                 .getMatchingBuildingExtension(f -> f.getBuildingExtensionType().equals(BuildingExtensionRegistries.farmField.get()) && f.getPosition().equals(position))
                 .map(m -> (FarmFieldExtra) m)
                 .ifPresent(field -> field.setCurrentDay(currentDay));

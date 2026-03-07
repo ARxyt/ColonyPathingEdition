@@ -79,9 +79,9 @@ public class FoodUtilExtra {
 
         IBuilding workBuilding = citizenData.getWorkBuilding();
         if (PathingConfig.DELIVERY_EAT_AT_WAREHOUSE.get() && workBuilding instanceof BuildingDeliveryman && citizenData.getEntity().isPresent()) {
-            BlockPos alterBuildingPos = citizenData.getColony().getBuildingManager().getBestBuilding(citizenData.getEntity().get(), BuildingWareHouse.class);
+            BlockPos alterBuildingPos = citizenData.getColony().getServerBuildingManager().getBestBuilding(citizenData.getEntity().get(), BuildingWareHouse.class);
             if(alterBuildingPos != null) {
-                workBuilding = citizenData.getColony().getBuildingManager().getBuilding(alterBuildingPos);
+                workBuilding = citizenData.getColony().getServerBuildingManager().getBuilding(alterBuildingPos);
             }
         }
 
@@ -103,7 +103,7 @@ public class FoodUtilExtra {
             }
         }
         // Tried everything to maintain quality/diversity but failed, so if we have restaurants in colony, try to eat at restaurants.
-        if (needRestaurantCheck && citizenData.getColony().getBuildingManager().getFirstBuildingMatching(building -> building instanceof BuildingCook) != null){
+        if (needRestaurantCheck && citizenData.getColony().getServerBuildingManager().getFirstBuildingMatching(building -> building instanceof BuildingCook) != null){
             return -1;
         }
         return bestSlot;

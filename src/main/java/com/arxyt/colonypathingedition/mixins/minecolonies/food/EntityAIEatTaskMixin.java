@@ -92,7 +92,7 @@ public abstract class EntityAIEatTaskMixin {
             return SEARCH_RESTAURANT;
         }
         final IColony colony = citizenData.getColony();
-        final BlockPos bestRestaurantPos = colony.getBuildingManager().getBestBuilding(citizen, BuildingCook.class);
+        final BlockPos bestRestaurantPos = colony.getServerBuildingManager().getBestBuilding(citizen, BuildingCook.class);
         final BlockPos citizenPos = citizen.blockPosition();
         final BlockPos buildingPos = buildingWorker.getPosition();
         // For citizens working outside their work huts, maybe more efficient to eat nearby.
@@ -136,7 +136,7 @@ public abstract class EntityAIEatTaskMixin {
     {
         final ICitizenData citizenData = citizen.getCitizenData();
         final IColony colony = citizenData.getColony();
-        restaurantPos = colony.getBuildingManager().getBestBuilding(citizen, BuildingCook.class);
+        restaurantPos = colony.getServerBuildingManager().getBestBuilding(citizen, BuildingCook.class);
 
         final IJob<?> job = citizen.getCitizenJobHandler().getColonyJob();
         if (job != null && citizenData.isWorking())
@@ -175,7 +175,7 @@ public abstract class EntityAIEatTaskMixin {
     {
         if (restaurantPos != null)
         {
-            final IBuilding building = Objects.requireNonNull(citizen.getCitizenColonyHandler().getColonyOrRegister()).getBuildingManager().getBuilding(restaurantPos);
+            final IBuilding building = Objects.requireNonNull(citizen.getCitizenColonyHandler().getColonyOrRegister()).getServerBuildingManager().getBuilding(restaurantPos);
             if (building != null)
             {
                 if (building.isInBuilding(citizen.blockPosition()))
@@ -210,7 +210,7 @@ public abstract class EntityAIEatTaskMixin {
 
         final IColony colony = citizen.getCitizenColonyHandler().getColonyOrRegister();
         assert colony != null;
-        final IBuilding cookBuilding = colony.getBuildingManager().getBuilding(restaurantPos);
+        final IBuilding cookBuilding = colony.getServerBuildingManager().getBuilding(restaurantPos);
         if (cookBuilding instanceof BuildingCook)
         {
             if (!EntityNavigationUtils.walkToBuilding(citizen, cookBuilding))
@@ -250,7 +250,7 @@ public abstract class EntityAIEatTaskMixin {
     {
         if (restaurantPos != null)
         {
-            final IBuilding restaurant = citizen.getCitizenData().getColony().getBuildingManager().getBuilding(restaurantPos);
+            final IBuilding restaurant = citizen.getCitizenData().getColony().getServerBuildingManager().getBuilding(restaurantPos);
             if (restaurant instanceof BuildingCook)
             {
                 final BlockPos sitting = ((BuildingCook) restaurant).getNextSittingPosition();

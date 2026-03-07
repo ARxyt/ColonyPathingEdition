@@ -117,7 +117,7 @@ public class ResurrectEvent {
     }
 
     private static double getResurrectChance(IColony colony) {
-        Map<BlockPos, IBuilding> buildings = colony.getBuildingManager().getBuildings();
+        Map<BlockPos, IBuilding> buildings = colony.getServerBuildingManager().getBuildings();
         int max = 0;
         for (IBuilding building : buildings.values()) {
             if (building instanceof BuildingGraveyard graveyard) {
@@ -132,7 +132,7 @@ public class ResurrectEvent {
     @Nullable
     private static GraveyardManagementModule getGraveyardManagementModule(IColony colony, String citizenName) {
         if (colony == null) return null;
-        Map<BlockPos, IBuilding> buildings = colony.getBuildingManager().getBuildings();
+        Map<BlockPos, IBuilding> buildings = colony.getServerBuildingManager().getBuildings();
         for (IBuilding building : buildings.values()) {
             if (building instanceof BuildingGraveyard graveyard) {
                 GraveyardManagementModule firstModuleOccurance = graveyard.getFirstModuleOccurance(GraveyardManagementModule.class);

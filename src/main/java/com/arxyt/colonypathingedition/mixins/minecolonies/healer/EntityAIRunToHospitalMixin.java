@@ -35,7 +35,7 @@ public class EntityAIRunToHospitalMixin {
         if(citizen.getCitizenData().getCitizenDiseaseHandler().isHurt() && WorldUtil.isDayTime(this.citizen.level())){
             final IColony colony = citizen.getCitizenData().getColony();
             if (nearestHospital == null){
-                nearestHospital = colony.getBuildingManager().getBestBuilding(citizen, BuildingHospital.class);
+                nearestHospital = colony.getServerBuildingManager().getBestBuilding(citizen, BuildingHospital.class);
             }
             if (nearestHospital != null && (this.moveAwayPath == null || !this.moveAwayPath.isInProgress()) && this.citizen.getNavigation().isDone()){
                 EntityNavigationUtils.walkToPos(citizen, nearestHospital, 3, true, nearSpeed);

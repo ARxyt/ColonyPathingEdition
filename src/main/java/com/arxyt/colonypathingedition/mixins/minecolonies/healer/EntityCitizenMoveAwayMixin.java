@@ -73,7 +73,7 @@ public abstract class EntityCitizenMoveAwayMixin {
         if(citizen.getCitizenData().getCitizenDiseaseHandler().isHurt() && !(citizen.getCitizenJobHandler().getColonyJob() instanceof AbstractJobGuard)){
             final IColony colony = citizen.getCitizenData().getColony();
             if (nearestHospital == null){
-                nearestHospital = colony.getBuildingManager().getBestBuilding(citizen, BuildingHospital.class);
+                nearestHospital = colony.getServerBuildingManager().getBestBuilding(citizen, BuildingHospital.class);
             }
             if (nearestHospital != null ){
                 EntityNavigationUtils.walkToPos(citizen, nearestHospital, 3, true);
