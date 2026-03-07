@@ -18,69 +18,32 @@ public class CPENetwork {
 
     private static final String PROTOCOL_VERSION = "1";
 
-    private static final List<PacketEntry<?>> PACKETS = new ArrayList<>();
-
     public static void register(RegisterPayloadHandlersEvent event) {
-        PayloadRegistrar registrar = event.registrar(ColonyPathingEdition.MODID);
-        CPENetwork.registerMessage(SpecialSeedSyncMessage.class, SpecialSeedSyncMessage::new);
-
-        for (PacketEntry<?> entry : PACKETS) {
-            entry.register(registrar);
-        }
+        PayloadRegistrar registrar = event.registrar(ColonyPathingEdition.MODID).versioned(PROTOCOL_VERSION);;
+        CPENetwork.registerClientMessage(SpecialSeedSyncMessage.TYPE, SpecialSeedSyncMessage.CODEC, registrar);
     }
 
-    // 注册函数（你平时调用的）
-    public static <T extends ICPEMessage<T>> void registerMessage(
-            Class<T> packetClass,
-            Function<RegistryFriendlyByteBuf, T> decoder) {
+    public static <T extends ICPEMessage<T>> void registerClientMessage(
+            CustomPacketPayload.Type<T> type,
+            StreamCodec<RegistryFriendlyByteBuf, T> codec,
+            PayloadRegistrar registrar) {
 
-        PACKETS.add(new PacketEntry<>(packetClass, decoder));
+        registrar.playToClient(
+                type,
+                codec,
+                ICPEMessage::handle
+        );
     }
 
-    // NeoForge事件调用
-    public static void init(RegisterPayloadHandlersEvent event) {
+    public static <T extends ICPEMessage<T>> void registerServerMessage(
+            CustomPacketPayload.Type<T> type,
+            StreamCodec<RegistryFriendlyByteBuf, T> codec,
+            PayloadRegistrar registrar) {
 
-        PayloadRegistrar registrar = event.registrar(ColonyPathingEdition.MODID)
-                .versioned(PROTOCOL_VERSION);
-
-        for (PacketEntry<?> entry : PACKETS) {
-            entry.register(registrar);
-        }
-    }
-
-    // 内部记录
-    @SuppressWarnings("unchecked")
-    private record PacketEntry<T extends ICPEMessage<T>>(
-            Class<T> clazz,
-            Function<RegistryFriendlyByteBuf, T> decoder) {
-
-        void register(PayloadRegistrar registrar) {
-
-            try {
-
-                Field field = clazz.getField("TYPE");
-
-                CustomPacketPayload.Type<T> type =
-                        (CustomPacketPayload.Type<T>) field.get(null);
-
-                StreamCodec<RegistryFriendlyByteBuf, T> codec =
-                        ICPEMessage.streamCodec(decoder);
-
-                registrar.playToServer(
-                        type,
-                        codec,
-                        ICPEMessage::handle
-                );
-
-                registrar.playToClient(
-                        type,
-                        codec,
-                        ICPEMessage::handle
-                );
-
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to register packet: " + clazz, e);
-            }
-        }
+        registrar.playToServer(
+                type,
+                codec,
+                ICPEMessage::handle
+        );
     }
 }

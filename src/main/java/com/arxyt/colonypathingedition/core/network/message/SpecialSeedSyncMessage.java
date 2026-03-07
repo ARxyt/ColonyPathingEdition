@@ -3,6 +3,7 @@ package com.arxyt.colonypathingedition.core.network.message;
 import com.arxyt.colonypathingedition.api.network.ICPEMessage;
 import com.arxyt.colonypathingedition.core.data.farmlandmap.SpecialSeedManager;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
@@ -14,6 +15,9 @@ public class SpecialSeedSyncMessage implements ICPEMessage<SpecialSeedSyncMessag
 
     public static final Type<SpecialSeedSyncMessage> TYPE =
             ICPEMessage.createType(SpecialSeedSyncMessage.class);
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, SpecialSeedSyncMessage> CODEC =
+            ICPEMessage.streamCodec(SpecialSeedSyncMessage::new);
 
     private final Map<ResourceLocation, ResourceLocation> mappings;
 

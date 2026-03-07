@@ -2,14 +2,12 @@
   "branch": "minecolonies:technology",
   "costs": [
     {
-      "type": "minecolonies:item_simple",
       "item": "minecraft:netherite_hoe",
-      "quantity": 1
+      "count": 1
     },
     {
-      "type": "minecolonies:item_simple",
       "item": "minecolonies:composted_dirt",
-      "quantity": 64
+      "count": 64
     }
   ],
   "effects": [
