@@ -108,7 +108,7 @@ abstract public class EntityAISickTaskMixin {
     {
         final IColony colony = citizenData.getColony();
         final Disease disease = citizen.getCitizenData().getCitizenDiseaseHandler().getDisease();
-        bestHospital = colony.getBuildingManager().getBestBuilding(citizen, BuildingHospital.class);
+        bestHospital = colony.getServerBuildingManager().getBestBuilding(citizen, BuildingHospital.class);
 
         if (bestHospital == null)
         {
@@ -176,7 +176,7 @@ abstract public class EntityAISickTaskMixin {
         }
 
         final IColony colony = citizenData.getColony();
-        IBuilding building = colony.getBuildingManager().getBuilding(bestHospital);
+        IBuilding building = colony.getServerBuildingManager().getBuilding(bestHospital);
         if(!(building instanceof BuildingHospital hospital) ){
             return SEARCH_HOSPITAL;
         }

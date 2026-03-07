@@ -13,10 +13,8 @@ import com.minecolonies.api.colony.buildingextensions.IBuildingExtension;
 import com.minecolonies.api.colony.buildingextensions.registry.BuildingExtensionRegistries;
 import com.minecolonies.api.colony.buildings.views.IBuildingView;
 import com.minecolonies.api.util.MessageUtils;
-import com.minecolonies.api.util.constant.Constants;
 import com.minecolonies.core.client.gui.AbstractWindowSkeleton;
 import com.minecolonies.core.colony.buildingextensions.FarmField;
-import com.minecolonies.core.network.messages.server.colony.building.fields.FarmFieldPlotResizeMessage;
 import com.minecolonies.core.tileentities.TileEntityScarecrow;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -29,6 +27,7 @@ import net.neoforged.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Optional;
 
 import static com.minecolonies.api.util.constant.TranslationConstants.*;
@@ -65,16 +64,6 @@ public class NewWindowField extends AbstractWindowSkeleton {
      * The ID for the current farmer text.
      */
     private static final String CURRENT_FARMER_TEXT_ID = "current-farmer";
-
-    /**
-     * The resource location of the GUI background.
-     */
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/gui/scarecrow.png");
-
-    /**
-     * The width and height of the directional buttons (they're square)
-     */
-    private static final int BUTTON_SIZE = 24;
 
     /**
      * The tile entity of the scarecrow.
@@ -136,7 +125,7 @@ public class NewWindowField extends AbstractWindowSkeleton {
         }
 
         String directionName = button.getID().replace(DIRECTIONAL_BUTTON_ID_PREFIX, "");
-        boolean up_down = directionName.matches(".*down");; // false -> up . true-> down;
+        boolean up_down = directionName.matches(".*down"); // false -> up . true-> down;
 
         Optional<Direction> direction = Direction.Plane.HORIZONTAL.stream().filter(f -> directionName.matches(f.getName()+".*")).findFirst();
 
@@ -182,9 +171,10 @@ public class NewWindowField extends AbstractWindowSkeleton {
             return;
         }
 
-        final IBuildingExtension field = colonyView.getBuildingExtension(otherField -> otherField.getBuildingExtensionType().equals(BuildingExtensionRegistries.farmField.get()) && otherField.getPosition()
-                .equals(tileEntityScarecrow.getBlockPos()));
-        if (field instanceof FarmField farmFieldFound)
+        final @NotNull List<IBuildingExtension> fields = colonyView.getClientBuildingManager()
+                .getBuildingExtensions(otherField -> otherField.getBuildingExtensionType().equals(BuildingExtensionRegistries.farmField.get()) && otherField.getPosition()
+                        .equals(tileEntityScarecrow.getBlockPos()));
+        if (!fields.isEmpty() && fields.getFirst() instanceof FarmField farmFieldFound)
         {
             farmField = farmFieldFound;
         }
@@ -216,7 +206,7 @@ public class NewWindowField extends AbstractWindowSkeleton {
             return;
         }
 
-        final IBuildingView building = colonyView.getBuilding(farmField.getBuildingId());
+        final IBuildingView building = colonyView.getClientBuildingManager().getBuilding(farmField.getBuildingId());
         if (building == null)
         {
             return;
@@ -297,6 +287,7 @@ public class NewWindowField extends AbstractWindowSkeleton {
      */
     private String getDirectionalTranslationKey(Direction direction)
     {
+        assert Minecraft.getInstance().player != null;
         Direction[] looks = Direction.orderedByNearest(Minecraft.getInstance().player);
         Direction facing = looks[0].getAxis() == Direction.Axis.Y ? looks[1] : looks[0];
 

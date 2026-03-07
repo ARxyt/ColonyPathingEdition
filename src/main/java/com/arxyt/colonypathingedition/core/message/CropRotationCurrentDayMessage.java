@@ -1,7 +1,6 @@
 package com.arxyt.colonypathingedition.core.message;
 
 import com.arxyt.colonypathingedition.api.FarmFieldExtra;
-import com.arxyt.colonypathingedition.core.costants.AdditionalContants;
 import com.ldtteam.common.network.PlayMessageType;
 import com.minecolonies.api.colony.IColony;
 import com.minecolonies.api.colony.buildingextensions.registry.BuildingExtensionRegistries;
@@ -27,7 +26,7 @@ public class CropRotationCurrentDayMessage extends AbstractColonyServerMessage {
     @Override
     protected void onExecute(final IPayloadContext ctxIn, final ServerPlayer player, final IColony colony)
     {
-        colony.getBuildingManager()
+        colony.getServerBuildingManager()
                 .getMatchingBuildingExtension(f -> f.getBuildingExtensionType().equals(BuildingExtensionRegistries.farmField.get()) && f.getPosition().equals(position))
                 .map(m -> (FarmFieldExtra) m)
                 .ifPresent(field -> field.setCurrentDay(currentDay));

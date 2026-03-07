@@ -19,6 +19,7 @@ import java.util.Set;
 public class PathingConfig {
     public static ModConfigSpec.BooleanValue EATING_AI_MODULE;
     public static ModConfigSpec.BooleanValue SMELTERY_AI_MODULE;
+    public static ModConfigSpec.BooleanValue FARMER_AI_MODULE;
 
     public static ModConfigSpec.BooleanValue TAVERN_ASSIGNMENT_MODULE;
     public static ModConfigSpec.BooleanValue ADDITIONAL_MINIMUM_STOCK_MODULE;
@@ -81,6 +82,8 @@ public class PathingConfig {
     public static ModConfigSpec.BooleanValue USE_MAX_STOCK_FIRST;
     public static ModConfigSpec.BooleanValue PICK_MATERIAL_AT_HUT;
     public static ModConfigSpec.BooleanValue EARLY_ENCHANT;
+    public static ModConfigSpec.BooleanValue MINIMUM_STOCK_PRECISE;
+    public static ModConfigSpec.BooleanValue BEACON_EFFECT;
     public static ModConfigSpec.IntValue ENCHANT_LEVEL_SCALE;
     public static ModConfigSpec.IntValue MAX_ADDITIONAL_LEVEL_ENCHANT;
     public static ModConfigSpec.IntValue LEISURE_TIME;
@@ -90,9 +93,10 @@ public class PathingConfig {
     public static ModConfigSpec.DoubleValue FOOD_BONUS_NORMAL;
     public static ModConfigSpec.DoubleValue FOOD_BONUS_MINECOLONIES;
     public static ModConfigSpec.ConfigValue<List<? extends String>> GENERAL_FOOD_BLACK_LIST;
-    public static ModConfigSpec.BooleanValue MINIMUM_STOCK_PRECISE;
+
 
     public static ModConfigSpec.IntValue MAX_PATHING_DISTANCE;
+    public static ModConfigSpec.BooleanValue CANCEL_LEVITATION;
 
     public static ModConfigSpec init(ModConfigSpec.Builder builder) {
         builder.push("Module Opener #模块特性开关#");
@@ -102,6 +106,9 @@ public class PathingConfig {
         SMELTERY_AI_MODULE = builder
                 .comment("Open the module to use the remastered smeltery AI system for chef and stone smeltery(default: true)\n 开启此模块将会启用重制的厨师和冶炼工人AI (默认开启)")
                 .define("enableNewSmelteryModule", true);
+        FARMER_AI_MODULE = builder
+                .comment("Open the module to use the remastered farmer AI system (default: true)\n 开启此模块将会启用重制的农夫AI (默认开启)")
+                .define("enableNewFarmerModule", true);
         builder.pop();
         builder.push("Building Module Opener #房屋模块特性开关#");
         TAVERN_ASSIGNMENT_MODULE = builder
@@ -350,11 +357,19 @@ public class PathingConfig {
                         Defines how long would citizen decrease leisure time if their work are pretty “at leisure”, this will multiplied by their homebuilding level. (s) (default: 18)
                         这个时间会在村民空闲时累计，后面抵消它的休闲时间，此处用以控制抵消最大值，此值在实际应用时会乘以其住宅等级 (默认 : 18)""")
                 .defineInRange("maxPreLeisureTime", 18, 0, 10000);
+        BEACON_EFFECT = builder
+                .comment("""
+                        Open this to enable citizens to get beacon effect. (default: true)
+                        开启这个可以让市民获得信标效果 (默认 : 开启)""")
+                .define("beaconEffect", true);
         builder.pop();
         builder.push("Basic Logic Modifier #基础逻辑修改#");
         MAX_PATHING_DISTANCE = builder
                 .comment("Max pathing distance (default: 1000, original:500)\n 民最大寻路距离,(默认 : 1000 殖民地原设置 : 500)")
                 .defineInRange("pathingDistance", 1000, 500, 4095);
+        CANCEL_LEVITATION = builder
+                .comment("Should player levite after doing things not allowed in your colony (default : false), 玩家是否会在你殖民地中做不允许的动作后被赋予漂浮buff (default : false)")
+                .define("cancelLevitation", false);
         builder.pop();
         return builder.build(); // 返回构建结果
     }

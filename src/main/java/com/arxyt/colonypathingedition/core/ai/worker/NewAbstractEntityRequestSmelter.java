@@ -365,12 +365,14 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
 
         final int availableSmeltable = Math.min(pendingCount, smeltableInInventory);
 
-        final BlockEntity entity = world.getBlockEntity(furnacePos);
+        final BlockPos targetFurnacePos = furnacePos;
+        final BlockEntity entity = world.getBlockEntity(targetFurnacePos);
+
         furnacePos = null;
         if (entity instanceof FurnaceBlockEntity furnace)
         {
             setFurnaceOccupy(furnace,worker.getCivilianID());
-            if (!walkToWorkPos(furnacePos))
+            if (!walkToWorkPos(targetFurnacePos))
             {
                 return getState();
             }
@@ -649,7 +651,7 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
         {
             if (WorldUtil.isBlockLoaded(world, pos)) {
                 final BlockEntity entity = world.getBlockEntity(pos);
-                if (entity instanceof FurnaceBlockEntity furnace && !furnace.getItem(FUEL_SLOT).isEmpty() && furnace.getItem(SMELTABLE_SLOT).isEmpty() && (isFurnaceNotOccupied(furnace) || isFurnaceCanReoccupied(furnace))) {
+                if (entity instanceof FurnaceBlockEntity furnace && !furnace.getItem(FUEL_SLOT).isEmpty() && (isFurnaceNotOccupied(furnace) || isFurnaceCanReoccupied(furnace))) {
                     count += 1;
                 }
             }

@@ -13,47 +13,55 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class FarmlandMapLoader extends SimpleJsonResourceReloadListener {
+
     private static final Gson GSON = new GsonBuilder().create();
 
-    private static final Map<ResourceLocation, ResourceLocation> MAPPINGS = new LinkedHashMap<>();
+    public static final FarmlandMapLoader INSTANCE = new FarmlandMapLoader();
 
-    public FarmlandMapLoader() {
+    private static final Map<ResourceLocation, ResourceLocation> mappings = new LinkedHashMap<>();
+
+    private FarmlandMapLoader() {
         super(GSON, "farmland_map");
     }
 
     @Override
-    protected void apply(@NotNull Map<ResourceLocation, JsonElement> object,
-                         @NotNull ResourceManager resourceManager,
-                         @NotNull ProfilerFiller profiler) {
+    protected void apply(
+            Map<ResourceLocation, JsonElement> object,
+            @NotNull ResourceManager manager,
+            @NotNull ProfilerFiller profiler) {
 
-        MAPPINGS.clear();
+        mappings.clear();
 
         object.forEach((id, jsonElement) -> {
             try {
-                JsonObject root = jsonElement.getAsJsonObject();
-                JsonArray arr = root.getAsJsonArray("values");
+                JsonArray arr = jsonElement.getAsJsonObject().getAsJsonArray("values");
                 if (arr == null) return;
 
                 for (JsonElement el : arr) {
+
                     JsonObject obj = el.getAsJsonObject();
-                    String seedStr = obj.get("seed").getAsString();
-                    String soilStr = obj.get("farmland").getAsString();
 
-                    ResourceLocation seed = ResourceLocation.parse(seedStr);
-                    ResourceLocation soil = ResourceLocation.parse(soilStr);
+                    ResourceLocation seed =
+                            ResourceLocation.parse(obj.get("seed").getAsString());
 
-                    MAPPINGS.put(seed, soil);
+                    ResourceLocation soil =
+                            ResourceLocation.parse(obj.get("farmland").getAsString());
+
+                    mappings.put(seed, soil);
                 }
 
             } catch (Exception e) {
-                ColonyPathingEdition.LOGGER.error("[SpecialSeeds] Failed to parse {}: {}", id, e.getMessage());
+                ColonyPathingEdition.LOGGER.error(
+                        "[SpecialSeeds] Failed to parse {}: {}", id, e.getMessage());
             }
         });
 
-        ColonyPathingEdition.LOGGER.info("[SpecialSeeds] Total {} mappings loaded.", MAPPINGS.size());
+        ColonyPathingEdition.LOGGER.info("[SpecialSeeds] Loaded {} mappings", mappings.size());
+
+        SpecialSeedManager.rebuildFromMappings(mappings);
     }
 
     public static Map<ResourceLocation, ResourceLocation> getMappings() {
-        return Collections.unmodifiableMap(MAPPINGS);
+        return Collections.unmodifiableMap(mappings);
     }
 }

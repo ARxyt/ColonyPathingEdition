@@ -28,7 +28,7 @@ public class CropRotationSeasonCountMessage extends AbstractColonyServerMessage
     @Override
     protected void onExecute(final IPayloadContext ctxIn, final ServerPlayer player, final IColony colony)
     {
-        colony.getBuildingManager()
+        colony.getServerBuildingManager()
                 .getMatchingBuildingExtension(f -> f.getBuildingExtensionType().equals(BuildingExtensionRegistries.farmField.get()) && f.getPosition().equals(position))
                 .map(m -> (FarmFieldExtra) m)
                 .ifPresent(field -> field.setSeasonCount(seasonCount));

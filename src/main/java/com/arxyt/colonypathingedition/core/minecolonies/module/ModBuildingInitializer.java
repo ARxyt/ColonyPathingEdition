@@ -4,8 +4,8 @@ import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.minecolonies.api.colony.buildings.ModBuildings;
 import com.minecolonies.api.colony.buildings.registry.BuildingEntry;
 
-import static com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModels.FOOD_BLACK_LIST;
-import static com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModels.TAVERN_RECRUIT;
+import static com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModules.FOOD_BLACK_LIST;
+import static com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModules.TAVERN_RECRUIT;
 import static com.minecolonies.core.colony.buildings.modules.BuildingModules.*;
 
 public class ModBuildingInitializer {
@@ -37,6 +37,14 @@ public class ModBuildingInitializer {
             insertBefore(ModBuildings.bakery.get(), STATS_MODULE, FOOD_BLACK_LIST);
             insertBefore(ModBuildings.deliveryman.get(), STATS_MODULE, FOOD_BLACK_LIST);
             insertBefore(ModBuildings.kitchen.get(), STATS_MODULE, FOOD_BLACK_LIST);
+            insertBefore(ModBuildings.cowboy.get(), STATS_MODULE, FOOD_BLACK_LIST);
+            insertBefore(ModBuildings.shepherd.get(), STATS_MODULE, FOOD_BLACK_LIST);
+            insertBefore(ModBuildings.swineHerder.get(), STATS_MODULE, FOOD_BLACK_LIST);
+            insertBefore(ModBuildings.chickenHerder.get(), STATS_MODULE, FOOD_BLACK_LIST);
+            insertBefore(ModBuildings.beekeeper.get(), STATS_MODULE, FOOD_BLACK_LIST);
+            if(PathingConfig.DELIVERY_EAT_AT_WAREHOUSE.get()) {
+                insertBefore(ModBuildings.wareHouse.get(), MIN_STOCK, FOOD_BLACK_LIST);
+            }
         }
     }
 

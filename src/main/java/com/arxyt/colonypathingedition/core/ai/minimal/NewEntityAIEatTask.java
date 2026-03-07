@@ -141,7 +141,7 @@ public class NewEntityAIEatTask implements IStateAI {
     {
         if (restaurantPos != null)
         {
-            final IBuilding restaurant = citizen.getCitizenData().getColony().getBuildingManager().getBuilding(restaurantPos);
+            final IBuilding restaurant = citizen.getCitizenData().getColony().getServerBuildingManager().getBuilding(restaurantPos);
             if (restaurant instanceof BuildingCook)
             {
                 final BlockPos sitting = ((BuildingCook) restaurant).getNextSittingPosition();
@@ -184,15 +184,15 @@ public class NewEntityAIEatTask implements IStateAI {
                     return GO_TO_RESTAURANT;
                 }
                 final IColony colony = citizenData.getColony();
-                final BlockPos bestRestaurantPos = colony.getBuildingManager().getBestBuilding(citizen, BuildingCook.class);
+                final BlockPos bestRestaurantPos = colony.getServerBuildingManager().getBestBuilding(citizen, BuildingCook.class);
                 final BlockPos citizenPos = citizen.blockPosition();
                 BlockPos buildingPos = buildingWorker.getPosition();
                 IBuilding buildingToCheck = buildingWorker;
                 if (PathingConfig.DELIVERY_EAT_AT_WAREHOUSE.get() && buildingWorker instanceof BuildingDeliveryman){
-                    BlockPos alterBuildingPos = colony.getBuildingManager().getBestBuilding(citizen, BuildingWareHouse.class);
+                    BlockPos alterBuildingPos = colony.getServerBuildingManager().getBestBuilding(citizen, BuildingWareHouse.class);
                     if(alterBuildingPos != null) {
                         buildingPos = alterBuildingPos;
-                        buildingToCheck = colony.getBuildingManager().getBuilding(alterBuildingPos);
+                        buildingToCheck = colony.getServerBuildingManager().getBuilding(alterBuildingPos);
                     }
                 }
                 if(buildingToCheck == null){
@@ -220,7 +220,7 @@ public class NewEntityAIEatTask implements IStateAI {
                 // If there doesn't have qualified restaurant, drop back to original.
                 final ICitizenData citizenData = citizen.getCitizenData();
                 final IColony colony = citizenData.getColony();
-                final Map<BlockPos,BuildingCook> alteredRestaurantPos = colony.getBuildingManager().getBuildings().entrySet()
+                final Map<BlockPos,BuildingCook> alteredRestaurantPos = colony.getServerBuildingManager().getBuildings().entrySet()
                         .stream()
                         .filter(e -> e.getValue() instanceof BuildingCook cook && cook.getBuildingLevel() > 0)
                         .collect(Collectors.toMap(
@@ -245,7 +245,7 @@ public class NewEntityAIEatTask implements IStateAI {
                                         .orElse(null)
                         );
                 if(restaurantPos != null){
-                    final IBuilding building = Objects.requireNonNull(citizen.getCitizenColonyHandler().getColonyOrRegister()).getBuildingManager().getBuilding(restaurantPos);
+                    final IBuilding building = Objects.requireNonNull(citizen.getCitizenColonyHandler().getColonyOrRegister()).getServerBuildingManager().getBuilding(restaurantPos);
                     if(building instanceof BuildingCook cook){
                         ((BuildingCookExtra)(cook)).preorderTable(citizen.getCivilianID());
                     }
@@ -278,8 +278,9 @@ public class NewEntityAIEatTask implements IStateAI {
             // Worker would return to work hut to eat, regardless of food condition.
             // If there isn't food at hut, go back to restaurants to wait for player.
             int qty = ((int) ((FULL_SATURATION - citizen.getCitizenData().getSaturation()) / FoodUtils.getFoodValue(storageToGet.getItemStack(), citizen))) + 1;
-            InventoryUtils.transferItemStackIntoNextBestSlotInItemHandler(buildingToGo, storageToGet, qty, citizen.getInventoryCitizen());
-            return EAT;
+            if(InventoryUtils.transferItemStackIntoNextBestSlotInItemHandler(buildingToGo, storageToGet, qty, citizen.getInventoryCitizen())) {
+                return EAT;
+            }
         }
         return GO_TO_RESTAURANT;
     }
@@ -303,7 +304,7 @@ public class NewEntityAIEatTask implements IStateAI {
                 return checkFood();
             }
         }
-        final IBuilding building = Objects.requireNonNull(citizen.getCitizenColonyHandler().getColonyOrRegister()).getBuildingManager().getBuilding(restaurantPos);
+        final IBuilding building = Objects.requireNonNull(citizen.getCitizenColonyHandler().getColonyOrRegister()).getServerBuildingManager().getBuilding(restaurantPos);
         if (building != null)
         {
             if (building.isInBuilding(citizen.blockPosition()))
@@ -328,14 +329,14 @@ public class NewEntityAIEatTask implements IStateAI {
     {
         final ICitizenData citizenData = citizen.getCitizenData();
         final IColony colony = citizenData.getColony();
-        restaurantPos = colony.getBuildingManager().getBestBuilding(citizen, BuildingCook.class);
+        restaurantPos = colony.getServerBuildingManager().getBestBuilding(citizen, BuildingCook.class);
 
         if (restaurantPos == null)
         {
             return GO_TO_RESTAURANT;
         }
 
-        restaurant = colony.getBuildingManager().getBuilding(restaurantPos);
+        restaurant = colony.getServerBuildingManager().getBuilding(restaurantPos);
         if (!restaurant.isInBuilding(citizen.blockPosition()))
         {
             return GO_TO_RESTAURANT;
@@ -365,7 +366,7 @@ public class NewEntityAIEatTask implements IStateAI {
 
         final IColony colony = citizen.getCitizenColonyHandler().getColonyOrRegister();
         assert colony != null;
-        final IBuilding cookBuilding = colony.getBuildingManager().getBuilding(restaurantPos);
+        final IBuilding cookBuilding = colony.getServerBuildingManager().getBuilding(restaurantPos);
         if (cookBuilding instanceof BuildingCook)
         {
             if (!EntityNavigationUtils.walkToBuilding(citizen, cookBuilding))
@@ -404,8 +405,7 @@ public class NewEntityAIEatTask implements IStateAI {
                 }
             }
         }
-        ((BuildingCookExtra)cookBuilding).tryRegisterCustomer(citizen.getCivilianID());
-        return WAIT_FOR_FOOD;
+        return GO_TO_RESTAURANT;
     }
 
     private NewEatingState goToEatingPlace()
