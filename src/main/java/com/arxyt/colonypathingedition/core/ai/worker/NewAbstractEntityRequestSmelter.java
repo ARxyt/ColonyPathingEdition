@@ -368,15 +368,12 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
 
         final BlockPos targetFurnacePos = furnacePos;
         final BlockEntity entity = world.getBlockEntity(targetFurnacePos);
-        furnacePos = null;
         if (entity instanceof FurnaceBlockEntity furnace)
         {
             setFurnaceOccupy(furnace,worker.getCivilianID());
-            if (!walkToWorkPos(targetFurnacePos))
-            {
+            if (!walkToWorkPos(targetFurnacePos)) {
                 return getState();
             }
-
             if (worker.getItemInHand(InteractionHand.MAIN_HAND).isEmpty())
             {
                 worker.setItemInHand(InteractionHand.MAIN_HAND, inputStack.copy());
@@ -417,6 +414,7 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
                     }
                 }
             }
+            furnacePos = null;
         }
 
         return CRAFT;

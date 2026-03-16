@@ -11,7 +11,7 @@
     "minecolonies.AbstractEntityAIInteractMixin",
     "minecolonies.ColonyMixin",
     "minecolonies.ColonyPermissionEventHandlerMixin",
-    "minecolonies.EntityAIStructureBuilderMixin",
+    "minecolonies.builder.EntityAIStructureBuilderMixin",
     "minecolonies.EntityAIWorkDeliverymanMixin",
     "minecolonies.EntityAIWorkEnchanterMixin",
     "minecolonies.ItemStackUtilsMixin",

@@ -157,7 +157,7 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
     public IAIState afterDump(){
         IAIState state = super.afterDump();
         if (state == IDLE) {
-            return PREPARING;
+            return START_WORKING;
         }
         return state;
     }
@@ -535,7 +535,7 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
         BlockState surfaceState = world.getBlockState(position.above());
         Block surfaceBlock = surfaceState.getBlock();
 
-        if (surfaceBlock == Blocks.PUMPKIN || surfaceBlock == Blocks.MELON)
+        if (surfaceBlock == Blocks.PUMPKIN || surfaceBlock == Blocks.MELON || surfaceState.canBeReplaced())
         {
             return position;
         }
@@ -604,7 +604,7 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
             if (surfaceBlock instanceof FungusBlock || surfaceBlock instanceof MushroomBlock){
                 return null;
             }
-            if (surfaceBlock instanceof FlowerBlock || surfaceBlock instanceof TallGrassBlock || surfaceBlock instanceof SaplingBlock){
+            if (surfaceBlock instanceof FlowerBlock || surfaceBlock instanceof SaplingBlock){
                 return position;
             }
             if (surfaceBlock instanceof StemBlock stemBlock){

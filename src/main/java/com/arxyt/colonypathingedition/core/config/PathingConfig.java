@@ -21,6 +21,7 @@ import java.util.Set;
 public class PathingConfig {
     public static ForgeConfigSpec.BooleanValue EATING_AI_MODULE;
     public static ForgeConfigSpec.BooleanValue SMELTERY_AI_MODULE;
+    public static ForgeConfigSpec.BooleanValue FARMER_AI_MODULE;
 
     public static ForgeConfigSpec.BooleanValue TAVERN_ASSIGNMENT_MODULE;
     public static ForgeConfigSpec.BooleanValue ADDITIONAL_MINIMUM_STOCK_MODULE;
@@ -105,6 +106,9 @@ public class PathingConfig {
         SMELTERY_AI_MODULE = builder
                 .comment("Open the module to use the remastered smeltery AI system for chef and stone smeltery(default: true)\n 开启此模块将会启用重制的厨师和冶炼工人AI (默认开启)")
                 .define("enableNewSmelteryModule", true);
+        FARMER_AI_MODULE = builder
+                .comment("Open the module to use the remastered farmer AI system (default: true)\n 开启此模块将会启用重制的农夫AI (默认开启)")
+                .define("enableNewFarmerModule", true);
         builder.pop();
         builder.push("Building Module Opener #房屋模块特性开关#");
         TAVERN_ASSIGNMENT_MODULE = builder

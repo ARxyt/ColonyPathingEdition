@@ -1,17 +1,14 @@
-package com.arxyt.colonypathingedition.mixins.minecolonies;
+package com.arxyt.colonypathingedition.mixins.minecolonies.builder;
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra;
 import com.arxyt.colonypathingedition.core.util.DistanceUtils;
-import com.minecolonies.api.colony.ICitizenData;
-import com.minecolonies.api.colony.workorders.IWorkOrder;
 import com.minecolonies.api.crafting.ItemStorage;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 import com.minecolonies.api.util.FoodUtils;
 import com.minecolonies.api.util.InventoryUtils;
 import com.minecolonies.api.util.MathUtils;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingBuilder;
-import com.minecolonies.core.colony.jobs.AbstractJobStructure;
 import com.minecolonies.core.colony.jobs.JobBuilder;
 import com.minecolonies.core.entity.ai.workers.AbstractEntityAIStructureWithWorkOrder;
 import com.minecolonies.core.entity.ai.workers.builder.EntityAIStructureBuilder;
@@ -24,14 +21,10 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra.getBestFoodForCitizenWithRestaurantCheck;
-import static com.minecolonies.api.colony.requestsystem.requestable.deliveryman.AbstractDeliverymanRequestable.getPlayerActionPriority;
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.LOAD_STRUCTURE;
 import static com.minecolonies.api.util.constant.CitizenConstants.STANDARD_WORKING_RANGE;
 

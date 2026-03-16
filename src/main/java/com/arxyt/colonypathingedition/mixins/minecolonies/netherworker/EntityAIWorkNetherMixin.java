@@ -412,9 +412,9 @@ public abstract class EntityAIWorkNetherMixin extends AbstractEntityAICrafting<J
                                     }
                                     else
                                     {
-                                        damageToDo += TinkersToolHelper.getDamage(sword);
+                                        damageToDo += (float) TinkersToolHelper.getDamage(sword);
                                     }
-                                    damageToDo += EnchantmentHelper.getDamageBonus(sword, mob.getMobType()) / 2.5;
+                                    damageToDo += (float) (EnchantmentHelper.getDamageBonus(sword, mob.getMobType()) / 2.5);
                                     sword.hurtAndBreak(1, worker, entity -> {
                                         // the sword broke; try to find another sword
                                         worker.setItemSlot(EquipmentSlot.MAINHAND, findTool(ModEquipmentTypes.sword.get()));
