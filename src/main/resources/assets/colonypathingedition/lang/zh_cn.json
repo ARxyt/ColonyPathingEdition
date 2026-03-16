@@ -15,7 +15,7 @@
     "com.arxyt.colonypathingedition.core.farmfield.select_seed": "选择种子",
     "com.arxyt.colonypathingedition.core.farmfield.duration": "季长",
     "com.arxyt.colonypathingedition.core.farmfield.day_unit": "天",
-    "com.arxyt.colonypathingedition.core.easycolony.colony.hurt.message": "我被 %s 锤了！速来（X = %d, Y = %d, Z = %d）救架！",
+    "com.arxyt.colonypathingedition.core.easycolony.colony.hurt.message": "我被 %s 锤了！快来（X = %d, Y = %d, Z = %d）救救我吧！",
     "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.message": "市民当前状态为:",
 
     "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.IDLE": "空闲",

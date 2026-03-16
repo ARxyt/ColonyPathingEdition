@@ -30,7 +30,7 @@
       <text id="intelligence" pos="142 26" size="12 11" color="black" textalign="MIDDLE" label="99"/>
 
       <itemicon id="recruitCost" size="16 16" pos="92 40" item="minecraft:command_block"/>
-      <button id="recruitBtn" source="minecolonies:textures/gui/builderhut/builder_button_quite_small.png" size="44 16" pos="110 40" label="$(com.arxyt.colonypathingedition.core.tavern.recruit)" color="black"/>
+      <button id="recruitBtn" source="minecolonies:textures/gui/builderhut/builder_button_quite_small.png" size="44 16" pos="110 40" label="$(com.arxyt.colonypathingedition.core.tavern_recruit)" color="black"/>
     </box>
   </list>
 </window>

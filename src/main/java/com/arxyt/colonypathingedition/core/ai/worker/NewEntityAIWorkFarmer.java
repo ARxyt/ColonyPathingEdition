@@ -534,120 +534,106 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
         BlockState surfaceState = world.getBlockState(position.above());
         Block surfaceBlock = surfaceState.getBlock();
 
-        if (surfaceBlock == Blocks.PUMPKIN || surfaceBlock == Blocks.MELON)
+        if (surfaceBlock == Blocks.PUMPKIN || surfaceBlock == Blocks.MELON || surfaceState.canBeReplaced())
         {
             return position;
         }
 
-        if (surfaceBlock instanceof @NotNull CropBlock crop)
-        {
-            if (crop.isMaxAge(surfaceState))
-            {
-                return position;
-            }
-            final int amountOfCompostInInv = InventoryUtils.getItemCountInItemHandler(worker.getInventoryCitizen(), this::isCompost);
-            if (amountOfCompostInInv == 0)
-            {
-                return null;
-            }
-
-            if (InventoryUtils.shrinkItemCountInItemHandler(worker.getInventoryCitizen(), this::isCompost))
-            {
-                new CompostParticleMessage(position.above())
-                        .sendToTargetPoint((ServerLevel) world, null, position.getX(), position.getY(), position.getZ(), BLOCK_BREAK_SOUND_RANGE);
-                crop.growCrops(world, position.above(), surfaceState);
-                surfaceState = world.getBlockState(position.above());
-                surfaceBlock = surfaceState.getBlock();
-                if (surfaceBlock instanceof CropBlock)
-                {
-                    crop = (CropBlock) surfaceBlock;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            return crop.isMaxAge(surfaceState) ? position : null;
-        }
-        else if (surfaceBlock instanceof MinecoloniesCropBlock minecoloniesCrop)
-        {
-            if (minecoloniesCrop.isMaxAge(surfaceState))
-            {
-                return position;
-            }
-            final int amountOfCompostInInv = InventoryUtils.getItemCountInItemHandler(worker.getInventoryCitizen(), this::isCompost);
-            if (amountOfCompostInInv == 0)
-            {
-                return null;
-            }
-
-            if (InventoryUtils.shrinkItemCountInItemHandler(worker.getInventoryCitizen(), this::isCompost))
-            {
-                new CompostParticleMessage(position.above())
-                        .sendToTargetPoint((ServerLevel) world, null, position.getX(), position.getY(), position.getZ(), BLOCK_BREAK_SOUND_RANGE);
-                minecoloniesCrop.attemptGrow(surfaceState, (ServerLevel) world, position.above());
-                surfaceState = world.getBlockState(position.above());
-                surfaceBlock = surfaceState.getBlock();
-                if (surfaceBlock instanceof MinecoloniesCropBlock)
-                {
-                    minecoloniesCrop = (MinecoloniesCropBlock) surfaceBlock;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-            return minecoloniesCrop.isMaxAge(surfaceState) ? position : null;
-        }
-        if (surfaceBlock instanceof BushBlock){
-            if (surfaceBlock instanceof FungusBlock || surfaceBlock instanceof MushroomBlock){
-                return null;
-            }
-            if (surfaceBlock instanceof FlowerBlock || surfaceBlock instanceof TallGrassBlock || surfaceBlock instanceof SaplingBlock){
-                return position;
-            }
-            if (surfaceBlock instanceof StemBlock stemBlock){
-                if(!(farmField.getSeed().getItem() instanceof BlockItem blockItem && blockItem.getBlock() instanceof StemBlock stemBlock2) ){
-                    return position;
-                }
-                if(stemBlock == stemBlock2 && (building.getWorkingOffset() != null && (building.getWorkingOffset().getX() + building.getWorkingOffset().getZ()) % 2 != 0)){
-                    if (isBoneMealAble(position.above(),stemBlock)) {
-                        final int amountOfCompostInInv = InventoryUtils.getItemCountInItemHandler(worker.getInventoryCitizen(), this::isCompost);
-                        if (amountOfCompostInInv != 0 && InventoryUtils.shrinkItemCountInItemHandler(worker.getInventoryCitizen(), this::isCompost))
-                        {
-                            new CompostParticleMessage(position.above())
-                                    .sendToTargetPoint((ServerLevel) world, null, position.getX(), position.getY(), position.getZ(), BLOCK_BREAK_SOUND_RANGE);
-                            stemBlock.performBonemeal((ServerLevel) world, world.getRandom(), position.above(), surfaceState);
-                        }
-                    }
-                    return null;
-                }
-                return position;
-            }
-            if (surfaceBlock instanceof BonemealableBlock bonemealable) {
-                if (!isBoneMealAble(position.above(),bonemealable)) {
+        switch (surfaceBlock) {
+            case @NotNull CropBlock crop -> {
+                if (crop.isMaxAge(surfaceState)) {
                     return position;
                 }
                 final int amountOfCompostInInv = InventoryUtils.getItemCountInItemHandler(worker.getInventoryCitizen(), this::isCompost);
-                if (amountOfCompostInInv == 0)
-                {
+                if (amountOfCompostInInv == 0) {
                     return null;
                 }
 
-                if (InventoryUtils.shrinkItemCountInItemHandler(worker.getInventoryCitizen(), this::isCompost))
-                {
+                if (InventoryUtils.shrinkItemCountInItemHandler(worker.getInventoryCitizen(), this::isCompost)) {
                     new CompostParticleMessage(position.above())
                             .sendToTargetPoint((ServerLevel) world, null, position.getX(), position.getY(), position.getZ(), BLOCK_BREAK_SOUND_RANGE);
-                    bonemealable.performBonemeal((ServerLevel) world, world.getRandom(), position.above(), surfaceState);
+                    crop.growCrops(world, position.above(), surfaceState);
                     surfaceState = world.getBlockState(position.above());
                     surfaceBlock = surfaceState.getBlock();
-                    if (!(surfaceBlock instanceof BushBlock && surfaceBlock instanceof BonemealableBlock))
-                    {
+                    if (surfaceBlock instanceof CropBlock) {
+                        crop = (CropBlock) surfaceBlock;
+                    } else {
                         return null;
                     }
-                    bonemealable = (BonemealableBlock) surfaceBlock;
-                    return isBoneMealAble(position.above(),bonemealable) ? null : position;
                 }
+                return crop.isMaxAge(surfaceState) ? position : null;
+            }
+            case MinecoloniesCropBlock minecoloniesCrop -> {
+                if (minecoloniesCrop.isMaxAge(surfaceState)) {
+                    return position;
+                }
+                final int amountOfCompostInInv = InventoryUtils.getItemCountInItemHandler(worker.getInventoryCitizen(), this::isCompost);
+                if (amountOfCompostInInv == 0) {
+                    return null;
+                }
+
+                if (InventoryUtils.shrinkItemCountInItemHandler(worker.getInventoryCitizen(), this::isCompost)) {
+                    new CompostParticleMessage(position.above())
+                            .sendToTargetPoint((ServerLevel) world, null, position.getX(), position.getY(), position.getZ(), BLOCK_BREAK_SOUND_RANGE);
+                    minecoloniesCrop.attemptGrow(surfaceState, (ServerLevel) world, position.above());
+                    surfaceState = world.getBlockState(position.above());
+                    surfaceBlock = surfaceState.getBlock();
+                    if (surfaceBlock instanceof MinecoloniesCropBlock) {
+                        minecoloniesCrop = (MinecoloniesCropBlock) surfaceBlock;
+                    } else {
+                        return null;
+                    }
+                }
+                return minecoloniesCrop.isMaxAge(surfaceState) ? position : null;
+            }
+            case BushBlock bushBlock -> {
+                if (surfaceBlock instanceof FungusBlock || surfaceBlock instanceof MushroomBlock) {
+                    return null;
+                }
+                if (surfaceBlock instanceof FlowerBlock || surfaceBlock instanceof SaplingBlock) {
+                    return position;
+                }
+                if (surfaceBlock instanceof StemBlock stemBlock) {
+                    if (!(farmField.getSeed().getItem() instanceof BlockItem blockItem && blockItem.getBlock() instanceof StemBlock stemBlock2)) {
+                        return position;
+                    }
+                    if (stemBlock == stemBlock2 && (building.getWorkingOffset() != null && (building.getWorkingOffset().getX() + building.getWorkingOffset().getZ()) % 2 != 0)) {
+                        if (isBoneMealAble(position.above(), stemBlock)) {
+                            final int amountOfCompostInInv = InventoryUtils.getItemCountInItemHandler(worker.getInventoryCitizen(), this::isCompost);
+                            if (amountOfCompostInInv != 0 && InventoryUtils.shrinkItemCountInItemHandler(worker.getInventoryCitizen(), this::isCompost)) {
+                                new CompostParticleMessage(position.above())
+                                        .sendToTargetPoint((ServerLevel) world, null, position.getX(), position.getY(), position.getZ(), BLOCK_BREAK_SOUND_RANGE);
+                                stemBlock.performBonemeal((ServerLevel) world, world.getRandom(), position.above(), surfaceState);
+                            }
+                        }
+                        return null;
+                    }
+                    return position;
+                }
+                if (surfaceBlock instanceof BonemealableBlock bonemealable) {
+                    if (!isBoneMealAble(position.above(), bonemealable)) {
+                        return position;
+                    }
+                    final int amountOfCompostInInv = InventoryUtils.getItemCountInItemHandler(worker.getInventoryCitizen(), this::isCompost);
+                    if (amountOfCompostInInv == 0) {
+                        return null;
+                    }
+
+                    if (InventoryUtils.shrinkItemCountInItemHandler(worker.getInventoryCitizen(), this::isCompost)) {
+                        new CompostParticleMessage(position.above())
+                                .sendToTargetPoint((ServerLevel) world, null, position.getX(), position.getY(), position.getZ(), BLOCK_BREAK_SOUND_RANGE);
+                        bonemealable.performBonemeal((ServerLevel) world, world.getRandom(), position.above(), surfaceState);
+                        surfaceState = world.getBlockState(position.above());
+                        surfaceBlock = surfaceState.getBlock();
+                        if (!(surfaceBlock instanceof BushBlock && surfaceBlock instanceof BonemealableBlock)) {
+                            return null;
+                        }
+                        bonemealable = (BonemealableBlock) surfaceBlock;
+                        return isBoneMealAble(position.above(), bonemealable) ? null : position;
+                    }
+                }
+            }
+            default -> {
             }
         }
         return null;

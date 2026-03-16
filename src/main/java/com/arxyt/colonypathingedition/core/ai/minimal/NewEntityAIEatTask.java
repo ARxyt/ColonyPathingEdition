@@ -17,6 +17,7 @@ import com.minecolonies.api.entity.citizen.VisibleCitizenStatus;
 import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenFoodHandler;
 import com.minecolonies.api.util.*;
 import com.minecolonies.api.util.constant.CitizenConstants;
+import com.minecolonies.core.colony.buildings.modules.BuildingModules;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingCook;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingDeliveryman;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingWareHouse;
@@ -36,6 +37,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEatTask.NewEatingState.*;
@@ -52,6 +54,7 @@ import static com.minecolonies.api.util.constant.TranslationConstants.NO_RESTAUR
 
 public class NewEntityAIEatTask implements IStateAI {
 
+    private static final Predicate<BuildingCook> STAFFED_RESTAURANTS = buildingCook -> buildingCook.getModule(BuildingModules.COOK_WORK).hasAssignedCitizen();
     private final double WAITING_MINUTES = PathingConfig.RESTAURANT_WAITING_TIME.get();
     private static final int REQUIRED_TIME_TO_EAT = 3;
     private static final int MAX_SCORE_DISTANCE = 200;
@@ -309,7 +312,6 @@ public class NewEntityAIEatTask implements IStateAI {
         {
             if (building.isInBuilding(citizen.blockPosition()))
             {
-
                 ((BuildingCookExtra)building).tryRegisterCustomer(citizen.getCivilianID());
                 return WAIT_FOR_FOOD;
             }
@@ -412,7 +414,7 @@ public class NewEntityAIEatTask implements IStateAI {
     {
         IJob<?> jobCitizen = citizen.getCitizenData().getJob();
         BuildingCookExtra restaurantExtra = ((BuildingCookExtra)restaurant);
-        if(!restaurantExtra.checkCustomerRegistry(citizen.getCivilianID()) || !WorldUtil.isPastTime(citizen.level(), NIGHT - 2100) || (jobCitizen != null && JOBS_EAT_IMMEDIATELY.contains(jobCitizen.getClass())) || eatPos == null){
+        if(!restaurantExtra.checkCustomerRegistry(citizen.getCivilianID()) || !STAFFED_RESTAURANTS.test((BuildingCook)restaurant) || !WorldUtil.isPastTime(citizen.level(), NIGHT - 2100) || (jobCitizen != null && JOBS_EAT_IMMEDIATELY.contains(jobCitizen.getClass())) || eatPos == null){
             restaurantExtra.deleteCustomer(citizen.getCivilianID());
             if (hasFood(false)) return EAT;
             else return GET_FOOD_YOURSELF;

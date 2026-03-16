@@ -26,6 +26,7 @@ public class ModBuildingInitializer {
             insertBefore(ModBuildings.concreteMixer.get(), STATS_MODULE, MIN_STOCK);
             insertBefore(ModBuildings.simpleQuarry.get(), SIMPLE_QUARRY, MIN_STOCK);
             insertBefore(ModBuildings.mediumQuarry.get(), MEDIUM_QUARRY, MIN_STOCK);
+            insertBefore(ModBuildings.kitchen.get(), STATS_MODULE, MIN_STOCK);
         }
         if(PathingConfig.TAVERN_ASSIGNMENT_MODULE.get()) {
             insertBefore(ModBuildings.tavern.get(), BED, TAVERN_RECRUIT);

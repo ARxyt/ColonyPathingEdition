@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(value = WindowPostBoxMain.class, remap = false)
 public abstract class WindowPostBoxMainMixin {
 
-    @Redirect(method = "lambda$updateResources$3", at = @At(value = "INVOKE", target = "Ljava/lang/String;contains(Ljava/lang/CharSequence;)Z"), remap = false)
+    @Redirect(method = "lambda$updateResources$4", at = @At(value = "INVOKE", target = "Ljava/lang/String;contains(Ljava/lang/CharSequence;)Z"), remap = false)
     private boolean updateResources$contain(String instance, CharSequence s) {
         return LinkageManager.match(instance, s);
     }
