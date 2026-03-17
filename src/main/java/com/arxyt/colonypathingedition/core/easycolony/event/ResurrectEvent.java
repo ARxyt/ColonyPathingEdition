@@ -94,7 +94,7 @@ public class ResurrectEvent {
             player.sendSystemMessage(msg);
             return;
         }
-        if (colony.getCitizenManager().getMaxCitizens() <= colony.getCitizenManager().getCurrentCitizenCount()) {
+        if (colony.getCitizenManager().getPotentialMaxCitizens() <= colony.getCitizenManager().getCurrentCitizenCount()) {
             msg = Component.translatable(AdditionalContants.RESURRECT + ".not_available").withStyle(ChatFormatting.GRAY);
             player.sendSystemMessage(msg);
             return;
