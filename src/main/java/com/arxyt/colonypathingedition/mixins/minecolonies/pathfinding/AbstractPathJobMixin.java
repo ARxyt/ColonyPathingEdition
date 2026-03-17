@@ -855,19 +855,31 @@ public abstract class AbstractPathJobMixin{
     private void updateNode(@NotNull final MNode node, @NotNull final MNode nextNode, final double heuristic, final double cost, boolean onRails, boolean onRoad, boolean noDrop)
     {
         IMNodeExtras extras = (IMNodeExtras) node;
-        //  This node already exists
-        if ((cost >= nextNode.getCost() || nextNode.getVisitedCount() > visitedLevel) && !(extras.isCallbackNode() && nextNode.getVisitedCount() <= visitedLevel * callbackTimesTolerance))
+
+        // We don't ignore any low-cost nodes, only add some callback nodes to recalculate.
+        if (cost >= nextNode.getCost() && !(extras.isCallbackNode() && nextNode.getVisitedCount() <= visitedLevel * callbackTimesTolerance))
         {
             return;
         }
         nodesToVisit.remove(nextNode);
         pathNodesToVisit.remove(nextNode);
+        nextNode.setHeuristic(heuristic);
+
+        // Those low-cost nodes should change its parent node to current node.
         if (cost < nextNode.getCost()) {
+
             nextNode.parent = node;
             nextNode.setCost(cost);
             nextNode.setOnRails(onRails);
+            if(noDrop) {
+                pathNodesToVisit.offer(nextNode);
+            }
+            return;
         }
-        else if ( extras.isCallbackNode() && nextNode.isVisited() ){
+
+        // Other nodes may need to recalculate its heuristic.
+        if (nextNode.isVisited()){
+
             IMNodeExtras extrasNext = (IMNodeExtras) nextNode;
             if (extrasNext.isCallbackNode() && nextNode.getHeuristic() <= heuristic){
                 return;
@@ -875,10 +887,9 @@ public abstract class AbstractPathJobMixin{
             if (nextNode.parent != null && Math.abs(nextNode.parent.y - nextNode.y) > 1){
                 return;
             }
-        }
-        nextNode.setHeuristic(heuristic);
-        if((onRails || onRoad) && noDrop) {
-            pathNodesToVisit.offer(nextNode);
+            if((onRails || onRoad) && noDrop) {
+                pathNodesToVisit.offer(nextNode);
+            }
         }
     }
 
