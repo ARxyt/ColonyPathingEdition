@@ -3,6 +3,7 @@ package com.arxyt.colonypathingedition.mixins.minecolonies.citizen;
 import com.arxyt.colonypathingedition.api.JobNetherWorkerExtra;
 import com.arxyt.colonypathingedition.api.workersetting.BuildingHospitalExtra;
 import com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEatTask;
+import com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIFlee;
 import com.minecolonies.api.colony.interactionhandling.ChatPriority;
 import com.minecolonies.api.entity.ai.IStateAI;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
@@ -16,12 +17,14 @@ import com.minecolonies.core.colony.jobs.AbstractJobGuard;
 import com.minecolonies.core.colony.jobs.JobHealer;
 import com.minecolonies.core.colony.jobs.JobNetherWorker;
 import com.minecolonies.core.colony.jobs.JobPupil;
+import com.minecolonies.core.entity.ai.minimal.EntityAICitizenAvoidEntity;
 import com.minecolonies.core.entity.ai.minimal.EntityAIEatTask;
 import com.minecolonies.core.entity.ai.workers.AbstractEntityAIBasic;
 import com.minecolonies.core.entity.ai.workers.CitizenAI;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.monster.Monster;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -34,6 +37,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 import static com.arxyt.colonypathingedition.core.config.PathingConfig.EATING_AI_MODULE;
+import static com.arxyt.colonypathingedition.core.config.PathingConfig.FLEE_AI_MODULE;
 import static com.minecolonies.api.entity.citizen.VisibleCitizenStatus.*;
 import static com.minecolonies.api.entity.citizen.VisibleCitizenStatus.HOUSE;
 import static com.minecolonies.api.entity.citizen.VisibleCitizenStatus.MOURNING;
@@ -60,6 +64,10 @@ public class CitizenAIMixin {
         if(EATING_AI_MODULE.get()) {
             minimalAI.removeIf(iStateAI -> iStateAI instanceof EntityAIEatTask);
             minimalAI.add(new NewEntityAIEatTask(citizen));
+        }
+        if(FLEE_AI_MODULE.get()) {
+            minimalAI.removeIf(iStateAI -> iStateAI instanceof EntityAICitizenAvoidEntity);
+            minimalAI.add(new NewEntityAIFlee(citizen, Monster.class, INITIAL_RUN_SPEED_AVOID));
         }
     }
 

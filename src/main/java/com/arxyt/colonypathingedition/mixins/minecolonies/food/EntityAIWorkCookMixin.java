@@ -188,7 +188,7 @@ public abstract class EntityAIWorkCookMixin extends AbstractEntityAIBasicMixin<B
     protected void checkForImportantJobs(CallbackInfoReturnable<IAIState> cir) {
         final List<? extends Player> playerList = WorldUtil.getEntitiesWithinBuilding(getWorld(), Player.class,
                 building, player -> player != null
-                        && player.getFoodData().getFoodLevel() < LEVEL_TO_FEED_PLAYER
+                        && player.getFoodData().getFoodLevel() < 20
                         && building.getColony().getPermissions().hasPermission(player, Action.MANAGE_HUTS)
         );
 

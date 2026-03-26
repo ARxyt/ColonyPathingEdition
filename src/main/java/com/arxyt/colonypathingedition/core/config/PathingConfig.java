@@ -19,6 +19,7 @@ public class PathingConfig {
     public static ModConfigSpec.BooleanValue EATING_AI_MODULE;
     public static ModConfigSpec.BooleanValue SMELTERY_AI_MODULE;
     public static ModConfigSpec.BooleanValue FARMER_AI_MODULE;
+    public static ModConfigSpec.BooleanValue FLEE_AI_MODULE;
 
     public static ModConfigSpec.BooleanValue TAVERN_ASSIGNMENT_MODULE;
     public static ModConfigSpec.BooleanValue ADDITIONAL_MINIMUM_STOCK_MODULE;
@@ -102,12 +103,16 @@ public class PathingConfig {
         EATING_AI_MODULE = builder
                 .comment("Open the module to use the remastered eating AI system (default: true)\n 开启此模块将会启用重制的市民进食AI (默认开启)")
                 .define("enableNewEatingModule", true);
+        FLEE_AI_MODULE = builder
+                .comment("Open the module to use the remastered flee AI system (default: true)\n 开启此模块将会启用重制的市民逃跑AI (默认开启)")
+                .define("enableNewFleeModule", true);
         SMELTERY_AI_MODULE = builder
                 .comment("Open the module to use the remastered smeltery AI system for chef and stone smeltery(default: true)\n 开启此模块将会启用重制的厨师和冶炼工人AI (默认开启)")
                 .define("enableNewSmelteryModule", true);
         FARMER_AI_MODULE = builder
                 .comment("Open the module to use the remastered farmer AI system (default: true)\n 开启此模块将会启用重制的农夫AI (默认开启)")
                 .define("enableNewFarmerModule", true);
+
         builder.pop();
 
         builder.push("Building Module Opener #房屋模块特性开关#");

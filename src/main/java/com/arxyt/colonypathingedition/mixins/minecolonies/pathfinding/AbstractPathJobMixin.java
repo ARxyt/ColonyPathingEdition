@@ -160,10 +160,7 @@ public abstract class AbstractPathJobMixin{
             cost += pathingOptions.railsExitCost;
         }
 
-        // 原逻辑：随机性因子
-        if (pathingOptions.randomnessFactor > 0.0d) {
-            cost += ColonyConstants.rand.nextDouble() * pathingOptions.randomnessFactor;
-        }
+        // 删除随机因子，因为会影响后续寻路。
 
         // 原逻辑：洞穴空气成本
         if (state.getBlock() == Blocks.CAVE_AIR) {
