@@ -22,6 +22,7 @@ public class PathingConfig {
     public static ForgeConfigSpec.BooleanValue EATING_AI_MODULE;
     public static ForgeConfigSpec.BooleanValue SMELTERY_AI_MODULE;
     public static ForgeConfigSpec.BooleanValue FARMER_AI_MODULE;
+    public static ForgeConfigSpec.BooleanValue FLEE_AI_MODULE;
 
     public static ForgeConfigSpec.BooleanValue TAVERN_ASSIGNMENT_MODULE;
     public static ForgeConfigSpec.BooleanValue ADDITIONAL_MINIMUM_STOCK_MODULE;
@@ -103,6 +104,9 @@ public class PathingConfig {
         EATING_AI_MODULE = builder
                 .comment("Open the module to use the remastered eating AI system (default: true)\n 开启此模块将会启用重制的市民进食AI (默认开启)")
                 .define("enableNewEatingModule", true);
+        FLEE_AI_MODULE = builder
+                .comment("Open the module to use the remastered flee AI system (default: true)\n 开启此模块将会启用重制的市民逃跑AI (默认开启)")
+                .define("enableNewFleeModule", true);
         SMELTERY_AI_MODULE = builder
                 .comment("Open the module to use the remastered smeltery AI system for chef and stone smeltery(default: true)\n 开启此模块将会启用重制的厨师和冶炼工人AI (默认开启)")
                 .define("enableNewSmelteryModule", true);

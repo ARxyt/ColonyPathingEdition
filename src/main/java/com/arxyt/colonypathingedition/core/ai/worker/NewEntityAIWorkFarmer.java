@@ -535,7 +535,7 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
         BlockState surfaceState = world.getBlockState(position.above());
         Block surfaceBlock = surfaceState.getBlock();
 
-        if (surfaceBlock == Blocks.PUMPKIN || surfaceBlock == Blocks.MELON || surfaceState.canBeReplaced())
+        if (surfaceBlock == Blocks.PUMPKIN || surfaceBlock == Blocks.MELON || (surfaceState.canBeReplaced() && !(surfaceBlock instanceof AirBlock)))
         {
             return position;
         }

@@ -91,6 +91,7 @@ public class NewEntityAIEatTask implements IStateAI {
     private int waitingTicks = 0;
     private int foodSlot = -1;
     private final Set<Item> eatenFood = new LinkedHashSet<>();
+
     /**
      * Instantiates this task.
      *

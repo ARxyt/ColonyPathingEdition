@@ -6,6 +6,7 @@ import com.minecolonies.api.entity.ai.statemachine.states.CitizenAIState;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
 import com.minecolonies.api.entity.ai.statemachine.tickratestatemachine.ITickRateStateMachine;
 import com.minecolonies.api.util.BlockPosUtil;
+import com.minecolonies.api.util.CompatibilityUtils;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingHospital;
 import com.minecolonies.core.colony.jobs.AbstractJobGuard;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
@@ -21,6 +22,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.List;
+
+import static com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIFlee.*;
 import static com.minecolonies.api.util.constant.CitizenConstants.INITIAL_RUN_SPEED_AVOID;
 import static com.minecolonies.api.util.constant.CitizenConstants.MAX_GUARD_CALL_RANGE;
 
@@ -70,6 +74,8 @@ public abstract class EntityCitizenMoveAwayMixin {
 
         citizenAI.addTransition(new AIOneTimeEventTarget<>(CitizenAIState.FLEE));
         citizen.callForHelp(attacker, MAX_GUARD_CALL_RANGE);
+        SpreadFear(citizen);
+
         if(citizen.getCitizenData().getCitizenDiseaseHandler().isHurt() && !(citizen.getCitizenJobHandler().getColonyJob() instanceof AbstractJobGuard)){
             final IColony colony = citizen.getCitizenData().getColony();
             if (nearestHospital == null){
@@ -81,5 +87,28 @@ public abstract class EntityCitizenMoveAwayMixin {
             }
         }
         EntityNavigationUtils.walkAwayFrom(citizen, attacker.blockPosition(), 15, INITIAL_RUN_SPEED_AVOID);
+    }
+
+    /**
+     * Spread fear.
+     */
+    @Unique
+    private void SpreadFear(EntityCitizen citizen)
+    {
+        List<Entity> toSpreadFear = CompatibilityUtils.getWorldFromCitizen(citizen).getEntities(
+                        citizen,
+                        citizen.getBoundingBox().inflate(
+                                SPREAD_FEAR_DIST_X,
+                                SPREAD_FEAR_DIST_Y,
+                                SPREAD_FEAR_DIST_X),
+                        Entity::isAlive)
+                .stream()
+                .filter(entity -> entity instanceof EntityCitizen aCitizen && !(aCitizen.getCitizenJobHandler().getColonyJob() instanceof AbstractJobGuard<?>))
+                .toList();
+        for(Entity entity : toSpreadFear) {
+            if(entity instanceof EntityCitizen aCitizen) {
+                aCitizen.getCitizenAI().addTransition(new AIOneTimeEventTarget<>(CitizenAIState.FLEE));
+            }
+        }
     }
 }
