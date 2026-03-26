@@ -64,13 +64,13 @@ public class BuildingModulesMixin
                         Skill.Dexterity,
                         Skill.Athletics
                 );
-//            case "farmer_craft":
-//                return () -> new CraftingWorkerBuildingModule(ModJobs.farmer.get(),
-//                        Skill.Stamina,
-//                        Skill.Athletics,
-//                        false,
-//                        (b) -> Math.max(1, (b.getBuildingLevel() + 1) / 2)
-//                );
+            case "courier_work":
+                return () ->  new DeliverymanAssignmentModule(ModJobs.delivery.get(),
+                        Skill.Agility,
+                        Skill.Adaptability,
+                        true,
+                        (b) -> Math.max(1, (b.getBuildingLevel() + 1) / 2)
+                );
             default:
                 // leave unchanged
         }
