@@ -87,7 +87,6 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) protected abstract void handleDebugOptions(MNode node);
     @Shadow(remap = false) protected abstract boolean isAtDestination(MNode n);
     @Shadow(remap = false) protected abstract boolean stopOnNodeLimit(int totalNodesVisited, MNode bestNode, int nodesSinceEndNode);
-    @Shadow(remap = false) protected abstract void visitNode(MNode node);
     @Shadow(remap = false) @NotNull protected abstract Path finalizePath(MNode targetNode);
 
 
@@ -131,8 +130,10 @@ public abstract class AbstractPathJobMixin{
     @Unique private Queue<MNode> pathNodesToVisit;
 
     /**
-     * @author ARxyt
-     * @reason Add some change reported in issue but rejected.
+     * 重写 computeCost 方法，修改游泳进入成本并添加自定义逻辑。
+     *
+     * @author YourName
+     * @reason 调整路径计算中的游泳成本
      */
     @Overwrite(remap = false)
     protected double computeCost(
@@ -154,7 +155,7 @@ public abstract class AbstractPathJobMixin{
             cost *= pathingOptions.onRailCost;
             if (state.getBlock() instanceof PoweredRailBlock && !(state.getValue(PoweredRailBlock.POWERED)))
             {
-                return 25.0;
+                return 50.0;
             }
             return cost ;
         }
@@ -164,10 +165,7 @@ public abstract class AbstractPathJobMixin{
             cost += pathingOptions.railsExitCost;
         }
 
-        // 原逻辑：随机性因子
-        if (pathingOptions.randomnessFactor > 0.0d) {
-            cost += ColonyConstants.rand.nextDouble() * pathingOptions.randomnessFactor;
-        }
+        // 删除随机因子，因为会影响后续寻路。
 
         // 原逻辑：洞穴空气成本
         if (state.getBlock() == Blocks.CAVE_AIR) {
@@ -198,7 +196,7 @@ public abstract class AbstractPathJobMixin{
 
         if (!isDiving)
         {
-            if (Math.abs(dYDouble) > 0.6 && !ladder && !(dY == 1 && (below.getBlock() instanceof StairBlock) && below.getValue(StairBlock.FACING) == directionFromDelta(dX,0,dZ) && below.getValue(StairBlock.HALF) == Half.BOTTOM))
+            if (Math.abs(dYDouble) > 0.6 && !ladder && !(dY == 1 && (below.getBlock() instanceof StairBlock) && below.getValue(StairBlock.FACING)==directionFromDelta(dX,0,dZ) && below.getValue(StairBlock.HALF)== Half.BOTTOM))
             {
                 if (dYDouble > 0.0)
                 {
@@ -211,37 +209,39 @@ public abstract class AbstractPathJobMixin{
                     }
                     cost += basicJumpCost;
                 }
-                else if ( pathingOptions.dropCost != 0)
-                {
-                    if (!(dY == -1 && below.getBlock() instanceof StairBlock)) {
-                        double basicDropCost = Math.abs(Math.pow((dYDouble + 2. / 5) , 3))- 8. / 125;
-                        if (dYDouble >= -1.25){
-                            if(onPath) {
-                                basicDropCost *= pathingOptions.onPathCost;
-                            }
-                        }
-                        else {
-                            basicDropCost *= Math.abs(dYDouble);
+                else if ( pathingOptions.dropCost != 0) {
+                    if (dY == -1 && below.getBlock() instanceof StairBlock) {
+                        cost += 0.25 * pathingOptions.dropCost * (onPath? pathingOptions.onPathCost : 1);
+                    }
+                    else {
+                        double basicDropCost = Math.pow(dYDouble, 4);
+                        if (dYDouble >= -1 && onPath) {
+                            basicDropCost *= pathingOptions.onPathCost * pathingOptions.jumpCost;
                         }
                         cost += pathingOptions.dropCost * basicDropCost;
-                    }
-                    if (below.getBlock() instanceof FarmBlock){
-                        cost += destroyingFarmlandCost;
+
+                        if (below.getBlock() instanceof FarmBlock) {
+                            cost += destroyingFarmlandCost;
+                        }
                     }
                 }
             }
             else if (ladder && parent.isLadder() && dY == 0){
                 cost += ladderSwitchCost;
             }
-        }
-
-        if (below.getBlock() instanceof PanelBlock){
-            cost += 0.2;
+            else if (dYDouble != 0) {
+                cost += 0.25 * Math.abs(dYDouble) * pathingOptions.dropCost * (onPath? pathingOptions.onPathCost : 1);
+            }
         }
 
         if (below.getBlock() instanceof ShingleBlock || below.getBlock() instanceof ShingleSlabBlock)
         {
             cost += shingleCost;
+        }
+
+        if (state.getBlock() instanceof PanelBlock)
+        {
+            cost += 0.5;
         }
 
         if (below.getBlock() instanceof LeavesBlock)
@@ -326,7 +326,7 @@ public abstract class AbstractPathJobMixin{
                 nodesSinceEndNode++;
                 totalNodesVisited++;
 
-                // Limiting max amount of nodes mapped, encountering a high cost node increases the limit
+                // Limiting max amount of nodes mapped, encountering a high-cost node increases the limit
                 if (totalNodesVisited > Math.min(MAX_NODES, maxNodes + node.getHeuristic() * 2)) {
                     if (stopOnNodeLimit(totalNodesVisited, bestNode, nodesSinceEndNode)) {
                         shouldSkip = true;
@@ -560,6 +560,64 @@ public abstract class AbstractPathJobMixin{
             }
         }
         return Integer.MIN_VALUE;
+    }
+
+    /**
+     * @author ARxyt
+     * @reason Add a random explore/Drop visit fix.
+     */
+    @Overwrite(remap = false)
+    protected void visitNode(final MNode node)
+    {
+        cachedBlockLookup.resetToNextPos(node.x, node.y, node.z);
+
+        int dX = 0;
+        int dY = 0;
+        int dZ = 0;
+
+        if (node.parent != null)
+        {
+            dX = node.x - node.parent.x;
+            dY = node.y - node.parent.y;
+            dZ = node.z - node.parent.z;
+        }
+
+        if (node.isLadder() || node.isVisited())
+        {
+            exploreInDirection(node, 0, 1, 0);
+            exploreInDirection(node, 0, -1, 0);
+        }
+        // Only explore downwards when dropping
+        else if (node.isCornerNode() && (node.parent == null || !(dX == 0 && dY == 1 && dZ == 0)))
+        {
+            exploreInDirection(node, 0, -1, 0);
+            return;
+        }
+        // Walk downwards node if passable
+        else if (!node.isSwimming() && isPassable(node.x, node.y - 1, node.z, false, node.parent))
+        {
+            exploreInDirection(node, 0, -1, 0);
+        }
+
+        List<Direction> directions = new ArrayList<>(Arrays.asList(Direction.values()));
+        Collections.shuffle(directions, new Random());
+
+        for (Direction dir : directions) {
+            switch (dir) {
+                case NORTH:
+                    if (dZ <= 0 || dY <= -2) exploreInDirection(node, 0, 0, -1);
+                    break;
+                case EAST:
+                    if (dX >= 0 || dY <= -2) exploreInDirection(node, 1, 0, 0);
+                    break;
+                case SOUTH:
+                    if (dZ >= 0 || dY <= -2) exploreInDirection(node, 0, 0, 1);
+                    break;
+                case WEST:
+                    if (dX <= 0 || dY <= -2) exploreInDirection(node, -1, 0, 0);
+                    break;
+            }
+        }
     }
 
     /**
