@@ -82,7 +82,6 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) protected abstract void handleDebugOptions(MNode node);
     @Shadow(remap = false) protected abstract boolean isAtDestination(MNode n);
     @Shadow(remap = false) protected abstract boolean stopOnNodeLimit(int totalNodesVisited, MNode bestNode, int nodesSinceEndNode);
-    @Shadow(remap = false) protected abstract void visitNode(MNode node);
     @Shadow(remap = false) @NotNull protected abstract Path finalizePath(MNode targetNode);
 
     @Unique private BlockEntity townhall;
@@ -150,7 +149,7 @@ public abstract class AbstractPathJobMixin{
             cost *= pathingOptions.onRailCost;
             if (state.getBlock() instanceof PoweredRailBlock && !(state.getValue(PoweredRailBlock.POWERED)))
             {
-                return 25.0;
+                return 50.0;
             }
             return cost ;
         }
@@ -204,25 +203,28 @@ public abstract class AbstractPathJobMixin{
                     }
                     cost += basicJumpCost;
                 }
-                else if ( pathingOptions.dropCost != 0)
-                {
-                    if (!(dY==1 && below.getBlock() instanceof StairBlock)) {
-                        double basicDropCost = Math.abs(Math.pow((dYDouble + 2. / 5) , 3))- 8. / 125;
-                        if (dYDouble > -3.0 && onPath){
-                            basicDropCost *= pathingOptions.onPathCost;
-                        }
-                        else {
-                            basicDropCost *= Math.abs(dYDouble);
+                else if ( pathingOptions.dropCost != 0) {
+                    if (dY == -1 && below.getBlock() instanceof StairBlock) {
+                        cost += 0.25 * pathingOptions.dropCost * (onPath? pathingOptions.onPathCost : 1);
+                    }
+                    else {
+                        double basicDropCost = Math.pow(dYDouble, 4);
+                        if (dYDouble >= -1 && onPath) {
+                            basicDropCost *= pathingOptions.onPathCost * pathingOptions.jumpCost;
                         }
                         cost += pathingOptions.dropCost * basicDropCost;
-                    }
-                    if (below.getBlock() instanceof FarmBlock){
-                        cost += destroyingFarmlandCost;
+
+                        if (below.getBlock() instanceof FarmBlock) {
+                            cost += destroyingFarmlandCost;
+                        }
                     }
                 }
             }
             else if (ladder && parent.isLadder() && dY == 0){
                 cost += ladderSwitchCost;
+            }
+            else if (dYDouble != 0) {
+                cost += 0.25 * Math.abs(dYDouble) * pathingOptions.dropCost * (onPath? pathingOptions.onPathCost : 1);
             }
         }
 
@@ -233,7 +235,7 @@ public abstract class AbstractPathJobMixin{
 
         if (state.getBlock() instanceof PanelBlock)
         {
-            cost += 0.2;
+            cost += 0.5;
         }
 
         if (below.getBlock() instanceof LeavesBlock)
@@ -443,7 +445,7 @@ public abstract class AbstractPathJobMixin{
     @Unique
     private boolean checkConerCollision(int x, int y, int z) {
         final BlockState above = cachedBlockLookup.getBlockState(x,y+1,z);
-        return !(ShapeUtil.getStartY(above.getCollisionShape(world, tempWorldPos.set(x, y + 1, z)), 1) < 0.875)||(above.hasProperty(BlockStateProperties.OPEN)&&!(above.getBlock() instanceof PanelBlock));
+        return !(ShapeUtil.getStartY(above.getCollisionShape(world, tempWorldPos.set(x, y + 1, z)), 1) < 0.875) || above.hasProperty(BlockStateProperties.OPEN);
     }
 
     @Unique
@@ -554,6 +556,64 @@ public abstract class AbstractPathJobMixin{
 
     /**
      * @author ARxyt
+     * @reason Add a random explore/Drop visit fix.
+     */
+    @Overwrite(remap = false)
+    protected void visitNode(final MNode node)
+    {
+        cachedBlockLookup.resetToNextPos(node.x, node.y, node.z);
+
+        int dX = 0;
+        int dY = 0;
+        int dZ = 0;
+
+        if (node.parent != null)
+        {
+            dX = node.x - node.parent.x;
+            dY = node.y - node.parent.y;
+            dZ = node.z - node.parent.z;
+        }
+
+        if (node.isLadder() || node.isVisited())
+        {
+            exploreInDirection(node, 0, 1, 0);
+            exploreInDirection(node, 0, -1, 0);
+        }
+        // Only explore downwards when dropping
+        else if (node.isCornerNode() && (node.parent == null || !(dX == 0 && dY == 1 && dZ == 0)))
+        {
+            exploreInDirection(node, 0, -1, 0);
+            return;
+        }
+        // Walk downwards node if passable
+        else if (!node.isSwimming() && isPassable(node.x, node.y - 1, node.z, false, node.parent))
+        {
+            exploreInDirection(node, 0, -1, 0);
+        }
+
+        List<Direction> directions = new ArrayList<>(Arrays.asList(Direction.values()));
+        Collections.shuffle(directions, new Random());
+
+        for (Direction dir : directions) {
+            switch (dir) {
+                case NORTH:
+                    if (dZ <= 0 || dY <= -2) exploreInDirection(node, 0, 0, -1);
+                    break;
+                case EAST:
+                    if (dX >= 0 || dY <= -2) exploreInDirection(node, 1, 0, 0);
+                    break;
+                case SOUTH:
+                    if (dZ >= 0 || dY <= -2) exploreInDirection(node, 0, 0, 1);
+                    break;
+                case WEST:
+                    if (dX <= 0 || dY <= -2) exploreInDirection(node, -1, 0, 0);
+                    break;
+            }
+        }
+    }
+
+    /**
+     * @author ARxyt
      * @reason 重构代码，取消corner链接，使用统一规则缩减代码量，同时de奇怪的bug
      */
     @Overwrite( remap = false)
@@ -647,7 +707,7 @@ public abstract class AbstractPathJobMixin{
         final boolean swimStart = isSwimming && !node.isSwimming();
         final boolean onRails = pathingOptions.canUseRails() && state.getBlock() instanceof BaseRailBlock && checkConnection(node,dX,dZ);
         final boolean ladder = PathfindingUtils.isLadder(state, pathingOptions);
-        final boolean onRoad =HasPathTag(below)||HasPathTag(pos)||(ladder||PathfindingUtils.isLadder(belowState, pathingOptions)||WorkerUtil.isPathBlock(belowState.getBlock())||WorkerUtil.isPathBlock(state.getBlock()))&&!(HasNotPathTag(below)||HasNotPathTag(pos));
+        final boolean onRoad = HasPathTag(below) || HasPathTag(pos) || (ladder || PathfindingUtils.isLadder(belowState, pathingOptions) || WorkerUtil.isPathBlock(belowState.getBlock()) || WorkerUtil.isPathBlock(state.getBlock())) && !(HasNotPathTag(below) || HasNotPathTag(pos));
         final boolean isDiving = isSwimming && PathfindingUtils.isWater(world, null, aboveState, null);
 
 
@@ -788,7 +848,7 @@ public abstract class AbstractPathJobMixin{
         {
             extras.setOnFarmland();
         }
-        if (below.getBlock() instanceof SlabBlock && below.getValue(SlabBlock.TYPE)== SlabType.BOTTOM)
+        if (below.getBlock() instanceof SlabBlock && below.getValue(SlabBlock.TYPE) == SlabType.BOTTOM)
         {
             extras.setOnSlab();
         }

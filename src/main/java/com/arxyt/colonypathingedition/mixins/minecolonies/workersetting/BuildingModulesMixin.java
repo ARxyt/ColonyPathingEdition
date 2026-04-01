@@ -60,6 +60,12 @@ public class BuildingModulesMixin
                     Skill.Dexterity,
                     Skill.Athletics
             );
+            case "courier_work" -> () ->  new DeliverymanAssignmentModule(ModJobs.delivery.get(),
+                    Skill.Agility,
+                    Skill.Adaptability,
+                    true,
+                    (b) -> Math.max(1, (b.getBuildingLevel() + 1) / 2)
+            );
             default ->
                     // leave unchanged
                     moduleSupplier;

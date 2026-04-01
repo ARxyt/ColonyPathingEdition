@@ -159,52 +159,55 @@ public class PathingConfig {
                     .comment("Rail path cost multiplier (default: 0.1, original:0.1) #铁轨Cost乘数 (默认 : 0.1 殖民地原设置 : 0.1)#")
                     .defineInRange("railCostMultiplier", 0.1, 0.0, 2.0);
             ROAD_COST_MULTIPLIER = builder
-                    .comment("Road path cost multiplier (default: 0.4, original:1/6) #路径Cost乘数 (默认 : 0.4 殖民地原设置 : 1/6)#")
-                    .defineInRange("roadCostMultiplier", 0.4, 0.0, 2.0);
+                    .comment("Road path cost multiplier (default: 0.25, original:1/6) #路径Cost乘数 (默认 : 0.4 殖民地原设置 : 1/6)#")
+                    .defineInRange("roadCostMultiplier", 0.25, 0.0, 2.0);
             DROP_COST_MULTIPLIER = builder
-                    .comment("Drop cost multiplier (default: 1.0, original:1.0) #掉落Cost乘数 (默认 : 1.0 殖民地原设置 : 1.0)#\n" +
-                            "Notice: The base formula for falling cost has been modified from |dY|³ to (|dY| - 2/5)³ - 8/125. #注意:下落Cost基础公式已经从|dY|³修改为(|dY|-2/5)³-8/125.#")
+                    .comment("""
+                            Drop cost multiplier (default: 1.0, original:1.0)
+                            #掉落Cost乘数 (默认 : 1.0 殖民地原设置 : 1.0)#
+                            Notice: The base formula for falling cost has been modified from |dY|³ to |dY| ^ 4.
+                            #注意:下落Cost基础公式已经从 |dY|³ 修改为 |dY| ^ 4 #""")
                     .defineInRange("dropCostMultiplier", 1.0, 0.0, 10.0);
             builder.pop();
             builder.push("Basic Cost Definer #基础Cost定义#");
             WATER_COST_DEFINER = builder
-                    .comment("Water path cost addon (default: 8.0, original:2.0) #水路Cost (默认 : 8.0 殖民地原设置 : 2.0)#")
-                    .defineInRange("waterCostAddon", 8.0, 0.0, 24.0);
+                    .comment("Water path cost addon (default: 12.0, original:2.0) #水路Cost (默认 : 12.0 殖民地原设置 : 2.0)#")
+                    .defineInRange("waterCostAddon", 12.0, 0.0, 63.0);
             JUMP_COST_DEFINER = builder
-                    .comment("Jump cost addon (default: 2.0, original:2.0) #跳跃(准确来说是非梯子爬升)Cost (默认 : 2.0 殖民地原设置 : 2.0)#")
-                    .defineInRange("jumpCostAddon", 2.0, 0.0, 24.0);
+                    .comment("Jump cost addon (default: 4.0, original:2.0) #跳跃(准确来说是非梯子爬升)Cost (默认 : 4.0 殖民地原设置 : 2.0)#")
+                    .defineInRange("jumpCostAddon", 4.0, 0.0, 63.0);
             INSHAPE_COST_DEFINER = builder
                     .comment("In shape cost addon (default: 2.0, original:2.0) #实体方块内部行走的Cost (默认 : 2.0 殖民地原设置 : 2.0)#")
-                    .defineInRange("inShapeCostAddon", 2.0, 0.0, 24.0);
+                    .defineInRange("inShapeCostAddon", 2.0, 0.0, 63.0);
             DOORS_COST_DEFINER = builder
                     .comment("Door and trapdoor’s cost addon (default: 3.0, original:3.0) #穿过各种\"门\"的Cost (默认 : 3.0 殖民地原设置 : 3.0)#")
-                    .defineInRange("doorsCostAddon", 3.0, 0.0, 24.0);
+                    .defineInRange("doorsCostAddon", 3.0, 0.0, 63.0);
             DIVE_COST_DEFINER = builder
-                    .comment("Dive cost addon (default: 24.0, original:4.0) #潜水(潜多了会淹死)的Cost (默认 : 24.0 殖民地原设置 : 4.0)#")
-                    .defineInRange("diveCostAddon", 24.0, 0.0, 24.0);
+                    .comment("Dive cost addon (default: 48.0, original:4.0) #潜水(潜多了会淹死)的Cost (默认 : 48.0 殖民地原设置 : 4.0)#")
+                    .defineInRange("diveCostAddon", 48.0, 0.0, 63.0);
             CAVE_COST_DEFINER = builder
                     .comment("Breathing cave air cost addon (default: 0.3, original:3.0) #钻洞(人工的也算)的Cost,(默认 : 0.3 殖民地原设置 : 3.0)#")
-                    .defineInRange("caveCostAddon", 0.3, 0.0, 24.0);
+                    .defineInRange("caveCostAddon", 0.3, 0.0, 63.0);
             RAILEXIT_COST_DEFINER = builder
                     .comment("Exit railway cost addon (default: 4.0, original:4.0) #下铁路(人工的也算)的Cost(探测铁轨为”站点“，不计cost) (默认 : 4.0 殖民地原设置 : 4.0)#")
-                    .defineInRange("railExitAddon", 4.0, 0.0, 24.0);
+                    .defineInRange("railExitAddon", 4.0, 0.0, 63.0);
             builder.pop();
             builder.push("Typical Cost Definer #针对性Cost定义#");
             LADDER_SWITCH_COST_DEFINER = builder
-                    .comment("Cost on switch ladder when climbing (default: 4.0) #攀爬时切换梯子的Cost (默认 : 4.0)#")
-                    .defineInRange("ladderSwitchCostAddon", 4.0, 0.0, 24.0);
+                    .comment("Cost on switch ladder when climbing (default: 18.0) #攀爬时切换梯子的Cost (默认 : 18.0)#")
+                    .defineInRange("ladderSwitchCostAddon", 18.0, 0.0, 63.0);
             SHINGLE_COST_DEFINER = builder
-                    .comment("Walk on shingle cost addon (default: 3.0, original:3.0) #上房揭瓦(走在屋瓦上)的Cost (默认 : 3.0 殖民地原设置 : 3.0)#")
-                    .defineInRange("shingleCostAddon", 3.0, 0.0, 24.0);
+                    .comment("Walk on shingle cost addon (default: 6.0, original:3.0) #上房揭瓦(走在屋瓦上)的Cost (默认 : 6.0 殖民地原设置 : 3.0)#")
+                    .defineInRange("shingleCostAddon", 6.0, 0.0, 63.0);
             FARMLAND_COST_DEFINER = builder
-                    .comment("Jump in farmland or drop onto farmland cost addon (default: 8.0) #在农田中跳上跳下的Cost (默认 : 8.0)#")
-                    .defineInRange("farmlandCostAddon", 8.0, 0.0, 24.0);
+                    .comment("Jump in farmland or drop onto farmland cost addon (default: 24.0) #在农田中跳上跳下的Cost (默认 : 24.0)#")
+                    .defineInRange("farmlandCostAddon", 24.0, 0.0, 63.0);
             LEAF_COST_DEFINER = builder
-                    .comment("Walk on leaves cost addon (default: 4.0) #爬树(走在树叶上)的Cost (默认 : 4.0)#")
-                    .defineInRange("leafCostAddon", 4.0, 0.0, 24.0);
+                    .comment("Walk on leaves cost addon (default: 8.0) #爬树(走在树叶上)的Cost (默认 : 8.0)#")
+                    .defineInRange("leafCostAddon", 8.0, 0.0, 63.0);
             BERRY_COST_DEFINER = builder
-                    .comment("Walk in sweet berry bush cost addon (default: 24.0) #被浆果丛扎的Cost (默认 : 24.0)#")
-                    .defineInRange("berryCostAddon", 24.0, 0.0, 24.0);
+                    .comment("Walk in sweet berry bush cost addon (default: 63.0) #被浆果丛扎的Cost (默认 : 63.0)#")
+                    .defineInRange("berryCostAddon", 63.0, 0.0, 63.0);
             builder.pop();
             builder.push("Advanced Pathfinding Constant Definer #进阶寻路算法常数定义(警告：慎重修改！会对全局寻路产生极大影响！)#");
             ONRAIL_CALLBACK_MULTIPLIER = builder
@@ -219,19 +222,19 @@ public class PathingConfig {
                     .defineInRange("onRoadCallbackMutiplier", 1.2, 0.0, 2.0);
             ONRAIL_PREFERENCE = builder
                     .comment("""
-                            This is a global heuristic reduction, representing how much villagers prefer railways when pathfinding far away from the target point. The smaller the value, the stronger the preference. (default: 0.85)
-                            是一个全局的启发值减免，表现为村民在远离目标点处寻路时对铁路的信任程度，数值越小越信任(默认 : 0.85)""")
-                    .defineInRange("onRailPreference", 0.85, 0.5, 2.0);
+                            This is a global heuristic reduction, representing how much villagers prefer railways when pathfinding far away from the target point. The smaller the value, the stronger the preference. (default: 0.5)
+                            是一个全局的启发值减免，表现为村民在远离目标点处寻路时对铁路的信任程度，数值越小越信任(默认 : 0.5)""")
+                    .defineInRange("onRailPreference", 0.5, 0.1, 3.0);
             ONROAD_PREFERENCE = builder
                     .comment("""
-                            This is a global heuristic reduction, representing how much villagers prefer path blocks when pathfinding far away from the target point. The smaller the value, the stronger the preference. (default: 0.92)
-                            是一个全局的启发值减免，表现为村民在远离目标点处寻路时对道路方块的信任程度，数值越小越信任(默认 : 0.92)""")
-                    .defineInRange("onRoadPreference", 0.92, 0.5, 2.0);
+                            This is a global heuristic reduction, representing how much villagers prefer path blocks when pathfinding far away from the target point. The smaller the value, the stronger the preference. (default: 0.78)
+                            是一个全局的启发值减免，表现为村民在远离目标点处寻路时对道路方块的信任程度，数值越小越信任(默认 : 0.78)""")
+                    .defineInRange("onRoadPreference", 0.78, 0.4, 3.0);
             SWIMMING_PREFERENCE = builder
                     .comment("""
                             This is a global heuristic multiplier, representing how much villagers prefer swimming when pathfinding far away from the target point. The smaller the value, the stronger the preference. (default: 1.3)
-                            是一个全局的启发值乘子，表现为村民在远离目标点处寻路时对水路的信任程度，数值越小越信任(默认 : 1.3)""")
-                    .defineInRange("swimmingPreference", 1.3, 0.8, 3);
+                            是一个全局的启发值乘子，表现为村民在远离目标点处寻路时对水路的信任程度，数值越小越信任(默认 : 1.6)""")
+                    .defineInRange("swimmingPreference", 1.6, 1.0, 8.0);
             CALLBACK_TIMES_TOLERANCE = builder
                     .comment("Tolerates how many times callback nodes can be expanded during each pathfinding process. (default: 2)\n 能容忍每次寻路中回扣节点被扩展几次，数值过大可能会造成扩展的无用节点增加 (默认 : 2)")
                     .defineInRange("callbackTimesTolerance", 2, 1, 25);

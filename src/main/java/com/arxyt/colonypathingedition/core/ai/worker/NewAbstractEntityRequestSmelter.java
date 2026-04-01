@@ -212,10 +212,26 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
     private IAIState addFuelToFurnace()
     {
         final List<ItemStack> possibleFuels = getActivePossibleFuels();
-        if (!InventoryUtils.hasItemInItemHandler(worker.getInventoryCitizen(), isCorrectFuel(possibleFuels)))
-        {
-            if (InventoryUtils.hasBuildingEnoughElseCount(building, isCorrectFuel(possibleFuels), 1) >= 1)
+        final List<ItemStack> alterPossibleFuels = getActivePossibleFuels();
+        if (currentRecipeStorage != null) {
+            possibleFuels.removeIf(stack -> ItemStackUtils.compareItemStacksIgnoreStackSize(stack, currentRecipeStorage.getPrimaryOutput()));
+            possibleFuels.removeIf(stack -> ItemStackUtils.compareItemStacksIgnoreStackSize(stack, currentRecipeStorage.getCleanedInput().getFirst().getItemStack()));
+        }
+
+        boolean haveToUseAlterFuels = false;
+        if (!InventoryUtils.hasItemInItemHandler(worker.getInventoryCitizen(), isCorrectFuel(possibleFuels))) {
+            if (InventoryUtils.hasBuildingEnoughElseCount(building, isCorrectFuel(possibleFuels), 1) >= 1) {
+                needsCurrently = new Tuple<>(isCorrectFuel(possibleFuels), STACKSIZE);
+                return GATHERING_REQUIRED_MATERIALS;
+            }
+            haveToUseAlterFuels = true;
+        }
+
+        if (haveToUseAlterFuels && !InventoryUtils.hasItemInItemHandler(worker.getInventoryCitizen(), isCorrectFuel(possibleFuels))) {
+            if (currentRecipeStorage != null && InventoryUtils.hasBuildingEnoughElseCount(building, isCorrectFuel(alterPossibleFuels), 1) >= 1)
             {
+                ItemStack stack = currentRecipeStorage.getCleanedInput().getFirst().getItemStack();
+                checkIfRequestForItemExistOrCreateAsync(stack, Math.max(currentRecipeStorage.getPrimaryOutput().getCount(),STACKSIZE), currentRecipeStorage.getPrimaryOutput().getCount());
                 needsCurrently = new Tuple<>(isCorrectFuel(possibleFuels), STACKSIZE);
                 return GATHERING_REQUIRED_MATERIALS;
             }
@@ -224,8 +240,7 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
             return IDLE;
         }
 
-        if (furnacePos == null)
-        {
+        if (furnacePos == null) {
             return IDLE;
         }
 
@@ -241,10 +256,11 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
                     return getState();
                 }
 
-                if (InventoryUtils.hasItemInItemHandler(worker.getInventoryCitizen(), isCorrectFuel(possibleFuels)) && isEmpty(furnace.getItem(FUEL_SLOT)))
+                final List<ItemStack> chosenFuels = haveToUseAlterFuels ? alterPossibleFuels : possibleFuels;
+                if (InventoryUtils.hasItemInItemHandler(worker.getInventoryCitizen(), isCorrectFuel(chosenFuels)) && isEmpty(furnace.getItem(FUEL_SLOT)))
                 {
                     InventoryUtils.transferXOfFirstSlotInItemHandlerWithIntoInItemHandler(
-                            worker.getInventoryCitizen(), isCorrectFuel(possibleFuels), STACKSIZE,
+                            worker.getInventoryCitizen(), isCorrectFuel(chosenFuels), STACKSIZE,
                             new InvWrapper(furnace), FUEL_SLOT);
                 }
             }
@@ -689,13 +705,6 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
                 worker.getCitizenData().triggerInteraction(new StandardInteraction(Component.translatable(FURNACE_USER_NO_FUEL), ChatPriority.IMPORTANT));
             }
             return ImmutableList.of();
-        }
-
-        if (currentRecipeStorage != null)
-        {
-            possibleFuels.removeIf(stack -> ItemStackUtils.compareItemStacksIgnoreStackSize(stack, currentRecipeStorage.getPrimaryOutput()));
-            // There is always only one input.
-            possibleFuels.removeIf(stack -> ItemStackUtils.compareItemStacksIgnoreStackSize(stack, currentRecipeStorage.getCleanedInput().get(0).getItemStack()));
         }
         return possibleFuels;
     }
