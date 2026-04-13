@@ -252,7 +252,7 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
             if (checkForToolOrWeapon(ModEquipmentTypes.hoe.get()))
             {
                 worker.getCitizenData().setJobStatus(JobStatus.STUCK);
-                return PREPARING;
+                return START_WORKING;
             }
             ItemStack seeds = farmField.getSeed();
             final int count = worker.getCitizenInventoryHandler().getItemCountInInventory(seeds.getItem());
@@ -438,7 +438,7 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
         }
         needRecheck = false;
         building.setPrevPos(null);
-        return PREPARING;
+        return decide();
     }
 
     // Basic Action and Listener

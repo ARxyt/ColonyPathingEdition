@@ -92,6 +92,7 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
     @Unique private List<Animal> toFeedList = null;
     @Unique private Animal currentFed = null;
     @Unique private int butcherTimeOut = 0;
+    @Unique private int feedTimeOut = 0;
 
     public AbstractEntityAIHerderMixin(@NotNull J job) {
         super(job);
@@ -399,7 +400,8 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
         }
 
         Animal toFeed = currentFed;
-        if (!walkingToAnimal(toFeed))
+        walkingToAnimal(toFeed);
+        if ((feedTimeOut >= 15 || BlockPosUtil.getDistance2D(worker.blockPosition(), toFeed.blockPosition()) < 4) && !ItemStackUtils.isEmpty(this.worker.getMainHandItem()))
         {
             if (toFeed.isBaby())
             {
@@ -419,9 +421,13 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
             fedRecently.put(toFeed.getUUID(), worker.level().getGameTime());
 
             currentFed = null;
+            worker.decreaseSaturationForContinuousAction();
+            feedTimeOut = 0;
+            return DECIDE;
         }
-
-        worker.decreaseSaturationForContinuousAction();
+        else {
+            feedTimeOut++;
+        }
         return getState();
     }
 

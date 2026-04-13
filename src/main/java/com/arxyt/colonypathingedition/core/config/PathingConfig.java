@@ -23,6 +23,7 @@ public class PathingConfig {
     public static ForgeConfigSpec.BooleanValue SMELTERY_AI_MODULE;
     public static ForgeConfigSpec.BooleanValue FARMER_AI_MODULE;
     public static ForgeConfigSpec.BooleanValue FLEE_AI_MODULE;
+    public static ForgeConfigSpec.BooleanValue DELIVERYMAN_AI_MODULE;
 
     public static ForgeConfigSpec.BooleanValue TAVERN_ASSIGNMENT_MODULE;
     public static ForgeConfigSpec.BooleanValue ADDITIONAL_MINIMUM_STOCK_MODULE;
@@ -86,6 +87,7 @@ public class PathingConfig {
     public static ForgeConfigSpec.BooleanValue EARLY_ENCHANT;
     public static ForgeConfigSpec.BooleanValue MINIMUM_STOCK_PRECISE;
     public static ForgeConfigSpec.BooleanValue BEACON_EFFECT;
+    public static ForgeConfigSpec.BooleanValue CANCEL_TELEPORT;
     public static ForgeConfigSpec.IntValue ENCHANT_LEVEL_SCALE;
     public static ForgeConfigSpec.IntValue MAX_ADDITIONAL_LEVEL_ENCHANT;
     public static ForgeConfigSpec.IntValue LEISURE_TIME;
@@ -113,6 +115,9 @@ public class PathingConfig {
         FARMER_AI_MODULE = builder
                 .comment("Open the module to use the remastered farmer AI system (default: true)\n 开启此模块将会启用重制的农夫AI (默认开启)")
                 .define("enableNewFarmerModule", true);
+        DELIVERYMAN_AI_MODULE = builder
+                .comment("Open the module to use the remastered deliveryman AI system (default: true)\n 开启此模块将会启用重制的快递员AI (默认开启)")
+                .define("enableNewDeliverymanModule", true);
         builder.pop();
         builder.push("Building Module Opener #房屋模块特性开关#");
         TAVERN_ASSIGNMENT_MODULE = builder
@@ -155,8 +160,8 @@ public class PathingConfig {
                 .comment("Rail path cost multiplier (default: 0.1, original:0.1) #铁轨Cost乘数 (默认 : 0.1 殖民地原设置 : 0.1)#")
                 .defineInRange("railCostMultiplier", 0.1, 0.0, 2.0);
         ROAD_COST_MULTIPLIER = builder
-                .comment("Road path cost multiplier (default: 0.25, original:1/6) #路径Cost乘数 (默认 : 0.4 殖民地原设置 : 1/6)#")
-                .defineInRange("roadCostMultiplier", 0.25, 0.0, 2.0);
+                .comment("Road path cost multiplier (default: 0.3, original:1/6) #路径Cost乘数 (默认 : 0.3 殖民地原设置 : 1/6)#")
+                .defineInRange("roadCostMultiplier", 0.3, 0.0, 2.0);
         DROP_COST_MULTIPLIER = builder
                 .comment("""
                             Drop cost multiplier (default: 1.0, original:1.0)
@@ -218,18 +223,18 @@ public class PathingConfig {
                 .defineInRange("onRoadCallbackMutiplier", 1.2, 0.0, 2.0);
         ONRAIL_PREFERENCE = builder
                 .comment("""
-                        This is a global heuristic reduction, representing how much villagers prefer railways when pathfinding far away from the target point. The smaller the value, the stronger the preference. (default: 0.5)
-                        是一个全局的启发值减免，表现为村民在远离目标点处寻路时对铁路的信任程度，数值越小越信任(默认 : 0.5)""")
-                .defineInRange("onRailPreference", 0.5, 0.1, 3.0);
+                        This is a global heuristic reduction, representing how much villagers prefer railways when pathfinding far away from the target point. The smaller the value, the stronger the preference. (default: 0.7)
+                        是一个全局的启发值减免，表现为村民在远离目标点处寻路时对铁路的信任程度，数值越小越信任(默认 : 0.7)""")
+                .defineInRange("onRailPreference", 0.7, 0.1, 3.0);
         ONROAD_PREFERENCE = builder
                 .comment("""
-                        This is a global heuristic reduction, representing how much villagers prefer path blocks when pathfinding far away from the target point. The smaller the value, the stronger the preference. (default: 0.78)
-                        是一个全局的启发值减免，表现为村民在远离目标点处寻路时对道路方块的信任程度，数值越小越信任(默认 : 0.78)""")
-                .defineInRange("onRoadPreference", 0.78, 0.4, 3.0);
+                        This is a global heuristic reduction, representing how much villagers prefer path blocks when pathfinding far away from the target point. The smaller the value, the stronger the preference. (default: 0.85)
+                        是一个全局的启发值减免，表现为村民在远离目标点处寻路时对道路方块的信任程度，数值越小越信任(默认 : 0.85)""")
+                .defineInRange("onRoadPreference", 0.85, 0.4, 3.0);
         SWIMMING_PREFERENCE = builder
                 .comment("""
-                        This is a global heuristic multiplier, representing how much villagers prefer swimming when pathfinding far away from the target point. The smaller the value, the stronger the preference. (default: 1.3)
-                        是一个全局的启发值乘子，表现为村民在远离目标点处寻路时对水路的信任程度，数值越小越信任(默认 : 1.3)""")
+                        This is a global heuristic multiplier, representing how much villagers prefer swimming when pathfinding far away from the target point. The smaller the value, the stronger the preference. (default: 1.6)
+                        是一个全局的启发值乘子，表现为村民在远离目标点处寻路时对水路的信任程度，数值越小越信任(默认 : 1.6)""")
                 .defineInRange("swimmingPreference", 1.6, 1.0, 8.0);
         CALLBACK_TIMES_TOLERANCE = builder
                 .comment("Tolerates how many times callback nodes can be expanded during each pathfinding process. (default: 2)\n 能容忍每次寻路中回扣节点被扩展几次，数值过大可能会造成扩展的无用节点增加 (默认 : 2)")
@@ -367,6 +372,11 @@ public class PathingConfig {
                         Open this to enable citizens to get beacon effect. (default: true)
                         开启这个可以让市民获得信标效果 (默认 : 开启)""")
                 .define("beaconEffect", true);
+        CANCEL_TELEPORT = builder
+                .comment("""
+                        Open this to disable citizens to teleport to their target when completely stuck. (default: false)
+                        开启这个可以禁止市民寻路卡住时直接传送到目标地点 (默认 : 关闭)""")
+                .define("cancelTeleport", false);
         builder.pop();
         builder.push("Basic Logic Modifier #基础逻辑修改#");
         MAX_PATHING_DISTANCE = builder

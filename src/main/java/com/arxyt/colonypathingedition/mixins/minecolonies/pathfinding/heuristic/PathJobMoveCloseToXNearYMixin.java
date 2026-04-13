@@ -17,7 +17,7 @@ public abstract class PathJobMoveCloseToXNearYMixin {
 
     @Inject(method = "computeHeuristic(III)D", at = @At("HEAD"), cancellable = true,remap = false)
     protected void computeHeuristic(int x, int y, int z, CallbackInfoReturnable<Double> cir) {
-        double heuristic = (DistanceUtils.dist(x, y, z,desiredPosition) * 2 + DistanceUtils.dist(x, y, z,nearbyPosition)) / 3;
+        double heuristic = (DistanceUtils.manhattanDistanceV(x, y, z,desiredPosition) * 2 + DistanceUtils.manhattanDistanceV(x, y, z,nearbyPosition)) / 3;
         cir.setReturnValue((heuristic * heuristic + 99 * heuristic) / 100);
     }
 }

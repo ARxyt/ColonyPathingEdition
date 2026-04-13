@@ -36,6 +36,9 @@ public abstract class PathJobMoveTowardsMixin extends AbstractPathJobMixin {
     @Override
     protected double modifyHeuristic(MNode node, MNode nextNode, double heuristic, boolean onRoad, boolean onRails)
     {
+        if(heuristic < 5) {
+            return heuristic;
+        }
         double newHeuristic;
         IMNodeExtras extras = (IMNodeExtras) node;
         if (onRails){
@@ -46,6 +49,9 @@ public abstract class PathJobMoveTowardsMixin extends AbstractPathJobMixin {
             heuristic *= onRoadPreference * 0.85;
         }
         newHeuristic = heuristic;
+        if(newHeuristic < 10) {
+            return 5 + newHeuristic / 2;
+        }
         return newHeuristic;
     }
 

@@ -24,7 +24,7 @@ public abstract class EntityAIWorkDeliverymanMixin implements AbstractAISkeleton
         if(getBuilding().getBuildingLevel() >= getBuilding().getMaxBuildingLevel()){
             return false;
         }
-        return InventoryUtils.getAmountOfStacksInItemHandler(getWorker().getInventoryCitizen()) > 2 + 5 * getBuilding().getBuildingLevel();
+        return InventoryUtils.getAmountOfStacksInItemHandler(getWorker().getInventoryCitizen()) > getWorker().getInventoryCitizen().getSlots() * 0.2 * getBuilding().getBuildingLevel();
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding;
 
+import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.MinecoloniesAdvancedPathNavigateAccessor;
 import com.minecolonies.api.entity.pathfinding.IMinecoloniesNavigator;
 import com.minecolonies.api.util.BlockPosUtil;
@@ -42,6 +43,7 @@ public abstract class UnstuckMixin<NAV extends PathNavigation & IMinecoloniesNav
     @Shadow (remap = false) protected abstract void breakBlocks(NAV navigator);
     @Shadow (remap = false) protected abstract void resetStuckTimers();
     @Shadow (remap = false) protected abstract void completeStuckAction(NAV navigator);
+    @Shadow (remap = false) public abstract void resetGlobalStuckTimers();
 
     @Unique private static final int TICKS_PER_BLOCK = 20;
 
@@ -159,7 +161,13 @@ public abstract class UnstuckMixin<NAV extends PathNavigation & IMinecoloniesNav
         // Directly teleport to the target location after the path is completely stuck.
         if (stuckLevel >= 5)
         {
-            completeStuckAction(navigator);
+            if(!PathingConfig.CANCEL_TELEPORT.get()) {
+                completeStuckAction(navigator);
+            }
+            else {
+                navigator.stop();
+                resetGlobalStuckTimers();
+            }
             resetStuckTimers();
             stuckLevelRecorder = 0;
         }
