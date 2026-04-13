@@ -227,12 +227,12 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
             haveToUseAlterFuels = true;
         }
 
-        if (haveToUseAlterFuels && !InventoryUtils.hasItemInItemHandler(worker.getInventoryCitizen(), isCorrectFuel(possibleFuels))) {
+        if (haveToUseAlterFuels && !InventoryUtils.hasItemInItemHandler(worker.getInventoryCitizen(), isCorrectFuel(alterPossibleFuels))) {
             if (currentRecipeStorage != null && InventoryUtils.hasBuildingEnoughElseCount(building, isCorrectFuel(alterPossibleFuels), 1) >= 1)
             {
                 ItemStack stack = currentRecipeStorage.getCleanedInput().getFirst().getItemStack();
                 checkIfRequestForItemExistOrCreateAsync(stack, Math.max(currentRecipeStorage.getPrimaryOutput().getCount(),STACKSIZE), currentRecipeStorage.getPrimaryOutput().getCount());
-                needsCurrently = new Tuple<>(isCorrectFuel(possibleFuels), STACKSIZE);
+                needsCurrently = new Tuple<>(isCorrectFuel(alterPossibleFuels), STACKSIZE);
                 return GATHERING_REQUIRED_MATERIALS;
             }
 

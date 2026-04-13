@@ -1,4 +1,4 @@
-package com.arxyt.colonypathingedition.mixins.minecolonies.farm;
+package com.arxyt.colonypathingedition.mixins.minecolonies.job;
 
 import com.arxyt.colonypathingedition.core.ai.worker.NewEntityAIWorkFarmer;
 import com.minecolonies.api.colony.ICitizenData;

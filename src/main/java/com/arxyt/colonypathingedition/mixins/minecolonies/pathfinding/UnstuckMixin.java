@@ -1,5 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding;
 
+import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.MinecoloniesAdvancedPathNavigateAccessor;
 import com.minecolonies.api.entity.pathfinding.IMinecoloniesNavigator;
 import com.minecolonies.api.util.BlockPosUtil;
@@ -36,6 +37,7 @@ public abstract class UnstuckMixin<NAV extends PathNavigation & IMinecoloniesNav
     @Shadow (remap = false) protected abstract void breakBlocks(NAV navigator);
     @Shadow (remap = false) protected abstract void resetStuckTimers();
     @Shadow (remap = false) protected abstract void completeStuckAction(NAV navigator);
+    @Shadow (remap = false) public abstract void resetGlobalStuckTimers();
 
     @Unique private int stuckLevelRecorder = 0;
     @Unique private boolean needReset = false;
@@ -150,7 +152,13 @@ public abstract class UnstuckMixin<NAV extends PathNavigation & IMinecoloniesNav
         // 这是调用路径完全卡住之后直接传送到目标地点的算法的地方
         if (stuckLevel >= 5)
         {
-            completeStuckAction(navigator);
+            if(!PathingConfig.CANCEL_TELEPORT.get()) {
+                completeStuckAction(navigator);
+            }
+            else {
+                navigator.stop();
+                resetGlobalStuckTimers();
+            }
             resetStuckTimers();
             stuckLevelRecorder = 0;
         }

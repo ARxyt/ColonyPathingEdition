@@ -52,6 +52,7 @@ public abstract class EntityAIWorkHealerMixin extends AbstractEntityAIBasicMixin
     @Shadow(remap = false) private Player playerToHeal;
 
     @Shadow(remap = false) protected abstract boolean hasCureInInventory(final Disease disease, final IItemHandler handler);
+    @Shadow(remap = false) protected abstract void recordTreatmentStats(EntityCitizen citizen);
 
     @Unique
     private boolean testRandomCureChance()
@@ -320,6 +321,7 @@ public abstract class EntityAIWorkHealerMixin extends AbstractEntityAIBasicMixin
             }
         }
 
+        recordTreatmentStats(citizen);
         getWorker().getCitizenExperienceHandler().addExperience(BASE_XP_GAIN);
         currentPatient.setState(Patient.PatientState.TREATED);
         currentPatient = null;
@@ -369,6 +371,7 @@ public abstract class EntityAIWorkHealerMixin extends AbstractEntityAIBasicMixin
         citizen.addEffect(new MobEffectInstance(MobEffects.REGENERATION,20 + invokeGetSecondarySkillLevel() * 2,getBuilding().getBuildingLevel()));
         citizen.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE,20 + invokeGetSecondarySkillLevel() * 2,2));
         citizen.addEffect(new MobEffectInstance(MobEffects.ABSORPTION,20 + invokeGetSecondarySkillLevel() * 2,1 + invokeGetPrimarySkillLevel() / 8));
+        recordTreatmentStats(citizen);
         getWorker().getCitizenExperienceHandler().addExperience(BASE_XP_GAIN);
         citizen.getCitizenData().getCitizenDiseaseHandler().cure();
         currentPatient.setState(Patient.PatientState.TREATED);

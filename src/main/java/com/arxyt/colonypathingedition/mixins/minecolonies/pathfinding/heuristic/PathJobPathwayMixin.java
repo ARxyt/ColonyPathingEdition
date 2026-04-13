@@ -16,7 +16,7 @@ public class PathJobPathwayMixin {
 
     @Inject(method = "computeHeuristic(III)D", at = @At("HEAD"), cancellable = true,remap = false)
     protected void computeHeuristic(int x, int y, int z, CallbackInfoReturnable<Double> cir) {
-        double heuristic = DistanceUtils.dist(x, y, z, end) ;
+        double heuristic = DistanceUtils.manhattanDistanceV(x, y, z, end) ;
         cir.setReturnValue((heuristic * heuristic + 99 * heuristic) / 100);
     }
 }

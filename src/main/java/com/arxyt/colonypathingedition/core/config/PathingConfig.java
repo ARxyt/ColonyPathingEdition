@@ -84,6 +84,7 @@ public class PathingConfig {
     public static ModConfigSpec.BooleanValue EARLY_ENCHANT;
     public static ModConfigSpec.BooleanValue MINIMUM_STOCK_PRECISE;
     public static ModConfigSpec.BooleanValue BEACON_EFFECT;
+    public static ModConfigSpec.BooleanValue CANCEL_TELEPORT;
     public static ModConfigSpec.IntValue ENCHANT_LEVEL_SCALE;
     public static ModConfigSpec.IntValue MAX_ADDITIONAL_LEVEL_ENCHANT;
     public static ModConfigSpec.IntValue LEISURE_TIME;
@@ -379,6 +380,11 @@ public class PathingConfig {
                         Open this to enable citizens to get beacon effect. (default: true)
                         开启这个可以让市民获得信标效果 (默认 : 开启)""")
                 .define("beaconEffect", true);
+        CANCEL_TELEPORT = builder
+                .comment("""
+                        Open this to disable citizens to teleport to their target when completely stuck. (default: false)
+                        开启这个可以禁止市民寻路卡住时直接传送到目标地点 (默认 : 关闭)""")
+                .define("cancelTeleport", false);
         builder.pop();
 
         builder.push("Basic Logic Modifier #基础逻辑修改#");

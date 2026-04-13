@@ -11,6 +11,7 @@ import com.minecolonies.api.entity.ai.JobStatus;
 import com.minecolonies.api.entity.ai.statemachine.AITarget;
 import com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
+import com.minecolonies.api.entity.ai.statemachine.states.IState;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.entity.citizen.VisibleCitizenStatus;
 import com.minecolonies.api.equipment.ModEquipmentTypes;
@@ -251,7 +252,7 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
             if (checkForToolOrWeapon(ModEquipmentTypes.hoe.get()))
             {
                 worker.getCitizenData().setJobStatus(JobStatus.STUCK);
-                return PREPARING;
+                return START_WORKING;
             }
             ItemStack seeds = farmField.getSeed();
             final int count = worker.getCitizenInventoryHandler().getItemCountInInventory(seeds.getItem());
@@ -262,11 +263,16 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
             }
             worker.getCitizenData().setVisibleStatus(FARMING_ICON);
             worker.getCitizenData().setJobStatus(JobStatus.WORKING);
+            IAIState decideState = decide();
+            if(decideState != PREPARING) {
+                setDelay(5);
+                return decideState;
+            }
             IAIState state = checkNextWorkspaceAndState(farmField,
                     pos -> this.newFindHarvestableSurface(pos, farmField) != null,
                     pos -> this.newFindHoeableSurface(pos, farmField) != null,
                     pos -> this.newFindPlantableSurface(pos,farmField) != null);
-            if(state != null){
+            if(state != null) {
                 farmField.setFieldStage(FarmField.Stage.PLANTED);
                 setDelay(5);
                 return state;
@@ -437,7 +443,7 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
         }
         needRecheck = false;
         building.setPrevPos(null);
-        return PREPARING;
+        return decide();
     }
 
     // Basic Action and Listener

@@ -75,6 +75,7 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
     @Unique private List<Animal> toFeedList;
     @Unique private Animal currentFed;
     @Unique private int butcherTimeOut = 0;
+    @Unique private int feedTimeOut = 0;
 
     public AbstractEntityAIHerderMixin(@NotNull J job) {
         super(job);
@@ -249,19 +250,19 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
     protected IAIState butcherAnimals() {
         if (this.current_module == null)
         {
-            return AIWorkerState.DECIDE;
+            return DECIDE;
         }
 
         Objects.requireNonNull(this.current_module); List<? extends Animal> animals = searchForAnimals(this.current_module::isCompatible);
 
         if (!equipTool(InteractionHand.MAIN_HAND, ModEquipmentTypes.axe.get()))
         {
-            return AIWorkerState.START_WORKING;
+            return START_WORKING;
         }
 
         if (animals.isEmpty())
         {
-            return AIWorkerState.DECIDE;
+            return DECIDE;
         }
 
         BlockPos center = this.worker.blockPosition();
@@ -277,7 +278,7 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
         }
 
         if (toKill == null ) {
-            return AIWorkerState.DECIDE;
+            return DECIDE;
         }
 
         walkingToAnimal(toKill);
@@ -293,10 +294,10 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
             this.worker.getCitizenExperienceHandler().addExperience(XP_PER_ACTION);
             incrementActionsDoneAndDecSaturation();
             this.fedRecently.remove(toKill.getUUID());
-            return AIWorkerState.DECIDE;
+            return DECIDE;
         }
 
-        return AIWorkerState.HERDER_BUTCHER;
+        return HERDER_BUTCHER;
     }
 
     @Unique
@@ -385,29 +386,32 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
         }
 
         Animal toFeed = currentFed;
-        if (!walkingToAnimal(toFeed))
+        walkingToAnimal(toFeed);
+        if ((feedTimeOut >= 15 || BlockPosUtil.getDistance2D(worker.blockPosition(), toFeed.blockPosition()) < 4) && !ItemStackUtils.isEmpty(this.worker.getMainHandItem()))
         {
             if (toFeed.isBaby())
             {
                 toFeed.ageUp(Math.min(2000, 100 * getPrimarySkillLevel()));
+                // Values taken from vanilla.
+                worker.swing(InteractionHand.MAIN_HAND);
+                StatsUtil.trackStatByName(building, ITEM_USED, worker.getMainHandItem().getItem().getDescriptionId(), 1);
+                if (worker.getRandom().nextDouble() > getPrimarySkillLevel() / 198.0D) {
+                    worker.getMainHandItem().shrink(1);
+                }
+                worker.getCitizenExperienceHandler().addExperience(XP_PER_ACTION);
+                worker.level().broadcastEntityEvent(toFeed, (byte) 18);
+                toFeed.playSound(SoundEvents.GENERIC_EAT, 1.0F, 1.0F);
+                CitizenItemUtils.removeHeldItem(worker);
+                fedRecently.put(toFeed.getUUID(), worker.level().getGameTime());
             }
-
-            // Values taken from vanilla.
-            worker.swing(InteractionHand.MAIN_HAND);
-            StatsUtil.trackStatByName(building, ITEM_USED, worker.getMainHandItem().getItem().getDescriptionId(), 1);
-            if (worker.getRandom().nextDouble() > getPrimarySkillLevel() / 198.0D) {
-                worker.getMainHandItem().shrink(1);
-            }
-            worker.getCitizenExperienceHandler().addExperience(XP_PER_ACTION);
-            worker.level().broadcastEntityEvent(toFeed, (byte) 18);
-            toFeed.playSound(SoundEvents.GENERIC_EAT, 1.0F, 1.0F);
-            CitizenItemUtils.removeHeldItem(worker);
-            fedRecently.put(toFeed.getUUID(), worker.level().getGameTime());
-
             currentFed = null;
+            worker.decreaseSaturationForContinuousAction();
+            feedTimeOut = 0;
+            return DECIDE;
         }
-
-        worker.decreaseSaturationForContinuousAction();
+        else {
+            feedTimeOut++;
+        }
         return getState();
     }
 

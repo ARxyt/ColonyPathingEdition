@@ -861,6 +861,9 @@ public abstract class AbstractPathJobMixin{
 
     @Unique
     private double modifyHeuristic(MNode nextNode, double heuristic, final BlockState state) {
+        if(heuristic < 5) {
+            return heuristic;
+        }
         double newHeuristic = heuristic;
         if(state.getBlock() == Blocks.CAVE_AIR){
             if(world.getLightEngine() != null) {
@@ -882,6 +885,9 @@ public abstract class AbstractPathJobMixin{
     @Unique
     protected double modifyHeuristic(MNode node, MNode nextNode, double heuristic, boolean onRoad, boolean onRails)
     {
+        if(heuristic < 5) {
+            return heuristic;
+        }
         double newHeuristic = heuristic;
         double lastHeuristic =node.getHeuristic();
         IMNodeExtras extras = (IMNodeExtras) node;
@@ -904,6 +910,9 @@ public abstract class AbstractPathJobMixin{
         }
         else{
             newHeuristic = heuristic;
+        }
+        if(newHeuristic < 10) {
+            return 5 + newHeuristic / 2;
         }
         return newHeuristic;
     }
