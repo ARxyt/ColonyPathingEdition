@@ -48,10 +48,6 @@ import static com.minecolonies.api.util.constant.StatisticsConstants.*;
 import static com.minecolonies.api.util.constant.TranslationConstants.*;
 
 public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeliveryman, BuildingDeliveryman> {
-    /**
-     * Min distance the worker should have to the warehouse to make any decisions.
-     */
-    private static final int MIN_DISTANCE_TO_WAREHOUSE = 5;
 
     /**
      * Wait 5 seconds for the worker to decide what to do.
@@ -142,7 +138,7 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
     private IAIState pickup()
     {
         setDelay(WALK_DELAY);
-        final IRequest<? extends IDeliverymanRequestable> currentTask = job.getCurrentTask();
+        final IRequest<? extends IDeliverymanRequestable> currentTask = ((JobDeliveryExtra)job).getCurrentTaskToDeliver();
 
         if (!(currentTask instanceof StandardRequests.PickupRequest))
         {
@@ -328,7 +324,7 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
      */
     private IAIState deliver()
     {
-        final IRequest<? extends IDeliverymanRequestable> currentTask = job.getCurrentTask();
+        final IRequest<? extends IDeliverymanRequestable> currentTask = ((JobDeliveryExtra)job).getCurrentTaskToDeliver();
 
         if (!(currentTask instanceof StandardRequests.DeliveryRequest))
         {
@@ -508,14 +504,16 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
      */
     private IAIState prepareDelivery()
     {
-        final IRequest<? extends IRequestable> currentTask = job.getCurrentTask();
-
-        if (!(currentTask instanceof StandardRequests.DeliveryRequest))
+        final IRequest<? extends IRequestable> currentTaskToDeliver = ((JobDeliveryExtra)job).getCurrentTaskToDeliver();
+        if (!(currentTaskToDeliver instanceof StandardRequests.DeliveryRequest))
         {
             // The current task has changed since the Decision-state.
             // Restart.
             return START_WORKING;
         }
+
+        final IRequest<? extends IRequestable> currentTaskToCheck = job.getCurrentTask();
+        final IRequest<? extends IRequestable> currentTask = currentTaskToCheck instanceof StandardRequests.DeliveryRequest? currentTaskToCheck : currentTaskToDeliver;
 
         final List<IRequest<? extends Delivery>> taskList = job.getTaskListWithSameDestination((IRequest<? extends Delivery>) currentTask)
                 .stream().filter(iRequest -> !alreadyInInv.containsKey(iRequest.getId())).toList();
@@ -635,7 +633,7 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
     private IAIState decide()
     {
         worker.getCitizenData().setVisibleStatus(VisibleCitizenStatus.WORKING);
-        final IRequest<? extends IDeliverymanRequestable> currentTask = job.getCurrentTask();
+        final IRequest<? extends IDeliverymanRequestable> currentTask = ((JobDeliveryExtra)job).getCurrentTaskToDeliver();
         if (currentTask == null)
         {
             // If there are no deliveries/pickups pending, just loiter around the warehouse.

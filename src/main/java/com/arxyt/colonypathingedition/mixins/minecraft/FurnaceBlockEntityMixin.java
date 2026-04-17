@@ -22,13 +22,14 @@ public abstract class FurnaceBlockEntityMixin implements FurnaceBlockEntityExtra
     @Shadow int cookingTotalTime;
     @Shadow int litDuration;
 
-    @Unique private int workerID = -1;
-    @Unique private int pickerID = -1;
-    @Unique private int protectTime = 0;
+    @Unique private int pathFindEdition$workerID = -1;
+    @Unique private int pathFindEdition$pickerID = -1;
+    @Unique private int pathFindEdition$fuelerID = -1;
+    @Unique private int pathFindEdition$protectTime = 0;
 
     // 增加进度
     @Unique
-    public int addProgress(int adder){
+    public int pathFindEdition$addProgress(int adder){
         cookingProgress += adder;
         if(cookingProgress >= cookingTotalTime){
             int left = cookingProgress - cookingTotalTime;
@@ -41,7 +42,7 @@ public abstract class FurnaceBlockEntityMixin implements FurnaceBlockEntityExtra
 
     // 增加燃料点燃时间
     @Unique
-    public void addLitTime(int adder){
+    public void pathFindEdition$addLitTime(int adder){
         if(litTime == 0){
             return;
         }
@@ -52,83 +53,109 @@ public abstract class FurnaceBlockEntityMixin implements FurnaceBlockEntityExtra
     }
 
     @Unique
-    public void tickProtect(){
-        if(protectTime > 0){
-            protectTime --;
+    public void pathFindEdition$tickProtect(){
+        if(pathFindEdition$protectTime > 0){
+            pathFindEdition$protectTime--;
         }
     }
 
     @Unique
-    public void setPickup(AbstractFurnaceBlockEntity pBlockEntity){
+    public void pathFindEdition$setPickup(AbstractFurnaceBlockEntity pBlockEntity){
         if(cookingTotalTime == cookingProgress + 1 && pBlockEntity.getItem(Constants.SMELTABLE_SLOT).getCount() == 1){
-            setFurnacePicker(workerID);
+            pathFindEdition$setFurnacePicker(pathFindEdition$workerID);
         }
     }
 
     @Unique
-    public int getFurnaceWorker() {
-        return workerID;
+    public int pathFindEdition$getFurnaceWorker() {
+        return pathFindEdition$workerID;
     }
 
     @Unique
-    public void setFurnaceWorker(int workerID) {
-        this.workerID = workerID;
+    public void pathFindEdition$setFurnaceWorker(int workerID) {
+        this.pathFindEdition$workerID = workerID;
         if(workerID < 0){
-            protectTime = 0;
+            pathFindEdition$protectTime = 0;
         }
         else{
-            protectTime = 60; //保护三秒
+            pathFindEdition$protectTime = 60; //保护三秒
         }
     }
 
     @Unique
-    public int getFurnacePicker(){
-        return pickerID;
+    public int pathFindEdition$getFurnacePicker(){
+        return pathFindEdition$pickerID;
     }
 
     @Unique
-    public void setFurnacePicker(int pickerID){
-        this.pickerID = pickerID;
+    public void pathFindEdition$setFurnacePicker(int pickerID){
+        this.pathFindEdition$pickerID = pickerID;
         if(pickerID < 0){
-            protectTime = 0;
+            pathFindEdition$protectTime = 0;
         }
         else{
-            protectTime = 40; //保护两秒
+            pathFindEdition$protectTime = 40; //保护两秒
+        }
+    }
+
+    /**
+     * @return citizen Civilian ID
+     */
+    @Unique
+    public int pathFindEdition$getFurnaceFueler() {
+        return pathFindEdition$fuelerID;
+    }
+
+    /**
+     * @param fuelerID: Civilian ID
+     */
+    @Unique
+    public void pathFindEdition$setFurnaceFueler(int fuelerID) {
+        this.pathFindEdition$fuelerID = fuelerID;
+        if(fuelerID >= 0){
+            pathFindEdition$protectTime = 40; //保护两秒
         }
     }
 
     @Unique
-    public void setProtectTime(int protectTime){
-        this.protectTime = protectTime;
+    public void pathFindEdition$setProtectTime(int protectTime){
+        this.pathFindEdition$protectTime = protectTime;
     }
 
     @Unique
-    public boolean atProtectTime() {
-        return protectTime > 0;
+    public boolean pathFindEdition$atProtectTime() {
+        return pathFindEdition$protectTime > 0;
     }
 
     @Inject(method = "saveAdditional", at = @At("RETURN"))
     private void onSave(CompoundTag tag, HolderLookup.Provider provider, CallbackInfo ci) {
-        tag.putInt("WorkerID", workerID);
+        tag.putInt("WorkerID", pathFindEdition$workerID);
+        tag.putInt("PickerID", pathFindEdition$pickerID);
     }
 
     @Inject(method = "loadAdditional", at = @At("RETURN"))
     private void onLoad(CompoundTag tag, HolderLookup.Provider registries, CallbackInfo ci) {
         if (tag.contains("WorkerID")) {
-            workerID = tag.getInt("WorkerID");
+            pathFindEdition$workerID = tag.getInt("WorkerID");
         }
         else{
-            workerID = -1;
+            pathFindEdition$workerID = -1;
+        }
+        if (tag.contains("PickerID")) {
+            pathFindEdition$pickerID = tag.getInt("PickerID");
+        }
+        else{
+            pathFindEdition$pickerID = -1;
         }
     }
 
     @Inject(method = "serverTick", at = @At("RETURN"))
     private static void afterServerTick(Level pLevel, BlockPos pPos, BlockState pState, AbstractFurnaceBlockEntity pBlockEntity, CallbackInfo ci){
-        ((FurnaceBlockEntityExtras)pBlockEntity).tickProtect();
+        ((FurnaceBlockEntityExtras)pBlockEntity).pathFindEdition$tickProtect();
     }
 
     @Inject(method = "serverTick", at = @At("HEAD"))
     private static void beforeServerTick(Level pLevel, BlockPos pPos, BlockState pState, AbstractFurnaceBlockEntity pBlockEntity, CallbackInfo ci){
-        ((FurnaceBlockEntityExtras)pBlockEntity).setPickup(pBlockEntity);
+        ((FurnaceBlockEntityExtras)pBlockEntity).pathFindEdition$setPickup(pBlockEntity);
     }
 }

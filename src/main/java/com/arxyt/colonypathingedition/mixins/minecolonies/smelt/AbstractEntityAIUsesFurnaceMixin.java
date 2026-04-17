@@ -100,12 +100,12 @@ public abstract class AbstractEntityAIUsesFurnaceMixin implements AbstractAISkel
                 if (entity instanceof final FurnaceBlockEntity furnace && furnace.getBlockState().getValue(BlockStateProperties.LIT))
                 {
                     FurnaceBlockEntityExtras extrasFurnace = (FurnaceBlockEntityExtras) furnace;
-                    extrasFurnace.addLitTime(getWorker().getCitizenData().getCitizenSkillHandler().getLevel(invokeGetModuleForJob().getSecondarySkill()) / 15);
+                    extrasFurnace.pathFindEdition$addLitTime(getWorker().getCitizenData().getCitizenSkillHandler().getLevel(invokeGetModuleForJob().getSecondarySkill()) / 15);
                     if (!(furnace.getItem(SMELTABLE_SLOT).isEmpty()))
                     {
                         int addProgress = getWorker().getCitizenData().getCitizenSkillHandler().getLevel(invokeGetModuleForJob().getPrimarySkill()) / 2;
                         while (addProgress > 0 && !furnace.getItem(SMELTABLE_SLOT).isEmpty()){
-                            addProgress = extrasFurnace.addProgress(addProgress);
+                            addProgress = extrasFurnace.pathFindEdition$addProgress(addProgress);
                             AbstractFurnaceBlockEntity.serverTick(world, pos, world.getBlockState(pos), furnace);
                         }
                     }

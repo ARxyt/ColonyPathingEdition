@@ -1,0 +1,20 @@
+{
+  "type": "recipe",
+  "crafter": "farmer_crafting",
+  "inputs": [
+    {
+      "count": 4,
+      "id": "minecraft:stone"
+    },
+    {
+      "count": 1,
+      "id": "minecolonies:composted_dirt"
+    }
+  ],
+  "intermediate": "minecraft:air",
+  "min-building-level": 3,
+  "result": {
+    "count": 4,
+    "id": "minecraft:moss_block"
+  }
+}

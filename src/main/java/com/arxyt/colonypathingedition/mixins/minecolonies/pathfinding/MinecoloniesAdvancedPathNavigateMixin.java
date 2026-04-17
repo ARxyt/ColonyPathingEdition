@@ -100,7 +100,6 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
             final double y = tpPlace.y + 0.625D + yOffset;
             final double z = tpPlace.z + 0.5D;
             minecoloniesMinecart.setPos(x, y, z);
-            minecoloniesMinecart.setDeltaMovement(Vec3.ZERO);
             minecoloniesMinecart.xo = x;
             minecoloniesMinecart.yo = y;
             minecoloniesMinecart.zo = z;

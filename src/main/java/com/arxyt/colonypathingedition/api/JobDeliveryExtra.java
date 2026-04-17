@@ -7,4 +7,5 @@ public interface JobDeliveryExtra {
     void setOngoingDeliveries(int target);
     IRequest<IDeliverymanRequestable> pickMoreDeliveryTask();
     boolean checkDeliveryFinished();
+    IRequest<IDeliverymanRequestable> getCurrentTaskToDeliver();
 }

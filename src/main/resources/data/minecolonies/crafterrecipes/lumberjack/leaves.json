@@ -1,0 +1,27 @@
+{
+  "type": "recipe-template",
+  "tag": "minecraft:saplings",
+  "filter": {
+    "include": [ "_sapling" ]
+  },
+  "recipe": {
+    "crafter": "lumberjack_custom",
+    "inputs": [
+      {
+        "id": "[NS]:[PATH]"
+      },
+      {
+        "id": "minecraft:bone_meal"
+      }
+    ],
+    "min-building-level": 3,
+    "alternate-output": [
+      {
+        "count": 4,
+        "id": "[NS]:[PATH:_sapling=_leaves]"
+      }
+    ],
+    "intermediate": "minecraft:air",
+    "tool": "minecolonies:shears"
+  }
+}

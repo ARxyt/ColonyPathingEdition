@@ -11,11 +11,11 @@
     },
     {
       "seed": "minecraft:crimson_fungus",
-      "farmland": "nethersdelight:rich_soul_soil"
+      "farmland": "mynethersdelight:resurgent_soil"
     },
     {
       "seed": "minecraft:warped_fungus",
-      "farmland": "nethersdelight:rich_soul_soil"
+      "farmland": "mynethersdelight:resurgent_soil"
     }
   ]
 }

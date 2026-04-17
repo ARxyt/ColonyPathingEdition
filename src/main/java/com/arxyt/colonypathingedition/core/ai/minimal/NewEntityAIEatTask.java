@@ -463,10 +463,6 @@ public class NewEntityAIEatTask implements IStateAI {
 
         final ICitizenData citizenData = citizen.getCitizenData();
         final ItemStack foodStack = citizenData.getInventory().getStackInSlot(foodSlot);
-        if (!FoodUtils.canEat(foodStack, citizenData.getHomeBuilding(), citizenData.getWorkBuilding()))
-        {
-            return CHECK_FOOD;
-        }
 
         citizen.setItemInHand(InteractionHand.MAIN_HAND, foodStack);
 

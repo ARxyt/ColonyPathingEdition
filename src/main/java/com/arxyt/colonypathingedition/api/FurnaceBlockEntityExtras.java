@@ -7,51 +7,61 @@ public interface FurnaceBlockEntityExtras{
      * An adder on target furnace's Progress
      * @return remain adder.
      */
-    int addProgress(int adder);
+    int pathFindEdition$addProgress(int adder);
 
     /**
      *  An adder on target furnace's Lit Time
      */
-    void addLitTime(int adder);
+    void pathFindEdition$addLitTime(int adder);
 
     /**
      * @return citizen Civilian ID
      */
-    int getFurnaceWorker();
+    int pathFindEdition$getFurnaceWorker();
 
     /**
      * @param workerID: citizen Civilian ID
      */
-    void setFurnaceWorker(int workerID);
+    void pathFindEdition$setFurnaceWorker(int workerID);
 
     /**
      * @return citizen Civilian ID
      */
-    int getFurnacePicker();
+    int pathFindEdition$getFurnacePicker();
 
     /**
      * @param workerID: Civilian ID
      */
-    void setFurnacePicker(int workerID);
+    void pathFindEdition$setFurnacePicker(int workerID);
+
+    /**
+     * @return citizen Civilian ID
+     */
+    int pathFindEdition$getFurnaceFueler();
+
+    /**
+     * @param workerID: Civilian ID
+     */
+    void pathFindEdition$setFurnaceFueler(int workerID);
 
     /**
      * @return furnace protect time
      */
-    boolean atProtectTime();
+    boolean pathFindEdition$atProtectTime();
 
     /**
      * Furnace serverTick() injects for protect time
      */
-    void tickProtect();
+    void pathFindEdition$tickProtect();
 
     /**
      * Furnace serverTick() injects for protect time
      */
-    void setProtectTime(int protectTime);
+    void pathFindEdition$setProtectTime(int protectTime);
 
     /**
      * Initialize furnace protect time
      * @param pBlockEntity: furnace's BlockEntity
      */
-    void setPickup(AbstractFurnaceBlockEntity pBlockEntity);
+    void pathFindEdition$setPickup(AbstractFurnaceBlockEntity pBlockEntity);
 }

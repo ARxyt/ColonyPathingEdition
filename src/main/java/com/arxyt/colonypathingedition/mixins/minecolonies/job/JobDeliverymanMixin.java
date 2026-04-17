@@ -40,6 +40,7 @@ public abstract class JobDeliverymanMixin extends AbstractJob<EntityAIWorkDelive
     @Shadow(remap = false) public abstract IWareHouse findWareHouse();
     @Shadow(remap = false) public abstract void addRequest(@NotNull IToken<?> token, int insertionIndex);
     @Shadow(remap = false) protected abstract boolean haveTasksSameSourceAndDest(@NotNull Delivery requestA, @NotNull Delivery requestB);
+    @Shadow(remap = false) public abstract boolean hasSameDestinationDelivery(@NotNull IRequest<? extends Delivery> request);
 
     public JobDeliverymanMixin(final ICitizenData entity)
     {
@@ -114,12 +115,12 @@ public abstract class JobDeliverymanMixin extends AbstractJob<EntityAIWorkDelive
                 continue;
             }
 
-            if (!(localRequest.getRequest() instanceof Delivery localDelivery))
+            if (!(localRequest instanceof StandardRequests.DeliveryRequest && localRequest.getRequest() instanceof Delivery localDelivery))
             {
                 continue;
             }
 
-            if (localRequest instanceof StandardRequests.DeliveryRequest && haveTasksSameSourceAndDest(delivery, localDelivery))
+            if (haveTasksSameSourceAndDest(delivery, localDelivery))
             {
                 addRequest(reqId, 0);
                 extendedReqs++;
@@ -145,7 +146,7 @@ public abstract class JobDeliverymanMixin extends AbstractJob<EntityAIWorkDelive
                     continue;
                 }
 
-                if (!(localRequest.getRequest() instanceof Delivery localDelivery))
+                if (!(localRequest instanceof StandardRequests.DeliveryRequest && localRequest.getRequest() instanceof Delivery localDelivery))
                 {
                     continue;
                 }
@@ -157,7 +158,7 @@ public abstract class JobDeliverymanMixin extends AbstractJob<EntityAIWorkDelive
                     delivery = localDelivery;
                     reqsToRemove.add(reqId);
                 }
-                else if (localRequest instanceof StandardRequests.DeliveryRequest && haveTasksSameSourceAndDest(delivery, localDelivery))
+                else if (haveTasksSameSourceAndDest(delivery, localDelivery))
                 {
                     addRequest(reqId, 0);
                     extendedReqs++;
@@ -176,6 +177,68 @@ public abstract class JobDeliverymanMixin extends AbstractJob<EntityAIWorkDelive
         module.markDirty();
 
         return request == null ? null : (IRequest<IDeliverymanRequestable>) getColony().getRequestManager().getRequestForToken(request);
+    }
+
+    @SuppressWarnings(UNCHECKED)
+    public IRequest<IDeliverymanRequestable> getCurrentTaskToDeliver()
+    {
+        IToken<?> request = getTaskQueueFromDataStore().peekLast();
+        if (request == null)
+        {
+            IBuilding wareHouse = findWareHouse();
+            if (wareHouse == null)
+            {
+                return null;
+            }
+
+            final WarehouseRequestQueueModule module = wareHouse.getModule(BuildingModules.WAREHOUSE_REQUEST_QUEUE);
+            if (module.getMutableRequestList().isEmpty())
+            {
+                return null;
+            }
+
+            final List<IToken<?>> reqsToRemove = new ArrayList<>();
+            int extendedReqs = 0;
+            for (final IToken<?> reqId : module.getMutableRequestList())
+            {
+                final IRequest localRequest = getColony().getRequestManager().getRequestForToken(reqId);
+                if (localRequest == null)
+                {
+                    reqsToRemove.add(reqId);
+                    continue;
+                }
+
+                if (request == null)
+                {
+                    addRequest(reqId, 0);
+                    request = reqId;
+                    reqsToRemove.add(reqId);
+                }
+                else if (localRequest instanceof StandardRequests.DeliveryRequest && hasSameDestinationDelivery(localRequest))
+                {
+                    addRequest(reqId, 0);
+                    extendedReqs++;
+                    reqsToRemove.add(reqId);
+                }
+
+                if (extendedReqs > 5)
+                {
+                    break;
+                }
+
+            }
+
+            module.getMutableRequestList().removeAll(reqsToRemove);
+            module.markDirty();
+
+            if (request == null)
+            {
+                return null;
+            }
+
+        }
+
+        return (IRequest<IDeliverymanRequestable>) getColony().getRequestManager().getRequestForToken(request);
     }
 
     @Unique

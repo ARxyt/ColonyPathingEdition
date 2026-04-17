@@ -1,0 +1,19 @@
+{
+  "type": "recipe",
+  "crafter": "lumberjack_custom",
+  "inputs": [
+    {
+      "id": "minecraft:azalea"
+    },
+    {
+      "id": "minecraft:bone_meal"
+    }
+  ],
+  "min-building-level": 3,
+  "intermediate": "minecraft:air",
+  "result": {
+    "count": 4,
+    "id": "minecraft:azalea_leaves"
+  },
+  "tool": "minecolonies:shears"
+}
