@@ -21,13 +21,14 @@ public abstract class FurnaceBlockEntityMixin implements FurnaceBlockEntityExtra
     @Shadow int cookingTotalTime;
     @Shadow int litDuration;
 
-    @Unique private int workerID = -1;
-    @Unique private int pickerID = -1;
-    @Unique private int protectTime = 0;
+    @Unique private int colonyPathingEdition$workerID = -1;
+    @Unique private int colonyPathingEdition$pickerID = -1;
+    @Unique private int colonyPathingEdition$fuelerID = -1;
+    @Unique private int colonyPathingEdition$protectTime = 0;
 
     // 增加进度
     @Unique
-    public int addProgress(int adder){
+    public int colonyPathingEdition$addProgress(int adder){
         cookingProgress += adder;
         if(cookingProgress >= cookingTotalTime){
             int left = cookingProgress - cookingTotalTime;
@@ -40,7 +41,7 @@ public abstract class FurnaceBlockEntityMixin implements FurnaceBlockEntityExtra
 
     // 增加燃料点燃时间
     @Unique
-    public void addLitTime(int adder){
+    public void colonyPathingEdition$addLitTime(int adder){
         if(litTime == 0){
             return;
         }
@@ -51,83 +52,109 @@ public abstract class FurnaceBlockEntityMixin implements FurnaceBlockEntityExtra
     }
 
     @Unique
-    public void tickProtect(){
-        if(protectTime > 0){
-            protectTime --;
+    public void colonyPathingEdition$tickProtect(){
+        if(colonyPathingEdition$protectTime > 0){
+            colonyPathingEdition$protectTime--;
         }
     }
 
     @Unique
-    public void setPickup(AbstractFurnaceBlockEntity pBlockEntity){
+    public void colonyPathingEdition$setPickup(AbstractFurnaceBlockEntity pBlockEntity){
         if(cookingTotalTime == cookingProgress + 1 && pBlockEntity.getItem(Constants.SMELTABLE_SLOT).getCount() == 1){
-            setFurnacePicker(workerID);
+            colonyPathingEdition$setFurnacePicker(colonyPathingEdition$workerID);
         }
     }
 
     @Unique
-    public int getFurnaceWorker() {
-        return workerID;
+    public int colonyPathingEdition$getFurnaceWorker() {
+        return colonyPathingEdition$workerID;
     }
 
     @Unique
-    public void setFurnaceWorker(int workerID) {
-        this.workerID = workerID;
+    public void colonyPathingEdition$setFurnaceWorker(int workerID) {
+        this.colonyPathingEdition$workerID = workerID;
         if(workerID < 0){
-            protectTime = 0;
+            colonyPathingEdition$protectTime = 0;
         }
         else{
-            protectTime = 60; //保护三秒
+            colonyPathingEdition$protectTime = 60; //保护三秒
         }
     }
 
     @Unique
-    public int getFurnacePicker(){
-        return pickerID;
+    public int colonyPathingEdition$getFurnacePicker(){
+        return colonyPathingEdition$pickerID;
     }
 
     @Unique
-    public void setFurnacePicker(int pickerID){
-        this.pickerID = pickerID;
+    public void colonyPathingEdition$setFurnacePicker(int pickerID){
+        this.colonyPathingEdition$pickerID = pickerID;
         if(pickerID < 0){
-            protectTime = 0;
+            colonyPathingEdition$protectTime = 0;
         }
         else{
-            protectTime = 40; //保护两秒
+            colonyPathingEdition$protectTime = 40; //保护两秒
+        }
+    }
+
+    /**
+     * @return citizen Civilian ID
+     */
+    @Unique
+    public int colonyPathingEdition$getFurnaceFueler() {
+        return colonyPathingEdition$fuelerID;
+    }
+
+    /**
+     * @param fuelerID: Civilian ID
+     */
+    @Unique
+    public void colonyPathingEdition$setFurnaceFueler(int fuelerID) {
+        this.colonyPathingEdition$fuelerID = fuelerID;
+        if(fuelerID >= 0){
+            colonyPathingEdition$protectTime = 40; //保护两秒
         }
     }
 
     @Unique
-    public void setProtectTime(int protectTime){
-        this.protectTime = protectTime;
+    public void colonyPathingEdition$setProtectTime(int protectTime){
+        this.colonyPathingEdition$protectTime = protectTime;
     }
 
     @Unique
-    public boolean atProtectTime() {
-        return protectTime > 0;
+    public boolean colonyPathingEdition$atProtectTime() {
+        return colonyPathingEdition$protectTime > 0;
     }
 
     @Inject(method = "saveAdditional", at = @At("RETURN"))
     private void onSave(CompoundTag tag, CallbackInfo ci) {
-        tag.putInt("WorkerID", workerID);
+        tag.putInt("WorkerID", colonyPathingEdition$workerID);
+        tag.putInt("PickerID", colonyPathingEdition$pickerID);
     }
 
     @Inject(method = "load", at = @At("RETURN"))
     private void onLoad(CompoundTag tag, CallbackInfo ci) {
         if (tag.contains("WorkerID")) {
-            workerID = tag.getInt("WorkerID");
+            colonyPathingEdition$workerID = tag.getInt("WorkerID");
         }
         else{
-            workerID = -1;
+            colonyPathingEdition$workerID = -1;
+        }
+        if (tag.contains("PickerID")) {
+            colonyPathingEdition$pickerID = tag.getInt("PickerID");
+        }
+        else{
+            colonyPathingEdition$pickerID = -1;
         }
     }
 
     @Inject(method = "serverTick", at = @At("RETURN"))
     private static void afterServerTick(Level pLevel, BlockPos pPos, BlockState pState, AbstractFurnaceBlockEntity pBlockEntity, CallbackInfo ci){
-        ((FurnaceBlockEntityExtras)pBlockEntity).tickProtect();
+        ((FurnaceBlockEntityExtras)pBlockEntity).colonyPathingEdition$tickProtect();
     }
 
     @Inject(method = "serverTick", at = @At("HEAD"))
     private static void beforeServerTick(Level pLevel, BlockPos pPos, BlockState pState, AbstractFurnaceBlockEntity pBlockEntity, CallbackInfo ci){
-        ((FurnaceBlockEntityExtras)pBlockEntity).setPickup(pBlockEntity);
+        ((FurnaceBlockEntityExtras)pBlockEntity).colonyPathingEdition$setPickup(pBlockEntity);
     }
 }

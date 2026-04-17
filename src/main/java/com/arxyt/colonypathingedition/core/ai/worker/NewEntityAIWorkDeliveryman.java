@@ -628,6 +628,7 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
             return false;
         }
 
+        boolean success = false;
         if ((entity instanceof TileEntityColonyBuilding
                 && InventoryUtils.hasBuildingEnoughElseCount(((TileEntityColonyBuilding) entity).getBuilding(), new ItemStorage(is), is.getCount()) >= is.getCount()) ||
                 (entity instanceof TileEntityRack && ((TileEntityRack) entity).getCount(new ItemStorage(is)) >= is.getCount()))
@@ -635,13 +636,25 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
             final IItemHandler handler = entity.getCapability(ForgeCapabilities.ITEM_HANDLER, null).resolve().orElse(null);
             if (handler != null)
             {
-                return InventoryUtils.transferItemStackIntoNextFreeSlotFromItemHandler(handler,
-                        stack -> !ItemStackUtils.isEmpty(stack) && ItemStackUtils.compareItemStacksIgnoreStackSize(is, stack, true, true),
-                        is.getCount(),
-                        worker.getInventoryCitizen());
+                success = InventoryUtils.transferItemStackIntoNextFreeSlotFromItemHandler(handler,
+                            stack -> !ItemStackUtils.isEmpty(stack) && ItemStackUtils.compareItemStacksIgnoreStackSize(is, stack, true, true),
+                            is.getCount(),
+                            worker.getInventoryCitizen());
             }
         }
 
+        if(!success) {
+            success = gatherAdditionalTileEntities(entity, is);
+        }
+
+        return success;
+    }
+
+    /**
+     * Add more available tile entities here.
+     */
+    public boolean gatherAdditionalTileEntities(final BlockEntity entity, final ItemStack is)
+    {
         return false;
     }
 

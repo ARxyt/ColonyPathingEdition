@@ -7,51 +7,61 @@ public interface FurnaceBlockEntityExtras{
      * An adder on target furnace's Progress
      * @return remain adder.
      */
-    int addProgress(int adder);
+    int colonyPathingEdition$addProgress(int adder);
 
     /**
      *  An adder on target furnace's Lit Time
      */
-    void addLitTime(int adder);
+    void colonyPathingEdition$addLitTime(int adder);
 
     /**
      * @return citizen Civilian ID
      */
-    int getFurnaceWorker();
+    int colonyPathingEdition$getFurnaceWorker();
 
     /**
      * @param workerID: citizen Civilian ID
      */
-    void setFurnaceWorker(int workerID);
+    void colonyPathingEdition$setFurnaceWorker(int workerID);
 
     /**
      * @return citizen Civilian ID
      */
-    int getFurnacePicker();
+    int colonyPathingEdition$getFurnacePicker();
 
     /**
      * @param workerID: Civilian ID
      */
-    void setFurnacePicker(int workerID);
+    void colonyPathingEdition$setFurnacePicker(int workerID);
+
+    /**
+     * @return citizen Civilian ID
+     */
+    int colonyPathingEdition$getFurnaceFueler();
+
+    /**
+     * @param workerID: Civilian ID
+     */
+    void colonyPathingEdition$setFurnaceFueler(int workerID);
 
     /**
      * @return furnace protect time
      */
-    boolean atProtectTime();
+    boolean colonyPathingEdition$atProtectTime();
 
     /**
      * Furnace serverTick() injects for protect time
      */
-    void tickProtect();
+    void colonyPathingEdition$tickProtect();
 
     /**
      * Furnace serverTick() injects for protect time
      */
-    void setProtectTime(int protectTime);
+    void colonyPathingEdition$setProtectTime(int protectTime);
 
     /**
      * Initialize furnace protect time
      * @param pBlockEntity: furnace's BlockEntity
      */
-    void setPickup(AbstractFurnaceBlockEntity pBlockEntity);
+    void colonyPathingEdition$setPickup(AbstractFurnaceBlockEntity pBlockEntity);
 }

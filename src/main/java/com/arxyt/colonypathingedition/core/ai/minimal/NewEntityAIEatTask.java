@@ -464,13 +464,8 @@ public class NewEntityAIEatTask implements IStateAI {
 
         final ICitizenData citizenData = citizen.getCitizenData();
         final ItemStack foodStack = citizenData.getInventory().getStackInSlot(foodSlot);
-        if (!FoodUtils.canEat(foodStack, citizenData.getHomeBuilding(), citizenData.getWorkBuilding()))
-        {
-            return CHECK_FOOD;
-        }
 
         citizen.setItemInHand(InteractionHand.MAIN_HAND, foodStack);
-
         citizen.swing(InteractionHand.MAIN_HAND);
         citizen.playSound(SoundEvents.GENERIC_EAT, (float) BASIC_VOLUME, (float) SoundUtils.getRandomPitch(citizen.getRandom()));
         Network.getNetwork()

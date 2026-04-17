@@ -196,7 +196,7 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
                 case CHECK_BABY : {
                     if (hasBreedingItem) {
                         for (final Animal entity : animals) {
-                            if (entity.isBaby()) {
+                            if (entity.isBaby() && worker.level().getGameTime() - fedRecently.getOrDefault(entity.getUUID(), 0L) > TICKS_SECOND * 60 * 5) {
                                 checkState = CHECK_BUTCHER;
                                 toFeedList = null;
                                 return HERDER_FEED;

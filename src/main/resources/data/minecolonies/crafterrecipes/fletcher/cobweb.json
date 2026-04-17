@@ -1,0 +1,13 @@
+{
+  "type": "recipe",
+  "crafter": "fletcher_crafting",
+  "inputs": [
+    {
+      "count": 5,
+      "item": "minecraft:string"
+    }
+  ],
+  "intermediate": "minecraft:air",
+  "min-building-level": 2,
+  "result": "minecraft:cobweb"
+}

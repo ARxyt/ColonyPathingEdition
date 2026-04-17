@@ -1,0 +1,14 @@
+{
+  "type": "recipe",
+  "crafter": "crusher_custom",
+  "inputs": [
+    {
+      "count": 2,
+      "item": "minecraft:netherrack"
+    }
+  ],
+  "intermediate": "minecraft:air",
+  "min-building-level": 3,
+  "not-research-id": "minecolonies:effects/crushing11unlock",
+  "result": "minecraft:soul_sand"
+}

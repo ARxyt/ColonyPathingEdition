@@ -181,8 +181,8 @@ public class PathingConfig {
                 .comment("In shape cost addon (default: 2.0, original:2.0) #实体方块内部行走的Cost (默认 : 2.0 殖民地原设置 : 2.0)#")
                 .defineInRange("inShapeCostAddon", 2.0, 0.0, 63.0);
         DOORS_COST_DEFINER = builder
-                .comment("Door and trapdoor’s cost addon (default: 3.0, original:3.0) #穿过各种\"门\"的Cost (默认 : 3.0 殖民地原设置 : 3.0)#")
-                .defineInRange("doorsCostAddon", 3.0, 0.0, 63.0);
+                .comment("Door and trapdoor’s cost addon (default: 2.0, original:3.0) #穿过各种\"门\"的Cost (默认 : 2.0 殖民地原设置 : 3.0)#")
+                .defineInRange("doorsCostAddon", 2.0, 0.0, 63.0);
         DIVE_COST_DEFINER = builder
                 .comment("Dive cost addon (default: 48.0, original:4.0) #潜水(潜多了会淹死)的Cost (默认 : 48.0 殖民地原设置 : 4.0)#")
                 .defineInRange("diveCostAddon", 48.0, 0.0, 63.0);

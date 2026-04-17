@@ -1,0 +1,21 @@
+{
+  "type": "recipe",
+  "crafter": "lumberjack_custom",
+  "inputs": [
+    {
+      "item": "minecraft:mangrove_propagule"
+    },
+    {
+      "item": "minecraft:bone_meal"
+    }
+  ],
+  "intermediate": "minecraft:air",
+  "min-building-level": 3,
+  "alternate-output": [
+    {
+      "count": 4,
+      "item": "minecraft:mangrove_leaves"
+    }
+  ],
+  "tool": "minecolonies:shears"
+}
