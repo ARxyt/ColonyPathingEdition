@@ -1,8 +1,10 @@
 package com.arxyt.colonypathingedition.core.util;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 
 public class DistanceUtils {
+
     /**
      * 曼哈顿距离 (L1)
      */
@@ -28,7 +30,7 @@ public class DistanceUtils {
     /**
      * 欧氏距离 (L2)
      */
-    public static double dist(int x, int y, int z, BlockPos pos) {
+    public static double dist(double x, double y, double z, BlockPos pos) {
         double dx = x - pos.getX();
         double dy = (y - pos.getY())/5.0;
         double dz = z - pos.getZ();
@@ -40,6 +42,31 @@ public class DistanceUtils {
         double dy = (pos1.getY() - pos2.getY())/5.0;
         double dz = pos1.getZ() - pos2.getZ();
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    /**
+     * 欧氏距离 (L2)
+     */
+    public static double dist(double x, double y, double z, Vec3 pos) {
+        double dx = x - pos.x;
+        double dy = y - pos.y;
+        double dz = z - pos.z;
+        return Math.sqrt(dx * dx + dy * dy * 0.75 + dz * dz);
+    }
+
+    /**
+     * 2D欧氏距离 (L1)
+     */
+    public static double dist2D(double x, double z, BlockPos pos) {
+        double dx = x - pos.getX();
+        double dz = z - pos.getZ();
+        return Math.sqrt(dx * dx + dz * dz);
+    }
+
+    public static double dist2D(BlockPos pos1, BlockPos pos2) {
+        double dx = pos1.getX() - pos2.getX();
+        double dz = pos1.getZ() - pos2.getZ();
+        return Math.sqrt(dx * dx + dz * dz);
     }
 
     /**

@@ -1,20 +1,14 @@
-package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding;
+package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding.navigator;
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.MinecoloniesAdvancedPathNavigateAccessor;
 import com.minecolonies.api.entity.pathfinding.IMinecoloniesNavigator;
 import com.minecolonies.api.util.BlockPosUtil;
-import com.minecolonies.api.util.DamageSourceKeys;
-import com.minecolonies.api.util.Log;
-import com.minecolonies.core.entity.pathfinding.SurfaceType;
 import com.minecolonies.core.entity.pathfinding.navigation.PathingStuckHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.pathfinder.Node;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -72,9 +66,9 @@ public abstract class UnstuckMixin<NAV extends PathNavigation & IMinecoloniesNav
 
         // Small forward teleport
         boolean teleported = false;
-        if (teleportRange > 0 && hadPath)
+        if (hadPath)
         {
-            int index = Math.min(Objects.requireNonNull(navigator.getPath()).getNextNodeIndex() + teleportRange, navigator.getPath().getNodeCount() - 1);
+            int index = Math.min(Objects.requireNonNull(navigator.getPath()).getNextNodeIndex() + 5, navigator.getPath().getNodeCount() - 1);
             final Node togo = navigator.getPath().getNode(index);
             navigator.getOurEntity().teleportTo(togo.x + 0.5d, togo.y, togo.z + 0.5d);
             delayToNextUnstuckAction = 20;

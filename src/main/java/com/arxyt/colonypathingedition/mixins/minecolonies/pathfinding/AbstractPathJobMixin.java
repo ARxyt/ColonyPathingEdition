@@ -2,10 +2,7 @@ package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding;
 
 import com.arxyt.colonypathingedition.api.IMNodeExtras;
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
-import com.ldtteam.domumornamentum.block.decorative.PanelBlock;
-import com.ldtteam.domumornamentum.block.decorative.PostBlock;
-import com.ldtteam.domumornamentum.block.decorative.ShingleBlock;
-import com.ldtteam.domumornamentum.block.decorative.ShingleSlabBlock;
+import com.ldtteam.domumornamentum.block.decorative.*;
 import com.ldtteam.structurize.blockentities.interfaces.IBlueprintDataProviderBE;
 import com.minecolonies.api.colony.buildings.workerbuildings.ITownHall;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
@@ -217,6 +214,9 @@ public abstract class AbstractPathJobMixin{
                         double basicDropCost = Math.pow(dYDouble, 4);
                         if (dYDouble >= -1 && onPath) {
                             basicDropCost *= pathingOptions.onPathCost * pathingOptions.jumpCost;
+                        }
+                        if (dYDouble < -2.5) {
+                            basicDropCost *= 5;
                         }
                         cost += pathingOptions.dropCost * basicDropCost;
 
@@ -962,12 +962,12 @@ public abstract class AbstractPathJobMixin{
             if(noDrop) {
                 pathNodesToVisit.offer(nextNode);
             }
+            nodesToVisit.offer(nextNode);
             return;
         }
 
         // other nodes may need to recalculate its heuristic.
         if (nextNode.isVisited()){
-
             IMNodeExtras extrasNext = (IMNodeExtras) nextNode;
             if (extrasNext.isCallbackNode() && nextNode.getHeuristic() <= heuristic){
                 return;
@@ -975,6 +975,7 @@ public abstract class AbstractPathJobMixin{
             if (nextNode.parent != null && Math.abs(nextNode.parent.y - nextNode.y) > 1){
                 return;
             }
+            nodesToVisit.offer(nextNode);
             if((onRails || onRoad) && noDrop) {
                 pathNodesToVisit.offer(nextNode);
             }

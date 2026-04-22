@@ -55,7 +55,7 @@ public abstract class PathfindingUtilsMixin {
             double posX = Math.min(ShapeUtil.max(bs.getCollisionShape(level, pos), Direction.Axis.X),1 - ShapeUtil.min(bs.getCollisionShape(level, pos), Direction.Axis.X));
             double posZ = Math.min(ShapeUtil.max(bs.getCollisionShape(level, pos), Direction.Axis.Z),1 - ShapeUtil.min(bs.getCollisionShape(level, pos), Direction.Axis.Z));
             boolean canStand = Math.min(posX,posZ) < 0.25;
-            return posHeight > 0.2 && !canStand ? pos.above().immutable() : pos.immutable();
+            if(canStand) return pos.immutable();
         }
 
         final BlockState belowState = level.getBlockState(below);
