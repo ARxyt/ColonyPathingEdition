@@ -80,20 +80,6 @@ public abstract class EntityAIConcreteMixerMixin extends AbstractEntityAICraftin
             return START_WORKING;
         }
 
-        if(InventoryUtils.getCountFromBuilding(building, REQUEST_CONCRETE_BLOCK) >= currentRequest.getRequest().getCount())
-        {
-            ItemStack stack = currentRequest.getRequest().getStack().copy();
-            stack.setCount(currentRequest.getRequest().getCount());
-            currentRequest.addDelivery(stack);
-            incrementActionsDone(getActionRewardForCraftingSuccess());
-            job.finishRequest(true);
-            worker.getCitizenExperienceHandler().addExperience(currentRequest.getRequest().getCount() / 2.0);
-            currentRequest = null;
-            currentRecipeStorage = null;
-            resetValues();
-            return START_WORKING;
-        }
-
         final int slot = getSlotWithPowderWithRequest();
         if (slot == -1)
         {
@@ -152,25 +138,9 @@ public abstract class EntityAIConcreteMixerMixin extends AbstractEntityAICraftin
             if (currentRequest != null && currentRecipeStorage != null && blockToMine.getBlock().asItem().equals(currentRecipeStorage.getPrimaryOutput().getItem()))
             {
                 job.setCraftCounter(job.getCraftCounter() + multiplier);
-                if (job.getCraftCounter() >= job.getMaxCraftingCount())
+                if (job.getCraftCounter() >= job.getMaxCraftingCount() && building.getBlockToMine() == null)
                 {
-                    ItemStack stack = currentRequest.getRequest().getStack().copy();
-                    stack.setCount(job.getMaxCraftingCount());
-                    currentRequest.addDelivery(stack);
-                    incrementActionsDone(getActionRewardForCraftingSuccess());
-                    worker.decreaseSaturationForAction();
-                    job.finishRequest(true);
-                    worker.getCitizenExperienceHandler().addExperience(currentRequest.getRequest().getCount() / 2.0);
-                    currentRequest = null;
-                    currentRecipeStorage = null;
-                    resetValues();
-
-                    if (inventoryNeedsDump() && job.getMaxCraftingCount() == 0 && job.getProgress() == 0 && job.getCraftCounter() == 0 && currentRequest != null)
-                    {
-                        worker.getCitizenExperienceHandler().addExperience(currentRequest.getRequest().getCount() / 2.0);
-                    }
-
-                    return START_WORKING;
+                    return finalizeCraftingTask();
                 }
             }
         }

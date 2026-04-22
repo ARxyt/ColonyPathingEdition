@@ -13,6 +13,7 @@ import com.minecolonies.core.entity.pathfinding.PathfindingUtils;
 import com.minecolonies.core.entity.pathfinding.PathingOptions;
 import com.minecolonies.core.entity.pathfinding.SurfaceType;
 import com.minecolonies.core.entity.pathfinding.pathjobs.AbstractPathJob;
+import com.minecolonies.core.entity.pathfinding.pathjobs.IDestinationPathJob;
 import com.minecolonies.core.entity.pathfinding.pathresults.PathResult;
 import com.minecolonies.core.entity.pathfinding.world.CachingBlockLookup;
 import com.minecolonies.core.entity.pathfinding.MNode;
@@ -69,6 +70,8 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) protected BlockPos.MutableBlockPos tempWorldPos;
     @Shadow(remap = false) protected int maxNodes;
     @Shadow(remap = false) private MNode bestNode;
+    @Shadow(remap = false) @Nullable protected Mob entity;
+    @Shadow(remap = false) private MNode startNode;
 
     @Shadow(remap = false) public abstract Mob getEntity();
     @Shadow(remap = false) protected abstract boolean isPassable(int x, int y, int z, boolean head, MNode parent);
@@ -212,6 +215,9 @@ public abstract class AbstractPathJobMixin{
                         if (dYDouble >= -1 && onPath) {
                             basicDropCost *= pathingOptions.onPathCost * pathingOptions.jumpCost;
                         }
+                        if (dYDouble < -2.5) {
+                            basicDropCost *= 5;
+                        }
                         cost += pathingOptions.dropCost * basicDropCost;
 
                         if (below.getBlock() instanceof FarmBlock) {
@@ -303,7 +309,7 @@ public abstract class AbstractPathJobMixin{
             }
 
             while (!cheapestNodelist.isEmpty()) {
-                final MNode node = cheapestNodelist.poll();
+                @Nullable final MNode node = cheapestNodelist.poll();
 
                 if(node == null){
                     continue;
@@ -940,6 +946,7 @@ public abstract class AbstractPathJobMixin{
             if(noDrop) {
                 pathNodesToVisit.offer(nextNode);
             }
+            nodesToVisit.offer(nextNode);
             return;
         }
 
@@ -953,6 +960,7 @@ public abstract class AbstractPathJobMixin{
             if (nextNode.parent != null && Math.abs(nextNode.parent.y - nextNode.y) > 1){
                 return;
             }
+            nodesToVisit.offer(nextNode);
             if((onRails || onRoad) && noDrop) {
                 pathNodesToVisit.offer(nextNode);
             }
@@ -1013,6 +1021,20 @@ public abstract class AbstractPathJobMixin{
             return tagPosMap.containsKey(relativePos) && tagPosMap.get(relativePos).contains("blocked");
         }
         return false;
+    }
+
+    /**
+     * @author ARxyt
+     * @reason Weird bestNode == null.
+     */
+    @Overwrite(remap = false)
+    public String toString()
+    {
+        return getClass().getSimpleName() + " start:" + start.toShortString() + " entity:" + entity + " maxNodes:" + maxNodes + " totalNodesVisited:" + totalNodesVisited
+                + " bestNodeCost:"
+                + (bestNode == null ? "null" : bestNode.getCost()) + " heuristicCostEstimate:" + (startNode == null ? "null" : startNode.getHeuristic()) + " h-rebalances:" + (
+                visitedLevel - 1) + " reaches:"
+                + reachesDestination + (this instanceof IDestinationPathJob ? " dest:" + ((IDestinationPathJob) this).getDestination().toShortString() : "");
     }
 }
 

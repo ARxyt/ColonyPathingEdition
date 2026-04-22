@@ -1,6 +1,7 @@
 package com.arxyt.colonypathingedition.core.util;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 
 public class DistanceUtils {
     /**
@@ -39,6 +40,16 @@ public class DistanceUtils {
         double dx = pos1.getX() - pos2.getX();
         double dy = (pos1.getY() - pos2.getY())/5.0;
         double dz = pos1.getZ() - pos2.getZ();
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    /**
+     * 欧氏距离 (L2)
+     */
+    public static double dist(double x, double y, double z, Vec3 pos) {
+        double dx = x - pos.x;
+        double dy = y - pos.y;
+        double dz = z - pos.z;
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 

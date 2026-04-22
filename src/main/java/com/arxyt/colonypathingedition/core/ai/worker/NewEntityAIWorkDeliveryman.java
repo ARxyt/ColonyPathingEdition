@@ -138,7 +138,7 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
     private IAIState pickup()
     {
         setDelay(WALK_DELAY);
-        final IRequest<? extends IDeliverymanRequestable> currentTask = ((JobDeliveryExtra)job).getCurrentTaskToDeliver();
+        final IRequest<? extends IDeliverymanRequestable> currentTask = job.getCurrentTask();
 
         if (!(currentTask instanceof StandardRequests.PickupRequest))
         {
@@ -324,7 +324,7 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
      */
     private IAIState deliver()
     {
-        final IRequest<? extends IDeliverymanRequestable> currentTask = ((JobDeliveryExtra)job).getCurrentTaskToDeliver();
+        final IRequest<? extends IDeliverymanRequestable> currentTask = job.getCurrentTask();
 
         if (!(currentTask instanceof StandardRequests.DeliveryRequest))
         {
@@ -504,7 +504,7 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
      */
     private IAIState prepareDelivery()
     {
-        final IRequest<? extends IRequestable> currentTaskToDeliver = ((JobDeliveryExtra)job).getCurrentTaskToDeliver();
+        final IRequest<? extends IRequestable> currentTaskToDeliver = job.getCurrentTask();
         if (!(currentTaskToDeliver instanceof StandardRequests.DeliveryRequest))
         {
             // The current task has changed since the Decision-state.
@@ -512,7 +512,7 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
             return START_WORKING;
         }
 
-        final IRequest<? extends IRequestable> currentTaskToCheck = job.getCurrentTask();
+        final IRequest<? extends IRequestable> currentTaskToCheck = ((JobDeliveryExtra)job).getCurrentTaskToDeliver();
         final IRequest<? extends IRequestable> currentTask = currentTaskToCheck instanceof StandardRequests.DeliveryRequest? currentTaskToCheck : currentTaskToDeliver;
 
         final List<IRequest<? extends Delivery>> taskList = job.getTaskListWithSameDestination((IRequest<? extends Delivery>) currentTask)
@@ -633,7 +633,7 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
     private IAIState decide()
     {
         worker.getCitizenData().setVisibleStatus(VisibleCitizenStatus.WORKING);
-        final IRequest<? extends IDeliverymanRequestable> currentTask = ((JobDeliveryExtra)job).getCurrentTaskToDeliver();
+        final IRequest<? extends IDeliverymanRequestable> currentTask = job.getCurrentTask();
         if (currentTask == null)
         {
             // If there are no deliveries/pickups pending, just loiter around the warehouse.

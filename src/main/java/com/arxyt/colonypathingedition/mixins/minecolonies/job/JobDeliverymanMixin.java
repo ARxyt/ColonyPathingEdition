@@ -5,7 +5,9 @@ import com.arxyt.colonypathingedition.core.ai.worker.NewEntityAIWorkDeliveryman;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.buildings.IBuilding;
 import com.minecolonies.api.colony.buildings.workerbuildings.IWareHouse;
+import com.minecolonies.api.colony.requestsystem.manager.IRequestManager;
 import com.minecolonies.api.colony.requestsystem.request.IRequest;
+import com.minecolonies.api.colony.requestsystem.request.RequestState;
 import com.minecolonies.api.colony.requestsystem.requestable.deliveryman.Delivery;
 import com.minecolonies.api.colony.requestsystem.requestable.deliveryman.IDeliverymanRequestable;
 import com.minecolonies.api.colony.requestsystem.token.IToken;
@@ -19,6 +21,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -38,7 +41,6 @@ public abstract class JobDeliverymanMixin extends AbstractJob<EntityAIWorkDelive
     @Shadow(remap = false) private int ongoingDeliveries;
     @Shadow(remap = false) protected abstract LinkedList<IToken<?>> getTaskQueueFromDataStore();
     @Shadow(remap = false) public abstract IWareHouse findWareHouse();
-    @Shadow(remap = false) public abstract void addRequest(@NotNull IToken<?> token, int insertionIndex);
     @Shadow(remap = false) protected abstract boolean haveTasksSameSourceAndDest(@NotNull Delivery requestA, @NotNull Delivery requestB);
     @Shadow(remap = false) public abstract boolean hasSameDestinationDelivery(@NotNull IRequest<? extends Delivery> request);
 
@@ -177,6 +179,40 @@ public abstract class JobDeliverymanMixin extends AbstractJob<EntityAIWorkDelive
         module.markDirty();
 
         return request == null ? null : (IRequest<IDeliverymanRequestable>) getColony().getRequestManager().getRequestForToken(request);
+    }
+
+    /**
+     * @author ARxyt
+     * @reason Use queue like a stack, result in wrong sending order.
+     */
+    @Overwrite(remap = false)
+    @SuppressWarnings(UNCHECKED)
+    public void addRequest(@NotNull final IToken<?> token, final int insertionIndex)
+    {
+        final IRequestManager requestManager = getColony().getRequestManager();
+
+        LinkedList<IToken<?>> taskQueue = getTaskQueueFromDataStore();
+
+        int offset = 0;
+        for (int i = 0; i < taskQueue.size(); i++)
+        {
+            final IToken theToken = taskQueue.get(i);
+            final IRequest<? extends IDeliverymanRequestable> request = (IRequest<? extends IDeliverymanRequestable>) (requestManager.getRequestForToken(theToken));
+            if (request == null || request.getState() == RequestState.COMPLETED)
+            {
+                taskQueue.remove(theToken);
+                i--;
+                if(i >= taskQueue.size() - insertionIndex) {
+                    offset--;
+                }
+            }
+            else
+            {
+                request.getRequest().incrementPriorityDueToAging();
+            }
+        }
+        
+        getTaskQueueFromDataStore().add(Math.max(0, taskQueue.size() - insertionIndex + offset), token);
     }
 
     @SuppressWarnings(UNCHECKED)

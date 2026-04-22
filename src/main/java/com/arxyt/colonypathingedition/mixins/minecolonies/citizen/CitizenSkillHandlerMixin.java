@@ -1,6 +1,5 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.citizen;
 
-import com.arxyt.colonypathingedition.api.SkillDataExtra;
 import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.CitizenSkillDataCreator;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.IColony;
@@ -98,7 +97,7 @@ public abstract class CitizenSkillHandlerMixin implements CitizenSkillDataCreato
             final double nextLevel = ExperienceUtils.getXPNeededForNextLevel(skillData.getLevel());
             if (nextLevel > xpToLevelUp)
             {
-                ((SkillDataExtra)skillData).setExperience(xpToLevelUp);
+                skillData.setExperience(xpToLevelUp);
                 break;
             }
             else

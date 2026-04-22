@@ -1,4 +1,4 @@
-package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding;
+package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding.navigator;
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.MinecoloniesAdvancedPathNavigateAccessor;
