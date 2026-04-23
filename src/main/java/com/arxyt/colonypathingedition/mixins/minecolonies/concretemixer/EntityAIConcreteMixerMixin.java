@@ -137,6 +137,7 @@ public abstract class EntityAIConcreteMixerMixin extends AbstractEntityAICraftin
             StatsUtil.trackStatByName(building, ITEMS_CRAFTED_DETAIL, blockToMine.getBlock().getDescriptionId(), multiplier);
             if (currentRequest != null && currentRecipeStorage != null && blockToMine.getBlock().asItem().equals(currentRecipeStorage.getPrimaryOutput().getItem()))
             {
+                currentRequest.addDelivery(new ItemStack(blockToMine.getBlock(), multiplier));
                 job.setCraftCounter(job.getCraftCounter() + multiplier);
                 if (job.getCraftCounter() >= job.getMaxCraftingCount() && building.getBlockToMine() == null)
                 {
