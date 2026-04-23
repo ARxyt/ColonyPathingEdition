@@ -199,6 +199,7 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
                             if (entity.isBaby() && worker.level().getGameTime() - fedRecently.getOrDefault(entity.getUUID(), 0L) > TICKS_SECOND * 60 * 5) {
                                 checkState = CHECK_BUTCHER;
                                 toFeedList = null;
+                                currentFed = null;
                                 return HERDER_FEED;
                             }
                         }
@@ -375,8 +376,7 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
             return START_WORKING;
         }
 
-        if (toFeedList == null){
-            currentFed = null;
+        if (toFeedList == null && currentFed == null){
             toFeedList = new ArrayList<>();
             List<? extends Animal> animals = searchForAnimals(current_module::isCompatible);
             int canFeedInRow = 1 + getSecondarySkillLevel() / 20;
@@ -388,11 +388,10 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
                     }
                 }
             }
-        }
-
-        if (toFeedList.isEmpty())
-        {
-            return DECIDE;
+            if (toFeedList.isEmpty())
+            {
+                return DECIDE;
+            }
         }
 
         if (currentFed == null){
@@ -423,7 +422,9 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
             currentFed = null;
             worker.decreaseSaturationForContinuousAction();
             feedTimeOut = 0;
-            return DECIDE;
+            if(toFeedList.isEmpty()) {
+                return DECIDE;
+            }
         }
         else {
             feedTimeOut++;

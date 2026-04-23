@@ -1,0 +1,26 @@
+{
+  "type": "recipe",
+  "crafter": "mechanic_crafting",
+  "inputs": [
+    {
+      "count": 1,
+      "item": "minecraft:gold_block"
+    },
+    {
+      "count": 1,
+      "item": "minecraft:stick"
+    },
+    {
+      "count": 1,
+      "item": "minecraft:chain"
+    },
+    {
+      "count": 2,
+      "item": "minecraft:stone"
+    }
+  ],
+  "min-building-level": 4,
+  "intermediate": "minecraft:air",
+  "result": "minecraft:bell",
+  "show-tooltip": true
+}
