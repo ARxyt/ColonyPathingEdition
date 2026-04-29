@@ -25,6 +25,7 @@ public abstract class MovementHandlerMixin extends MoveControl {
     @Shadow(remap = false) protected abstract boolean isWalkable(float p_24997_, float p_24998_);
 
     @Unique private int jumpCoolDown = 0;
+    @Unique private static int FORCE_JUMP_LIMIT = 10;
 
     public MovementHandlerMixin(Mob mob)
     {
@@ -89,7 +90,7 @@ public abstract class MovementHandlerMixin extends MoveControl {
 
             final float range = (float) (Mth.atan2(zDif, xDif) * (double) (180F / (float) Math.PI)) - 90.0F;
             this.mob.setYRot(this.rotlerp(this.mob.getYRot(), range, 90.0F));
-            this.mob.setSpeed((float) (this.speedModifier * speedValue));
+            this.mob.setSpeed((float) ((yDif < -1.5D && mob.getVehicle() == null) ? Math.min(this.speedModifier, 1.5 / Math.max(2, -0.5 - yDif)) : this.speedModifier) * speedValue);
             final BlockPos blockpos = this.mob.blockPosition();
             final BlockState blockstate = this.mob.level().getBlockState(blockpos);
 
@@ -105,35 +106,39 @@ public abstract class MovementHandlerMixin extends MoveControl {
                 return;
             }
 
-            final Block block = blockstate.getBlock();
-            final VoxelShape voxelshape = blockstate.getCollisionShape(this.mob.level(), blockpos);
-            int FORCE_JUMP_LIMIT = 10;
-            if (yDif > (double) stepHeight)
-            {
-                if (xDif * xDif + zDif * zDif < (double) Math.max(1.0F, this.mob.getBbWidth()) || jumpCoolDown > FORCE_JUMP_LIMIT) {
-                    this.mob.getJumpControl().jump();
-                    this.operation = Operation.JUMPING;
+            if (mob.getVehicle() == null) {
+                final Block block = blockstate.getBlock();
+                final VoxelShape voxelshape = blockstate.getCollisionShape(this.mob.level(), blockpos);
+                if (yDif > (double) stepHeight) {
+                    if (xDif * xDif + zDif * zDif < (double) Math.max(1.0F, this.mob.getBbWidth()) || jumpCoolDown > FORCE_JUMP_LIMIT) {
+                        this.mob.getJumpControl().jump();
+                        this.operation = net.minecraft.world.entity.ai.control.MoveControl.Operation.JUMPING;
+                        jumpCoolDown = 0;
+                    } else {
+                        jumpCoolDown++;
+                    }
+                } else if ((!ShapeUtil.isEmpty(voxelshape) && this.mob.getY() < ShapeUtil.max(voxelshape, Direction.Axis.Y) + (double) blockpos.getY() && !blockstate.is(BlockTags.DOORS)
+                        && !blockstate.is(BlockTags.FENCES) && !blockstate.is(BlockTags.FENCE_GATES))
+                        && !block.isLadder(blockstate, this.mob.level(), blockpos, this.mob)) {
+                    boolean canPass = true;
+                    if (xDif > zDif){
+                        canPass = ShapeUtil.min(voxelshape, Direction.Axis.Z) != 0 || ShapeUtil.max(voxelshape, Direction.Axis.Z) != 1;
+                    }
+                    if (zDif > xDif){
+                        canPass = ShapeUtil.min(voxelshape, Direction.Axis.X) != 0 || ShapeUtil.max(voxelshape, Direction.Axis.X) != 1;
+                    }
+                    if (canPass) {
+                        jumpCoolDown = 0;
+                    }
+                    if (jumpCoolDown > FORCE_JUMP_LIMIT) {
+                        this.mob.getJumpControl().jump();
+                        this.operation = net.minecraft.world.entity.ai.control.MoveControl.Operation.JUMPING;
+                    } else {
+                        jumpCoolDown++;
+                    }
+                } else {
                     jumpCoolDown = 0;
                 }
-                else {
-                    jumpCoolDown ++;
-                }
-            }
-            else if ((!ShapeUtil.isEmpty(voxelshape) && this.mob.getY() < ShapeUtil.max(voxelshape, Direction.Axis.Y) + (double) blockpos.getY() && !blockstate.is(BlockTags.DOORS)
-                    && !blockstate.is(
-                    BlockTags.FENCES) && !blockstate.is(BlockTags.FENCE_GATES))
-                    && !block.isLadder(blockstate, this.mob.level(), blockpos, this.mob))
-            {
-                if(jumpCoolDown > FORCE_JUMP_LIMIT) {
-                    this.mob.getJumpControl().jump();
-                    this.operation = Operation.JUMPING;
-                }
-                else {
-                    jumpCoolDown ++;
-                }
-            }
-            else{
-                jumpCoolDown = 0;
             }
         }
         else if (this.operation == Operation.JUMPING)

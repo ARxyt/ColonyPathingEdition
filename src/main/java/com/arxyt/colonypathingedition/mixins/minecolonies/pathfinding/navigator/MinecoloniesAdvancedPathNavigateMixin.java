@@ -2,8 +2,14 @@ package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding.navigator
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.arxyt.colonypathingedition.core.util.DistanceUtils;
+import com.ldtteam.domumornamentum.block.decorative.PanelBlock;
 import com.minecolonies.api.entity.other.MinecoloniesMinecart;
+import com.minecolonies.api.entity.pathfinding.IStuckHandler;
+import com.minecolonies.api.util.ShapeUtil;
+import com.minecolonies.api.util.Vec3Mutable;
+import com.minecolonies.api.util.WorldUtil;
 import com.minecolonies.core.entity.other.cavalry.CavalryHorseEntity;
+import com.minecolonies.core.entity.pathfinding.PathFindingStatus;
 import com.minecolonies.core.entity.pathfinding.PathPointExtended;
 import com.minecolonies.core.entity.pathfinding.PathfindingUtils;
 import com.minecolonies.core.entity.pathfinding.navigation.AbstractAdvancedPathNavigate;
@@ -13,15 +19,19 @@ import com.minecolonies.core.entity.pathfinding.pathresults.PathResult;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseRailBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.RailShape;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.*;
@@ -34,6 +44,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.HashSet;
 import java.util.Objects;
 
+import static com.minecolonies.api.util.constant.Constants.TICKS_SECOND;
+
 @Mixin(value = MinecoloniesAdvancedPathNavigate.class, remap = false)
 public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdvancedPathNavigate
 {
@@ -41,10 +53,25 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
     @Shadow(remap = false) public abstract double getSpeedFactor();
     @Shadow(remap = false) protected abstract Path convertPath(Path path);
     @Shadow(remap = false) protected abstract void onPathFinish();
+    @Shadow(remap = false) protected abstract void processCompletedCalculationResult();
+    @Shadow(remap = false) protected abstract boolean handleLadders(int oldIndex);
+    @Shadow(remap = false) protected abstract boolean handleRails();
 
     @Final @Shadow(remap = false) public static double MIN_Y_DISTANCE;
 
     @Shadow(remap = false) private @Nullable PathResult<? extends AbstractPathJob> pathResult;
+    @Shadow(remap = false) private int checkStuckDelay;
+    @Shadow(remap = false) private int pauseTicks;
+    @Shadow(remap = false) private Vec3Mutable wantedPosition;
+    @Shadow(remap = false) private boolean isSneaking;
+    @Shadow(remap = false) private BlockPos.MutableBlockPos tempPos;
+    @Shadow(remap = false) private long finishTime;
+    @Shadow(remap = false) private int pauseTickBackupAmount;
+    @Shadow(remap = false) private IStuckHandler<MinecoloniesAdvancedPathNavigate> stuckHandler;
+
+    @Unique private MinecoloniesAdvancedPathNavigate asNavigator() {
+        return (MinecoloniesAdvancedPathNavigate)(Object)this;
+    }
 
     public MinecoloniesAdvancedPathNavigateMixin(@NotNull final Mob entity, final Level world) {
         super(entity, world);
@@ -182,13 +209,12 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         }
 
         // Look at multiple points, in case we're too fast
-        final int thisIndex = Math.max(this.path.getNextNodeIndex(), 0);
+        final int thisIndex = this.path.getNextNodeIndex();
         final Node thisNode = path.getNode(thisIndex);
         final Vec3 thisPos = thisNode.asBlockPos().getCenter();
-        double minDist = DistanceUtils.dist(ourEntity.getX(), ourEntity.getY() + 0.5D, ourEntity.getZ(), thisPos);
-        double dy = Math.abs(ourEntity.getY() + 0.5D - thisPos.y);
+        double minDist = DistanceUtils.manhattanDistanceVWithYWeight(ourEntity.getX(), ourEntity.getY() + 0.5D, ourEntity.getZ(), thisPos, 0.5);
         boolean skipOnce = false;
-        if(minDist < 0.5D || (minDist - dy < 0.25D && dy < mob.maxUpStep())){
+        if(minDist < 0.5D){
             this.path.advance();
             skipOnce = true;
             if (isTracking)
@@ -196,11 +222,15 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
                 reached.add(new BlockPos(thisNode.x, thisNode.y, thisNode.z));
             }
         }
+
         for (int i = thisIndex + 1; i < Math.min(this.path.getNodeCount() - 1, thisIndex + 5); i++)
         {
-            final BlockPos pos = path.getNode(i).asBlockPos();
-            double thisDist = DistanceUtils.dist(ourEntity.getX(), ourEntity.getY() + 0.5D, ourEntity.getZ(), pos.getCenter());
+            final Vec3 pos = path.getNode(i).asBlockPos().getCenter();
+            final double thisDist = DistanceUtils.manhattanDistanceVWithYWeight(ourEntity.getX(), ourEntity.getY() + 0.5D, ourEntity.getZ(), pos, 0.5);
             if(!skipOnce && thisDist < minDist) {
+                if(DistanceUtils.dist2D(ourEntity.getX(), ourEntity.getZ(), pos) < 1.5 && ourEntity.getY() - pos.y > 1.5) {
+                    break;
+                }
                 minDist = thisDist;
                 this.path.advance();
                 if (isTracking)
@@ -210,8 +240,7 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
                 }
                 continue;
             }
-            dy = Math.abs(ourEntity.getY() - pos.getY());
-            if(thisDist < 0.5D || (thisDist - dy < 0.25D && dy < ourEntity.maxUpStep())) {
+            if(thisDist < 0.5D) {
                 this.path.advance();
                 if (isTracking)
                 {
@@ -234,4 +263,146 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         }
     }
 
+    /**
+     * @author ARxyt
+     * @reason Try to rework panel pathing.
+     */
+    @Overwrite(remap = false)
+    public static double getSmartGroundY(final BlockGetter world, final BlockPos.MutableBlockPos pos, final double orgY)
+    {
+        BlockState state = world.getBlockState(pos);
+
+        if (!state.isAir())
+        {
+            if (state.getBlock() instanceof FenceGateBlock || state.getBlock() instanceof DoorBlock || state.getBlock() instanceof TrapDoorBlock || state.getBlock() instanceof PanelBlock)
+            {
+                return orgY;
+            }
+
+            final VoxelShape voxelshape = state.getCollisionShape(world, pos);
+            if (!ShapeUtil.isEmpty(voxelshape))
+            {
+                return pos.getY() + ShapeUtil.max(voxelshape, Direction.Axis.Y);
+            }
+        }
+
+        pos.set(pos.getX(), pos.getY() - 1, pos.getZ());
+
+        state = world.getBlockState(pos);
+        if (!state.isAir())
+        {
+            final VoxelShape voxelshape = state.getCollisionShape(world, pos);
+            if (!ShapeUtil.isEmpty(voxelshape))
+            {
+                return pos.getY() + ShapeUtil.max(voxelshape, Direction.Axis.Y);
+            }
+        }
+
+        return orgY;
+    }
+
+    @Override
+    public void tick()
+    {
+        if (checkStuckDelay-- < 0)
+        {
+            checkStuckDelay = 10;
+            stuckHandler.checkStuck(asNavigator());
+        }
+
+        if (pauseTicks > 0)
+        {
+            pauseTicks--;
+        }
+
+        if (pathResult != null)
+        {
+            if (!pathResult.isDone())
+            {
+                return;
+            }
+            else if (pathResult.getStatus() == PathFindingStatus.CALCULATION_COMPLETE)
+            {
+                processCompletedCalculationResult();
+                wantedPosition.setEmpty();
+            }
+        }
+
+        int oldIndex = this.isDone() ? 0 : this.getPath().getNextNodeIndex();
+
+        this.ourEntity.setYya(0);
+        if (handleLadders(oldIndex))
+        {
+            followThePath();
+            return;
+        }
+
+        if (isSneaking)
+        {
+            isSneaking = false;
+            mob.setShiftKeyDown(false);
+        }
+
+        if (handleRails())
+        {
+            return;
+        }
+
+        ++this.tick;
+        if (this.hasDelayedRecomputation)
+        {
+            this.recomputePath();
+        }
+
+        // The following block replaces mojangs super.tick(). Why you may ask? Because it's broken, that's why.
+        // The moveHelper won't move up if standing in a block with an empty bounding box (put grass, 1 layer snow, mushroom in front of a solid block and have them try jump up).
+        if (!this.isDone())
+        {
+            final int currentPathIndex = path.getNextNodeIndex();
+            this.followThePath();
+
+            if (this.path != null && !this.path.isDone())
+            {
+                if ((wantedPosition.empty() || currentPathIndex != path.getNextNodeIndex() && path.getNextNodeIndex() < path.getNodeCount()))
+                {
+                    Vec3 vector3d2 = path.getNextEntityPos(mob);
+                    tempPos.set(Mth.floor(vector3d2.x), Mth.floor(vector3d2.y), Mth.floor(vector3d2.z));
+                    if (wantedPosition.empty() || ChunkPos.asLong(tempPos) == mob.chunkPosition().toLong() || WorldUtil.isEntityBlockLoaded(level, tempPos))
+                    {
+                        double xOffset = 0;
+                        double zOffset = 0;
+                        final BlockState blockstate = this.mob.getBlockStateOn();
+                        if(blockstate.getBlock() instanceof LadderBlock) {
+                            switch (blockstate.getValue(HorizontalDirectionalBlock.FACING)) {
+                                case EAST -> xOffset = -0.2;
+                                case WEST -> xOffset = 0.2;
+                                case NORTH -> zOffset = 0.2;
+                                case SOUTH -> zOffset = -0.2;
+                            }
+                        }
+                        wantedPosition.set(vector3d2.x + xOffset,
+                                getSmartGroundY(this.level, tempPos, vector3d2.y),
+                                vector3d2.z + zOffset);
+                    }
+                }
+            }
+
+            if (!wantedPosition.empty())
+            {
+                mob.getMoveControl().setWantedPosition(wantedPosition.getX(), wantedPosition.getY(), wantedPosition.getZ(), speedModifier);
+            }
+        }
+        // End of super.tick.
+
+        if (pathResult != null && isDone())
+        {
+            pathResult.setStatus(PathFindingStatus.COMPLETE);
+
+            // Cleanup pathresult if the entity forgot about it
+            if (ourEntity.level().getGameTime() - finishTime > TICKS_SECOND * 20 + pauseTickBackupAmount)
+            {
+                pathResult = null;
+            }
+        }
+    }
 }

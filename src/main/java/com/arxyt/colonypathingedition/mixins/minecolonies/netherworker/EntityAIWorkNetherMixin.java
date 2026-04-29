@@ -439,7 +439,7 @@ public abstract class EntityAIWorkNetherMixin extends AbstractEntityAICrafting<J
                                 attemptToEat();
                             }
 
-                            if (worker.getCitizenData().getSaturation() < LOW_SATURATION + 0.2 || worker.getHealth() < worker.getMaxHealth() * 0.2){
+                            if (!worker.isDeadOrDying() && worker.getCitizenData().getSaturation() < LOW_SATURATION + 0.2 || worker.getHealth() < worker.getMaxHealth() * 0.2){
                                 escaped = worker.getRandom().nextFloat() < getPrimarySkillLevel() / 200.0F;
                             }
                             expeditionLog.setCitizen(worker);

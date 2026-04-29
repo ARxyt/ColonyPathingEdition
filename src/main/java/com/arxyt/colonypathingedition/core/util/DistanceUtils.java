@@ -27,6 +27,16 @@ public class DistanceUtils {
     }
 
     /**
+     * 竖切曼哈顿距离 (L1)
+     */
+    public static double manhattanDistanceVWithYWeight(double x, double y, double z, Vec3 pos, double yWeight) {
+        double dx = Math.abs(x - pos.x);
+        double dy = Math.abs(y - pos.y);
+        double dz = Math.abs(z - pos.z);
+        return dx + dy * dy * yWeight + dz;
+    }
+
+    /**
      * 欧氏距离 (L2)
      */
     public static double dist(int x, int y, int z, BlockPos pos) {
@@ -51,6 +61,21 @@ public class DistanceUtils {
         double dy = y - pos.y;
         double dz = z - pos.z;
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    /**
+     * 2D欧氏距离 (L1)
+     */
+    public static double dist2D(double x, double z, Vec3 pos) {
+        double dx = x - pos.x;
+        double dz = z - pos.z;
+        return Math.sqrt(dx * dx + dz * dz);
+    }
+
+    public static double dist2D(BlockPos pos1, BlockPos pos2) {
+        double dx = pos1.getX() - pos2.getX();
+        double dz = pos1.getZ() - pos2.getZ();
+        return Math.sqrt(dx * dx + dz * dz);
     }
 
     /**

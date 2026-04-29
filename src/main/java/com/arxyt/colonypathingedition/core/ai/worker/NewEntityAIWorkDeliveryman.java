@@ -342,6 +342,7 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
         final IBuilding targetBuilding = worker.getCitizenColonyHandler().getColony().getServerBuildingManager().getBuilding(targetBuildingLocation.getInDimensionLocation());
         if (targetBuilding == null)
         {
+            ((JobDeliveryExtra)job).setOngoingDeliveries(0);
             job.finishRequest(true);
             return START_WORKING;
         }
@@ -359,8 +360,9 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
 
         final Map<ItemStorage, Integer> remainingRequests = new HashMap<>();
 
-        for (IRequest<? extends Delivery> req :
-                job.getTaskListWithSameDestination((IRequest<? extends Delivery>) currentTask))
+        final List<IRequest<? extends Delivery>> iRequestList = job.getTaskListWithSameDestination((IRequest<? extends Delivery>) currentTask);
+
+        for (IRequest<? extends Delivery> req : iRequestList)
         {
             final ItemStack reqStack = req.getRequest().getStack();
             final ItemStorage key = new ItemStorage(reqStack);
@@ -478,14 +480,14 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
 
         if (!extracted)
         {
-            ((JobDeliveryExtra)job).setOngoingDeliveries(0);
+            ((JobDeliveryExtra)job).setOngoingDeliveries(iRequestList.size());
             worker.decreaseSaturationForContinuousAction();
             CitizenItemUtils.setHeldItem(worker, InteractionHand.MAIN_HAND, SLOT_HAND);
             job.finishRequest(false);
             return START_WORKING;
         }
 
-        ((JobDeliveryExtra)job).setOngoingDeliveries(job.getTaskListWithSameDestination((IRequest<? extends Delivery>) currentTask).size());
+        ((JobDeliveryExtra)job).setOngoingDeliveries(iRequestList.size());
         worker.getCitizenExperienceHandler().addExperience(1.5D);
         worker.decreaseSaturationForContinuousAction();
         CitizenItemUtils.setHeldItem(worker, InteractionHand.MAIN_HAND, SLOT_HAND);
