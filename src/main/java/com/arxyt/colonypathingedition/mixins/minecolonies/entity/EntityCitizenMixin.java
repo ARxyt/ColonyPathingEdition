@@ -16,6 +16,7 @@ import com.minecolonies.core.entity.citizen.EntityCitizen;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
@@ -70,6 +71,10 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
     @Overwrite(remap = false)
     private boolean checkIfValidDamageSource(final DamageSource source, final float damage)
     {
+        if(source.is(DamageTypes.SWEET_BERRY_BUSH)) {
+            return false;
+        }
+
         final Entity sourceEntity = source.getEntity();
         if (sourceEntity instanceof EntityCitizen)
         {

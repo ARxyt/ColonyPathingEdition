@@ -75,7 +75,9 @@ public class PathingConfig {
     public static ForgeConfigSpec.IntValue LUMBERJACK_GATHER_WAITING_TIME;
 
     public static ForgeConfigSpec.EnumValue<BuilderModeEnum> BUILDER_MODE;
-    public static ForgeConfigSpec.IntValue BUILDER_GIBBON_RANGE;
+    public static ForgeConfigSpec.EnumValue<BuilderModeEnum> MINER_MODE;
+    public static ForgeConfigSpec.EnumValue<BuilderModeEnum> QUARRIER_MODE;
+    public static ForgeConfigSpec.IntValue GIBBON_RANGE;
     public static ForgeConfigSpec.BooleanValue BUILDER_TAKE_ORDERS_EVERYWHERE;
 
     public static ForgeConfigSpec.BooleanValue MAX_ANIMAL_MODIFIER;
@@ -281,14 +283,14 @@ public class PathingConfig {
                         A toggle for lumberjacks to collect dropped items on trees in a more realistic but less efficient way (break leaves).
                         When disabled, uncollected items will instead be teleported directly to the lumberjack’s feet.
                         让伐木工收集树上的掉落物看起来更合理一些(破坏树叶)，效率相对比较低下，关闭后捡不到的物品会直接传送到伐木工脚下""")
-                .define("lumberjackBreakLeavesToGather" ,true);
+                .define("lumberjackBreakLeavesToGather" ,false);
         LUMBERJACK_GATHER_WAITING_TIME = builder
                 .comment("""
                         Time lumberjacks spend gathering a single item. Not recommended to set too long.
                         伐木工等待收集的时间，不过因为目前检测问题不建议时间过长""")
                 .defineInRange("lumberjackGatherWaitingTime",5,2,10);
         builder.pop();
-        builder.push("Builder Mode Modifier #土木人修改#");
+        builder.push("Structure Builder Mode Modifier #蓝图建筑相关工人修改#");
         BUILDER_MODE = builder
                 .comment("""
                         Builder mode (default: GIBBON), optional below: 建筑工人模式, (默认: 长臂猿)，可选项如下：
@@ -298,7 +300,17 @@ public class PathingConfig {
                         GOD: GOD SHOULD BUILD ANYWHERE THEY WANT. 创世神：神就应该想在哪儿干就在那儿干。
                         GIBBON: Play as a gibbon, jumping up and down with a large building range. 长臂猿：默认选项，像猿猴一样上蹿下跳，但是只在一定建造范围内工作。""")
                 .defineEnum("builderMode", BuilderModeEnum.GIBBON);
-        BUILDER_GIBBON_RANGE = builder.comment("Building range of gibbon mode. 长臂猿模式下的建造范围。")
+        MINER_MODE = builder
+                .comment("""
+                        Miner mode (default: GIBBON), available modes are same as builder
+                        矿工工作模式, (默认: 长臂猿)，可选模式与建筑工相同""")
+                .defineEnum("minerMode", BuilderModeEnum.GIBBON);
+        QUARRIER_MODE = builder
+                .comment("""
+                        Quarrier mode (default: GIBBON), available modes are same as builder
+                        采石工工作模式, (默认: 长臂猿)，可选模式与建筑工相同""")
+                .defineEnum("quarrierMode", BuilderModeEnum.GIBBON);
+        GIBBON_RANGE = builder.comment("Building range of gibbon mode. 长臂猿模式下的建造范围。")
                         .defineInRange("builderGibbonRange", 20, 0, 128);
         BUILDER_TAKE_ORDERS_EVERYWHERE = builder.comment("Can builder take orders everywhere. 打灰人能否随时随地接单。")
                         .define("builderTakeOrdersEverywhere", true);

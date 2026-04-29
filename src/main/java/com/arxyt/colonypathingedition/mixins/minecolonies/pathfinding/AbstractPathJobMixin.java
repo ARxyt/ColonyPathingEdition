@@ -74,6 +74,7 @@ public abstract class AbstractPathJobMixin{
 
     @Shadow(remap = false) public abstract Mob getEntity();
     @Shadow(remap = false) protected abstract boolean isPassable(int x, int y, int z, boolean head, MNode parent);
+    @Shadow(remap = false) protected abstract boolean isPassable(@NotNull final BlockState block, final int x, final int y, final int z, final MNode parent, final boolean head);
     @Shadow(remap = false) public abstract PathingOptions getPathingOptions();
     @Shadow(remap = false) protected abstract boolean canLeaveBlock(int x, int y, int z, int parentX, int parentY, int parentZ, boolean head);
     @Shadow(remap = false) protected abstract boolean canLeaveBlock(final int x, final int y, final int z, final MNode parent, final boolean head);
@@ -85,10 +86,9 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) protected abstract boolean isAtDestination(MNode n);
     @Shadow(remap = false) protected abstract boolean stopOnNodeLimit(int totalNodesVisited, MNode bestNode, int nodesSinceEndNode);
     @Shadow(remap = false) @NotNull protected abstract Path finalizePath(MNode targetNode);
-
-
-    @Invoker(value="getGroundHeight",remap = false)
-    public abstract int invokeGetGroundHeight(final MNode node, final int x, final int y, final int z);
+    @Shadow(remap = false) protected abstract boolean checkHeadBlock(@Nullable MNode parent, int x, int y, int z);
+    @Shadow(remap = false) protected abstract int handleNotStanding(@Nullable MNode parent, int x, int y, int z, @NotNull BlockState below);
+    @Shadow(remap = false) protected abstract double computeHeuristic(final int x, final int y, final int z);
 
     @Invoker(value="createNode",remap = false)
     public abstract MNode invokeCreateNode(final MNode parent, final int x, final int y, final int z, final double heuristic, final double cost);
@@ -106,9 +106,6 @@ public abstract class AbstractPathJobMixin{
             final int y,
             final int z,
             final BlockState state, final BlockState below);
-
-    @Invoker(value="computeHeuristic",remap = false)
-    protected abstract double computeHeuristic(final int x, final int y, final int z);
 
     @Unique final private int callbackTimesTolerance =  PathingConfig.CALLBACK_TIMES_TOLERANCE.get();
     @Unique final private int extendCount =  PathingConfig.NODE_EXTEND_COUNT.get();
@@ -434,6 +431,48 @@ public abstract class AbstractPathJobMixin{
         return finalizePath(bestNode);
     }
 
+    /**
+     * @author ARxyt
+     * @reason Some adjustments.
+     */
+    @Overwrite(remap = false)
+    protected int getGroundHeight(final MNode node, final int x, final int y, final int z)
+    {
+        if (!pathingOptions.canWalkUnderWater() && PathfindingUtils.isLiquid(cachedBlockLookup.getBlockState(x, y + 1, z)))
+        {
+            return Integer.MIN_VALUE;
+        }
+        //  Check (y+1) first, as it's always needed, either for the upper body (level),
+        //  lower body (headroom drop) or lower body (jump up)
+        if (checkHeadBlock(node, x, y, z))
+        {
+            return handleTargetNotPassable(node, x, y + 1, z, cachedBlockLookup.getBlockState(x, y + 1, z));
+        }
+
+        //  Now check the block we want to move to
+        final BlockState target = cachedBlockLookup.getBlockState(x, y, z);
+        if (!isPassable(target, x, y, z, node, false))
+        {
+            return handleTargetNotPassable(node, x, y, z, target);
+        }
+
+        //  Do we have something to stand on in the target space?
+        final BlockState below = cachedBlockLookup.getBlockState(x, y - 1, z);
+        final SurfaceType walkability = SurfaceType.getSurfaceType(world, below, tempWorldPos.set(x, y - 1, z), pathingOptions);
+        final BlockState thisState = cachedBlockLookup.getBlockState(x, y, z);
+        final SurfaceType thisWalkability = SurfaceType.getSurfaceType(world, thisState, tempWorldPos.set(x, y, z), pathingOptions);
+        if (thisWalkability == SurfaceType.WALKABLE || walkability == SurfaceType.WALKABLE)
+        {
+            //  Level path
+            return y;
+        }
+        else if (walkability == SurfaceType.NOT_PASSABLE)
+        {
+            return Integer.MIN_VALUE;
+        }
+
+        return handleNotStanding(node, x, y, z, below);
+    }
 
     @Unique
     private int recheckGroundHeight(int x, int y, int z){
@@ -554,7 +593,8 @@ public abstract class AbstractPathJobMixin{
             } else if (!(below.isAir() || below.getCollisionShape(world, new BlockPos(x, y-1, z)).isEmpty())) {
                 if (PathfindingUtils.isLadder(below, pathingOptions)) {
                     return y - i + 1;
-                } else {
+                }
+                else if (!below.hasProperty(BlockStateProperties.OPEN)) {
                     return Integer.MIN_VALUE;
                 }
             }
@@ -631,7 +671,7 @@ public abstract class AbstractPathJobMixin{
         int nextZ = node.z + dZ;
 
         //  Can we traverse into this node?  Fix the y up, skip on already explored nodes
-        final int firstY = invokeGetGroundHeight(node, nextX, nextY, nextZ);
+        final int firstY = getGroundHeight(node, nextX, nextY, nextZ);
         if (firstY < world.getMinBuildHeight())
         {
             return;
@@ -949,13 +989,12 @@ public abstract class AbstractPathJobMixin{
         {
             return;
         }
-        nodesToVisit.remove(nextNode);
-        pathNodesToVisit.remove(nextNode);
         nextNode.setHeuristic(heuristic);
 
         // those low-cost nodes should change its parent node to current node.
         if (cost < nextNode.getCost()) {
-
+            nodesToVisit.remove(nextNode);
+            pathNodesToVisit.remove(nextNode);
             nextNode.parent = node;
             nextNode.setCost(cost);
             nextNode.setOnRails(onRails);
@@ -975,6 +1014,8 @@ public abstract class AbstractPathJobMixin{
             if (nextNode.parent != null && Math.abs(nextNode.parent.y - nextNode.y) > 1){
                 return;
             }
+            nodesToVisit.remove(nextNode);
+            pathNodesToVisit.remove(nextNode);
             nodesToVisit.offer(nextNode);
             if((onRails || onRoad) && noDrop) {
                 pathNodesToVisit.offer(nextNode);

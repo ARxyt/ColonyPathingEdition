@@ -136,7 +136,7 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
     private boolean gibbon(final BlockPos currentBlock) {
         workFrom = currentBlock;
         boolean stopPathing = walkWithProxy(workFrom, STANDARD_WORKING_RANGE);
-        if(MathUtils.twoDimDistance(worker.blockPosition(), workFrom) < PathingConfig.BUILDER_GIBBON_RANGE.get()){
+        if(MathUtils.twoDimDistance(worker.blockPosition(), workFrom) < PathingConfig.GIBBON_RANGE.get()){
             repathCounter = 0;
             return true;
         }

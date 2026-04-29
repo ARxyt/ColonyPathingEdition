@@ -16,7 +16,6 @@ import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 import com.minecolonies.api.entity.citizen.VisibleCitizenStatus;
 import com.minecolonies.api.util.InventoryUtils;
 import com.minecolonies.api.util.ItemStackUtils;
-import com.minecolonies.api.util.Log;
 import com.minecolonies.api.util.StatsUtil;
 import com.minecolonies.api.util.constant.Constants;
 import com.minecolonies.core.colony.buildings.AbstractBuilding;
@@ -337,7 +336,6 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
      */
     private IAIState deliver()
     {
-
         final IRequest<? extends IDeliverymanRequestable> currentTask = job.getCurrentTask();
 
         if (!(currentTask instanceof StandardRequests.DeliveryRequest))
@@ -350,15 +348,10 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
         final ILocation targetBuildingLocation = ((Delivery) currentTask.getRequest()).getTarget();
         if (!targetBuildingLocation.isReachableFromLocation(worker.getLocation()))
         {
-            Log.getLogger().info(worker.getCitizenColonyHandler().getColonyOrRegister().getName() + ": " + worker.getName() + ": Can't inter dimension yet: ");
             return START_WORKING;
         }
 
-        final IBuilding targetBuilding = worker.getCitizenColonyHandler()
-                .getColony()
-                .getServerBuildingManager()
-                .getBuilding(targetBuildingLocation.getInDimensionLocation());
-
+        final IBuilding targetBuilding = worker.getCitizenColonyHandler().getColony().getServerBuildingManager().getBuilding(targetBuildingLocation.getInDimensionLocation());
         if (targetBuilding == null)
         {
             ((JobDeliveryExtra)job).setOngoingDeliveries(0);
@@ -386,6 +379,7 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
             final ItemStack reqStack = req.getRequest().getStack();
             final ItemStorage key = new ItemStorage(reqStack);
             remainingRequests.merge(key, reqStack.getCount(), Integer::sum);
+            alreadyInInv.remove(req.getId());
         }
 
         for (int i = 0; i < workerInventory.getSlots(); i++)
@@ -530,14 +524,16 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
      */
     private IAIState prepareDelivery()
     {
-        final IRequest<? extends IRequestable> currentTask = job.getCurrentTask();
-
-        if (!(currentTask instanceof StandardRequests.DeliveryRequest))
+        final IRequest<? extends IRequestable> currentTaskToDeliver = job.getCurrentTask();
+        if (!(currentTaskToDeliver instanceof StandardRequests.DeliveryRequest))
         {
             // The current task has changed since the Decision-state.
             // Restart.
             return START_WORKING;
         }
+
+        final IRequest<? extends IRequestable> currentTaskToCheck = ((JobDeliveryExtra)job).getCurrentTaskToDeliver();
+        final IRequest<? extends IRequestable> currentTask = currentTaskToCheck instanceof StandardRequests.DeliveryRequest? currentTaskToCheck : currentTaskToDeliver;
 
         final List<IRequest<? extends Delivery>> taskList = job.getTaskListWithSameDestination((IRequest<? extends Delivery>) currentTask)
                 .stream().filter(iRequest -> !alreadyInInv.containsKey(iRequest.getId())).toList();
