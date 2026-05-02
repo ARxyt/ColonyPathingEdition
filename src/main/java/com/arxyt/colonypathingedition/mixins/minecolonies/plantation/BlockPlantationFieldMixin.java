@@ -5,6 +5,7 @@ import com.minecolonies.api.blocks.AbstractBlockMinecoloniesHorizontal;
 import com.minecolonies.api.blocks.interfaces.IBuildingBrowsableBlock;
 import com.minecolonies.api.colony.IColony;
 import com.minecolonies.api.colony.IColonyManager;
+import com.minecolonies.api.colony.buildingextensions.IBuildingExtension;
 import com.minecolonies.api.colony.buildingextensions.registry.BuildingExtensionRegistries;
 import com.minecolonies.api.entity.ai.workers.util.IBuilderUndestroyable;
 import com.minecolonies.api.util.Log;
@@ -27,6 +28,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Mixin(BlockPlantationField.class)
 public abstract class BlockPlantationFieldMixin extends AbstractBlockMinecoloniesHorizontal<BlockPlantationField> implements IBuilderUndestroyable, IAnchorBlock, IBuildingBrowsableBlock, EntityBlock {
@@ -74,11 +77,17 @@ public abstract class BlockPlantationFieldMixin extends AbstractBlockMinecolonie
             final IColony colony = IColonyManager.getInstance().getColonyByPosFromWorld(worldIn, pos);
             if (colony != null)
             {
-                if (!colony.getServerBuildingManager().getBuildingExtensions(extension -> extension.getPosition().equals(pos)).isEmpty()) {
-                    return ItemInteractionResult.SUCCESS;
+                List<IBuildingExtension> extensions = colony.getServerBuildingManager().getBuildingExtensions(extension ->  extension.getPosition().equals(pos));
+                for (IBuildingExtension plantationField : extensions) {
+                    if (!tileEntityPlantationField.getPlantationFieldTypes().contains(plantationField.getBuildingExtensionType())) {
+                        colony.getServerBuildingManager().removeBuildingExtension(extension -> extension.getBuildingExtensionType() == plantationField.getBuildingExtensionType() && extension.getPosition().equals(pos));
+                    }
                 }
                 for (BuildingExtensionRegistries.BuildingExtensionEntry plantationFieldType : tileEntityPlantationField.getPlantationFieldTypes())
                 {
+                    if(extensions.stream().anyMatch(extension -> extension.getBuildingExtensionType() == plantationFieldType)) {
+                        continue;
+                    }
                     final PlantationField plantationField = PlantationField.create(plantationFieldType, pos);
 
                     final List<BlockPos> workingPositions = tileEntityPlantationField.getWorkingPositions(plantationField.getModule().getWorkTag());

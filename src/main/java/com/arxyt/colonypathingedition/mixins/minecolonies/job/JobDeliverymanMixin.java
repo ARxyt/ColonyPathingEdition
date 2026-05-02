@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import static com.arxyt.colonypathingedition.core.config.PathingConfig.SMELTERY_AI_MODULE;
+import static com.arxyt.colonypathingedition.core.config.PathingConfig.DELIVERYMAN_AI_MODULE;
 import static com.minecolonies.api.util.constant.BuildingConstants.TAG_ONGOING;
 import static com.minecolonies.api.util.constant.Suppression.UNCHECKED;
 
@@ -58,7 +58,7 @@ public abstract class JobDeliverymanMixin extends AbstractJob<EntityAIWorkDelive
 
     @Override
     public void createAI(){
-        if(SMELTERY_AI_MODULE.get()){
+        if(DELIVERYMAN_AI_MODULE.get()){
             final NewEntityAIWorkDeliveryman tempAI = new NewEntityAIWorkDeliveryman((JobDeliveryman)((Object)this));
             if(tempAI != null){
                 getCitizen().getEntity().get().getCitizenJobHandler().setWorkAI(tempAI);

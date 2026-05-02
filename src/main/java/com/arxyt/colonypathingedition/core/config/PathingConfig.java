@@ -20,6 +20,7 @@ public class PathingConfig {
     public static ModConfigSpec.BooleanValue SMELTERY_AI_MODULE;
     public static ModConfigSpec.BooleanValue FARMER_AI_MODULE;
     public static ModConfigSpec.BooleanValue FLEE_AI_MODULE;
+    public static ModConfigSpec.BooleanValue DELIVERYMAN_AI_MODULE;
 
     public static ModConfigSpec.BooleanValue TAVERN_ASSIGNMENT_MODULE;
     public static ModConfigSpec.BooleanValue ADDITIONAL_MINIMUM_STOCK_MODULE;
@@ -115,7 +116,9 @@ public class PathingConfig {
         FARMER_AI_MODULE = builder
                 .comment("Open the module to use the remastered farmer AI system (default: true)\n 开启此模块将会启用重制的农夫AI (默认开启)")
                 .define("enableNewFarmerModule", true);
-
+        DELIVERYMAN_AI_MODULE = builder
+                .comment("Open the module to use the remastered deliveryman AI system (default: true)\n 开启此模块将会启用重制的快递员AI (默认开启)")
+                .define("enableNewDeliverymanModule", true);
         builder.pop();
 
         builder.push("Building Module Opener #房屋模块特性开关#");

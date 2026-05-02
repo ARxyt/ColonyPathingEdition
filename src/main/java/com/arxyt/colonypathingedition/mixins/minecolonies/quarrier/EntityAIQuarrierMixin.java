@@ -27,6 +27,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.START_BUILDING;
+import static com.minecolonies.api.research.util.ResearchConstants.BLOCK_PLACE_SPEED;
+import static com.minecolonies.api.util.constant.CitizenConstants.PROGRESS_MULTIPLIER;
 import static com.minecolonies.api.util.constant.CitizenConstants.STANDARD_WORKING_RANGE;
 
 
@@ -136,13 +138,40 @@ public abstract class EntityAIQuarrierMixin extends AbstractEntityAIStructureWit
      */
     @Unique
     private boolean gibbon(final BlockPos currentBlock) {
-        workFrom = currentBlock;
-        boolean stopPathing = walkWithProxy(workFrom, STANDARD_WORKING_RANGE);
-        if(MathUtils.twoDimDistance(worker.blockPosition(), workFrom) < PathingConfig.GIBBON_RANGE.get()){
-            repathCounter = 0;
+        boolean success = MathUtils.twoDimDistance(worker.blockPosition(), currentBlock) < PathingConfig.GIBBON_RANGE.get();
+        if (workFrom == null || success) {
+            if (gotoPath == null || gotoPath.isCancelled()) {
+                final PathJobMoveCloseToXNearY pathJob = new PathJobMoveCloseToXNearY(world,
+                        currentBlock,
+                        building.getWorkOrder().getLocation(),
+                        4,
+                        worker);
+                gotoPath = ((MinecoloniesAdvancedPathNavigate) worker.getNavigation()).setPathJob(pathJob, currentBlock, 1.0, false);
+                pathJob.getPathingOptions().dropCost = 1.5;
+                pathJob.extraNodes = 0;
+            }
+            else if (gotoPath.isDone()) {
+                if (gotoPath.getPath() != null)
+                {
+                    workFrom = gotoPath.getPath().getTarget();
+                }
+                gotoPath = null;
+            }
+            if (workFrom == null) {
+                return success || repathCounter >= 600;
+            }
+        }
+        boolean hasReached = walkToSafePos(workFrom);
+        if(hasReached){
+            workFrom = null;
+            repathCounter = 600;
+        }
+        if(success || repathCounter >= 600) {
             return true;
         }
-        return stopPathing && ++repathCounter >= 3;
+        final double decrease = 1 - worker.getCitizenColonyHandler().getColonyOrRegister().getResearchManager().getResearchEffects().getEffectStrength(BLOCK_PLACE_SPEED);
+        repathCounter += (int)(BUILD_BLOCK_DELAY * PROGRESS_MULTIPLIER / (getPlaceSpeedLevel() / 2.0 + PROGRESS_MULTIPLIER) * decrease);
+        return false;
     }
 
     /**
