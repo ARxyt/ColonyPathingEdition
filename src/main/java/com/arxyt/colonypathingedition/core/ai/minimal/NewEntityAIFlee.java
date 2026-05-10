@@ -114,7 +114,7 @@ public class NewEntityAIFlee implements IStateAI {
             closestLivingEntity = currentClosest;
             safeTime = 0;
             performMoveAway();
-            citizen.getCitizenAI().setTickRate(1);
+            citizen.getCitizenAI().setCurrentDelay(1);
             return RUNNING;
         }
 

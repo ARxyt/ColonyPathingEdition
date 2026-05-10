@@ -362,11 +362,14 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
 
         final List<IRequest<? extends Delivery>> iRequestList = job.getTaskListWithSameDestination((IRequest<? extends Delivery>) currentTask);
 
-        for (IRequest<? extends Delivery> req : iRequestList)
-        {
-            final ItemStack reqStack = req.getRequest().getStack();
-            final ItemStorage key = new ItemStorage(reqStack);
-            remainingRequests.merge(key, reqStack.getCount(), Integer::sum);
+        for (IRequest<? extends Delivery> req : new ArrayList<>(iRequestList)) {
+            ItemStack reqStack = req.getRequest().getStack();
+            if (alreadyInInv != null && alreadyInInv.containsKey(req.getId())) {
+                alreadyInInv.remove(req.getId());
+                remainingRequests.merge(new ItemStorage(reqStack), reqStack.getCount(), Integer::sum);
+            } else {
+                iRequestList.remove(req);
+            }
         }
 
         for (int i = 0; i < workerInventory.getSlots(); i++)
@@ -493,9 +496,16 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<JobDeli
         CitizenItemUtils.setHeldItem(worker, InteractionHand.MAIN_HAND, SLOT_HAND);
         job.finishRequest(true);
 
-        if(!((JobDeliveryExtra)job).checkDeliveryFinished()) {
-            return DELIVERY;
+
+        boolean isFinished = ((JobDeliveryExtra)job).checkDeliveryFinished();
+        if(!alreadyInInv.isEmpty()) {
+            return isFinished ? START_WORKING : DELIVERY;
         }
+
+        if(!isFinished) {
+            return PREPARE_DELIVERY;
+        }
+
         return success ? START_WORKING : DUMPING;
     }
 

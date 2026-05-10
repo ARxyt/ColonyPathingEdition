@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
-import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.START_BUILDING;
+import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.*;
 import static com.minecolonies.api.research.util.ResearchConstants.BLOCK_PLACE_SPEED;
 import static com.minecolonies.api.util.constant.CitizenConstants.PROGRESS_MULTIPLIER;
 import static com.minecolonies.api.util.constant.CitizenConstants.STANDARD_WORKING_RANGE;
@@ -158,15 +158,15 @@ public abstract class EntityAIQuarrierMixin extends AbstractEntityAIStructureWit
                 gotoPath = null;
             }
             if (workFrom == null) {
-                return success || repathCounter >= 600;
+                return success || repathCounter >= 300;
             }
         }
         boolean hasReached = walkToSafePos(workFrom);
         if(hasReached){
             workFrom = null;
-            repathCounter = 600;
+            repathCounter = 300;
         }
-        if(success || repathCounter >= 600) {
+        if(success || repathCounter >= 300) {
             return true;
         }
         final double decrease = 1 - worker.getCitizenColonyHandler().getColonyOrRegister().getResearchManager().getResearchEffects().getEffectStrength(BLOCK_PLACE_SPEED);
@@ -199,6 +199,10 @@ public abstract class EntityAIQuarrierMixin extends AbstractEntityAIStructureWit
     @Override
     protected IAIState structureStep(){
         IAIState returnState = super.structureStep();
+        if(returnState == MINE_BLOCK) {
+            setDelay(0);
+            return MINE_BLOCK;
+        }
         if (returnState != getState()){
             repathCounter = 0;
         }
@@ -211,8 +215,9 @@ public abstract class EntityAIQuarrierMixin extends AbstractEntityAIStructureWit
      */
     @Override
     public IAIState doMining(){
+        setDelay(1);
         IAIState returnState = super.doMining();
-        if (returnState != getState()){
+        if (returnState != getState() && returnState != BUILDING_STEP){
             repathCounter = 0;
         }
         return returnState;

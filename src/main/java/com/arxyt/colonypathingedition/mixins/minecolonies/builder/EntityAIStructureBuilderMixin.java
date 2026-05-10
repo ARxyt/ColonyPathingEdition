@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.LOAD_STRUCTURE;
+import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.*;
 import static com.minecolonies.api.research.util.ResearchConstants.BLOCK_PLACE_SPEED;
 import static com.minecolonies.api.util.constant.CitizenConstants.*;
 
@@ -151,15 +151,15 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
                 gotoPath = null;
             }
             if (workFrom == null) {
-                return success || repathCounter >= 600;
+                return success || repathCounter >= 300;
             }
         }
         boolean hasReached = walkToSafePos(workFrom);
         if(hasReached){
             workFrom = null;
-            repathCounter = 600;
+            repathCounter = 300;
         }
-        if(success || repathCounter >= 600) {
+        if(success || repathCounter >= 300) {
             return true;
         }
         final double decrease = 1 - worker.getCitizenColonyHandler().getColonyOrRegister().getResearchManager().getResearchEffects().getEffectStrength(BLOCK_PLACE_SPEED);
@@ -192,6 +192,10 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
     @Override
     protected IAIState structureStep(){
         IAIState returnState = super.structureStep();
+        if(returnState == MINE_BLOCK) {
+            setDelay(0);
+            return MINE_BLOCK;
+        }
         if (returnState != getState()){
             repathCounter = 0;
         }
@@ -199,13 +203,14 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
     }
 
     /**
-     * 只是重置一下重新寻路次数
+     * 只是重置一下重新寻路次数，而且为什么这里还要额外计时?
      * @return 原本的返回值
      */
     @Override
     public IAIState doMining(){
+        setDelay(1);
         IAIState returnState = super.doMining();
-        if (returnState != getState()){
+        if (returnState != getState() && returnState != BUILDING_STEP){
             repathCounter = 0;
         }
         return returnState;

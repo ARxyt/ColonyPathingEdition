@@ -47,8 +47,6 @@ import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.JO
 import static com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra.getShouldEatAtHut;
 import static com.minecolonies.api.util.constant.CitizenConstants.FULL_SATURATION;
 import static com.minecolonies.api.util.constant.CitizenConstants.NIGHT;
-import static com.minecolonies.api.util.constant.Constants.SECONDS_A_MINUTE;
-import static com.minecolonies.api.util.constant.Constants.TICKS_SECOND;
 import static com.minecolonies.api.util.constant.GuardConstants.BASIC_VOLUME;
 import static com.minecolonies.api.util.constant.TranslationConstants.NO_RESTAURANT;
 
@@ -56,9 +54,13 @@ public class NewEntityAIEatTask implements IStateAI {
 
     private static final Predicate<BuildingCook> STAFFED_RESTAURANTS = buildingCook -> buildingCook.getModule(BuildingModules.COOK_WORK).hasAssignedCitizen();
     private final double WAITING_MINUTES = PathingConfig.RESTAURANT_WAITING_TIME.get();
-    private static final int REQUIRED_TIME_TO_EAT = 3;
+    private static final int REQUIRED_TIME_TO_EAT = 5;
     private static final int MAX_SCORE_DISTANCE = 200;
     private static final int CROWD_PENALTY = 10;
+    private static final int IMMEDIATELY_DELAY = 1;
+    private static final int WAITING_DELAY = 10;
+    private static final int WALKING_DELAY = 20;
+    private static final int STUCK_DELAY = 100;
     private IBuilding buildingToGo = null;
 
     public enum NewEatingState implements IState
@@ -101,13 +103,13 @@ public class NewEntityAIEatTask implements IStateAI {
         this.citizen = citizen;
 
         citizen.getCitizenAI().addTransition(new TickingTransition<>(CitizenAIState.EATING, () -> true, this::startEating, 1));
-        citizen.getCitizenAI().addTransition(new TickingTransition<>(CHECK_FOOD, () -> true, this::checkFood, 20));
-        citizen.getCitizenAI().addTransition(new TickingTransition<>(GO_TO_HUT, () -> true, this::goToHut, 20));
-        citizen.getCitizenAI().addTransition(new TickingTransition<>(GO_TO_RESTAURANT, () -> true, this::goToRestaurant, 20));
-        citizen.getCitizenAI().addTransition(new TickingTransition<>(WAIT_FOR_FOOD, () -> true, this::waitForFood, 20));
-        citizen.getCitizenAI().addTransition(new TickingTransition<>(GET_FOOD_YOURSELF, () -> true, this::getFoodYourself, 20));
-        citizen.getCitizenAI().addTransition(new TickingTransition<>(GO_TO_EAT_POS, () -> true, this::goToEatingPlace, 20));
-        citizen.getCitizenAI().addTransition(new TickingTransition<>(EAT, () -> true, this::eat, 20));
+        citizen.getCitizenAI().addTransition(new TickingTransition<>(CHECK_FOOD, () -> true, this::checkFood, 1));
+        citizen.getCitizenAI().addTransition(new TickingTransition<>(GO_TO_HUT, () -> true, this::goToHut, 1));
+        citizen.getCitizenAI().addTransition(new TickingTransition<>(GO_TO_RESTAURANT, () -> true, this::goToRestaurant, 1));
+        citizen.getCitizenAI().addTransition(new TickingTransition<>(WAIT_FOR_FOOD, () -> true, this::waitForFood, 1));
+        citizen.getCitizenAI().addTransition(new TickingTransition<>(GET_FOOD_YOURSELF, () -> true, this::getFoodYourself, 1));
+        citizen.getCitizenAI().addTransition(new TickingTransition<>(GO_TO_EAT_POS, () -> true, this::goToEatingPlace, 1));
+        citizen.getCitizenAI().addTransition(new TickingTransition<>(EAT, () -> true, this::eat, 1));
         citizen.getCitizenAI().addTransition(new TickingTransition<>(DONE, () -> true, this::endEating, 1));
     }
 
@@ -176,6 +178,7 @@ public class NewEntityAIEatTask implements IStateAI {
         switch (checkState) {
             case CHECK_INHAND : {
                 if (hasFood(true)) {
+                    citizen.getCitizenAI().setCurrentDelay(IMMEDIATELY_DELAY);
                     return EAT;
                 }
                 checkState = CHECK_HUT;
@@ -262,7 +265,6 @@ public class NewEntityAIEatTask implements IStateAI {
     private NewEatingState goToHut(){
         restaurantPos = null;
         restaurant = null;
-        final ICitizenData citizenData = citizen.getCitizenData();
         if(buildingToGo == null) {
             return GO_TO_RESTAURANT;
         }
@@ -272,6 +274,7 @@ public class NewEntityAIEatTask implements IStateAI {
             if(effectInstance != null){
                 citizen.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED,effectInstance.getDuration(),3));
             }
+            citizen.getCitizenAI().setCurrentDelay(WALKING_DELAY);
             return GO_TO_HUT;
         }
         final ItemStorage storageToGet = FoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, buildingToGo);
@@ -302,7 +305,7 @@ public class NewEntityAIEatTask implements IStateAI {
                     return DONE;
                 }
                 citizenData.triggerInteraction(new StandardInteraction(Component.translatable(NO_RESTAURANT), ChatPriority.BLOCKING));
-                citizen.getCitizenAI().setCurrentDelay(20 * 5);
+                citizen.getCitizenAI().setCurrentDelay(STUCK_DELAY);
                 checkState = CHECK_INHAND;
                 return checkFood();
             }
@@ -324,6 +327,7 @@ public class NewEntityAIEatTask implements IStateAI {
                 }
             }
         }
+        citizen.getCitizenAI().setCurrentDelay(WALKING_DELAY);
         return GO_TO_RESTAURANT;
     }
 
@@ -335,15 +339,11 @@ public class NewEntityAIEatTask implements IStateAI {
 
         if (restaurantPos == null)
         {
+            citizen.getCitizenAI().setCurrentDelay(STUCK_DELAY);
             return GO_TO_RESTAURANT;
         }
 
         restaurant = colony.getServerBuildingManager().getBuilding(restaurantPos);
-        if (!restaurant.isInBuilding(citizen.blockPosition()))
-        {
-            return GO_TO_RESTAURANT;
-        }
-
         eatPos = findPlaceToEat();
         if (restaurant != null)
         {
@@ -356,6 +356,7 @@ public class NewEntityAIEatTask implements IStateAI {
             return EAT;
         }
 
+        citizen.getCitizenAI().setCurrentDelay(WALKING_DELAY);
         return WAIT_FOR_FOOD;
     }
 
@@ -363,6 +364,7 @@ public class NewEntityAIEatTask implements IStateAI {
     {
         if (restaurantPos == null)
         {
+            citizen.getCitizenAI().setCurrentDelay(STUCK_DELAY);
             return GO_TO_RESTAURANT;
         }
 
@@ -373,6 +375,7 @@ public class NewEntityAIEatTask implements IStateAI {
         {
             if (!EntityNavigationUtils.walkToBuilding(citizen, cookBuilding))
             {
+                citizen.getCitizenAI().setCurrentDelay(WALKING_DELAY);
                 return GET_FOOD_YOURSELF;
             }
 
@@ -384,8 +387,9 @@ public class NewEntityAIEatTask implements IStateAI {
                     // This caused by a fulfilled inventory, which means citizens can't eat by themselves, so reset to seek an assist.
                     BuildingCookExtra restaurantExtra = ((BuildingCookExtra)restaurant);
                     restaurantExtra.tryRegisterCustomer(citizen.getCivilianID());
-                    timeOutWalking = -5000;
-                    waitingTicks = -5000;
+                    timeOutWalking = 0;
+                    waitingTicks = -2400; // Wait for one more minute.
+                    citizen.getCitizenAI().setCurrentDelay(STUCK_DELAY);
                     return WAIT_FOR_FOOD;
                 }
                 return EAT;
@@ -403,10 +407,12 @@ public class NewEntityAIEatTask implements IStateAI {
                     return GO_TO_HUT;
                 }
                 else {
+                    citizen.getCitizenAI().setCurrentDelay(STUCK_DELAY);
                     return GO_TO_RESTAURANT;
                 }
             }
         }
+        citizen.getCitizenAI().setCurrentDelay(STUCK_DELAY);
         return GO_TO_RESTAURANT;
     }
 
@@ -416,6 +422,8 @@ public class NewEntityAIEatTask implements IStateAI {
         BuildingCookExtra restaurantExtra = ((BuildingCookExtra)restaurant);
         if(!restaurantExtra.checkCustomerRegistry(citizen.getCivilianID()) || !STAFFED_RESTAURANTS.test((BuildingCook)restaurant) || !WorldUtil.isPastTime(citizen.level(), NIGHT - 2100) || (jobCitizen != null && JOBS_EAT_IMMEDIATELY.contains(jobCitizen.getClass())) || eatPos == null){
             restaurantExtra.deleteCustomer(citizen.getCivilianID());
+            waitingTicks = 0;
+            timeOutWalking = 0;
             if (hasFood(false)) return EAT;
             else return GET_FOOD_YOURSELF;
         }
@@ -426,31 +434,37 @@ public class NewEntityAIEatTask implements IStateAI {
             return DONE;
         }
 
-        if ( timeOutWalking++ > 400 )
+        if(hasFood(true)) {
+            waitingTicks = 0;
+            timeOutWalking = 0;
+            restaurantExtra.deleteCustomer(citizen.getCivilianID());
+            return EAT;
+        }
+
+        if (timeOutWalking >= 10) // seconds
         {
+            waitingTicks = 0;
+            timeOutWalking = 0;
             restaurantExtra.deleteCustomer(citizen.getCivilianID());
             return GET_FOOD_YOURSELF;
         }
 
         if (EntityNavigationUtils.walkToPos(citizen, eatPos, 2, true))
         {
-            SittingEntity.sitDown(eatPos, citizen, TICKS_SECOND * SECONDS_A_MINUTE);
-            if (!hasFood(true))
+            SittingEntity.sitDown(eatPos, citizen, (int)(1200 * WAITING_MINUTES));
+            if (waitingTicks >= 1200 * WAITING_MINUTES) // ticks
             {
-                waitingTicks++;
-                if (waitingTicks > SECONDS_A_MINUTE * WAITING_MINUTES)
-                {
-                    waitingTicks = 0;
-                    restaurantExtra.deleteCustomer(citizen.getCivilianID());
-                    return GET_FOOD_YOURSELF;
-                }
-            }
-            else {
+                waitingTicks = 0;
                 timeOutWalking = 0;
                 restaurantExtra.deleteCustomer(citizen.getCivilianID());
-                return EAT;
+                return GET_FOOD_YOURSELF;
             }
+            waitingTicks += WAITING_DELAY;
+            citizen.getCitizenAI().setCurrentDelay(WAITING_DELAY);
+            return GO_TO_EAT_POS;
         }
+        timeOutWalking ++;
+        citizen.getCitizenAI().setCurrentDelay(WALKING_DELAY);
         return GO_TO_EAT_POS;
     }
 
@@ -458,6 +472,7 @@ public class NewEntityAIEatTask implements IStateAI {
     {
         if (!hasFood(false))
         {
+            citizen.getCitizenAI().setCurrentDelay(STUCK_DELAY);
             return CHECK_FOOD;
         }
 
@@ -470,9 +485,9 @@ public class NewEntityAIEatTask implements IStateAI {
         citizen.playSound(SoundEvents.GENERIC_EAT, (float) BASIC_VOLUME, (float) SoundUtils.getRandomPitch(citizen.getRandom()));
         new ItemParticleEffectMessage(foodStack.copy(), citizen.getX(), citizen.getY(), citizen.getZ(), citizen.getXRot(), citizen.getYRot(), citizen.getEyeHeight()).sendToTrackingEntity(citizen);
 
-        waitingTicks++;
-        if (waitingTicks < REQUIRED_TIME_TO_EAT)
+        if (++waitingTicks < REQUIRED_TIME_TO_EAT)
         {
+            citizen.getCitizenAI().setCurrentDelay(WAITING_DELAY);
             return EAT;
         }
 
