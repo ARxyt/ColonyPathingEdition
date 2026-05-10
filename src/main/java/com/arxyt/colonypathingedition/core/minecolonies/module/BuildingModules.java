@@ -1,9 +1,6 @@
 package com.arxyt.colonypathingedition.core.minecolonies.module;
 
-import com.arxyt.colonypathingedition.core.colony.module.FoodBlackListMenuModule;
-import com.arxyt.colonypathingedition.core.colony.module.FoodBlackListMenuModuleView;
-import com.arxyt.colonypathingedition.core.colony.module.TavernRecruitModule;
-import com.arxyt.colonypathingedition.core.colony.module.TavernRecruitModuleView;
+import com.arxyt.colonypathingedition.core.colony.module.*;
 import com.minecolonies.api.colony.buildings.registry.BuildingEntry;
 
 public class BuildingModules {

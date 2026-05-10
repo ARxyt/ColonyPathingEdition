@@ -26,6 +26,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.LOAD_STRUCTURE;
+import static com.minecolonies.api.research.util.ResearchConstants.BLOCK_PLACE_SPEED;
+import static com.minecolonies.api.util.constant.CitizenConstants.PROGRESS_MULTIPLIER;
 import static com.minecolonies.api.util.constant.CitizenConstants.STANDARD_WORKING_RANGE;
 
 @Mixin(value = EntityAIStructureBuilder.class, remap = false)
@@ -72,6 +74,7 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
      * @return Whether worker reached work site.
      * @author sxtkl ARxyt
      * @since 2025/8/19
+     * repathCounter: use to count how many times we repath.
      */
     @Unique
     private boolean sentry() {
@@ -125,22 +128,50 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
     }
 
     /**
-     * 你的建筑工人会像长臂猿一样，一边在工地上蹿下跳，一边无限距离得建造，当然前提是他们在工地附近。
+     * 你的建筑工人会像长臂猿一样，一边在工地上蹿下跳，一边无限距离得建造，当然前提是他们已经来到工地附近。
      * Your construction workers will behave like gibbons, leaping around the construction site while building at unlimited distances—of course, provided they are near the site.
      * @param currentBlock: As its name.
-     * @return 待实现
-     * @author sxtkl
-     * @since 2025/7/22
+     * @return if we reach the region we can work, or if we spent too much time on the way.
+     * @author sxtkl arxyt
+     * @since 2026/5/1
+     * repathCounter: use to count how much time we used on pathing.
      */
     @Unique
     private boolean gibbon(final BlockPos currentBlock) {
-        workFrom = currentBlock;
-        boolean stopPathing = walkWithProxy(workFrom, STANDARD_WORKING_RANGE);
-        if(MathUtils.twoDimDistance(worker.blockPosition(), workFrom) < PathingConfig.GIBBON_RANGE.get()){
-            repathCounter = 0;
+        boolean success = MathUtils.twoDimDistance(worker.blockPosition(), currentBlock) < PathingConfig.GIBBON_RANGE.get();
+        if (workFrom == null || success) {
+            if (gotoPath == null || gotoPath.isCancelled()) {
+                final PathJobMoveCloseToXNearY pathJob = new PathJobMoveCloseToXNearY(world,
+                        currentBlock,
+                        building.getWorkOrder().getLocation(),
+                        4,
+                        worker);
+                gotoPath = ((MinecoloniesAdvancedPathNavigate) worker.getNavigation()).setPathJob(pathJob, currentBlock, 1.0, false);
+                pathJob.getPathingOptions().dropCost = 1.5;
+                pathJob.extraNodes = 0;
+            }
+            else if (gotoPath.isDone()) {
+                if (gotoPath.getPath() != null)
+                {
+                    workFrom = gotoPath.getPath().getTarget();
+                }
+                gotoPath = null;
+            }
+            if (workFrom == null) {
+                return success || repathCounter >= 600;
+            }
+        }
+        boolean hasReached = walkToSafePos(workFrom);
+        if(hasReached){
+            workFrom = null;
+            repathCounter = 600;
+        }
+        if(success || repathCounter >= 600) {
             return true;
         }
-        return stopPathing && ++repathCounter >= 3;
+        final double decrease = 1 - worker.getCitizenColonyHandler().getColonyOrRegister().getResearchManager().getResearchEffects().getEffectStrength(BLOCK_PLACE_SPEED);
+        repathCounter += (int)(BUILD_BLOCK_DELAY * PROGRESS_MULTIPLIER / (getPlaceSpeedLevel() / 2.0 + PROGRESS_MULTIPLIER) * decrease);
+        return false;
     }
 
     /**

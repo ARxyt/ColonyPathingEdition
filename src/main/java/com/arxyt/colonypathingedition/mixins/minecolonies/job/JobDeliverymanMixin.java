@@ -1,7 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.job;
 
 import com.arxyt.colonypathingedition.api.JobDeliveryExtra;
-import com.arxyt.colonypathingedition.core.ai.worker.NewEntityAIWorkChef;
 import com.arxyt.colonypathingedition.core.ai.worker.NewEntityAIWorkDeliveryman;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.buildings.IBuilding;
@@ -15,7 +14,6 @@ import com.minecolonies.api.colony.requestsystem.token.IToken;
 import com.minecolonies.core.colony.buildings.modules.BuildingModules;
 import com.minecolonies.core.colony.buildings.modules.WarehouseRequestQueueModule;
 import com.minecolonies.core.colony.jobs.AbstractJob;
-import com.minecolonies.core.colony.jobs.JobChef;
 import com.minecolonies.core.colony.jobs.JobDeliveryman;
 import com.minecolonies.core.colony.requestsystem.requests.StandardRequests;
 import com.minecolonies.core.entity.ai.workers.service.EntityAIWorkDeliveryman;
@@ -81,7 +79,7 @@ public abstract class JobDeliverymanMixin extends AbstractJob<EntityAIWorkDelive
             return true;
         }
         IRequest<?> trueRequest = getColony().getRequestManager().getRequestForToken(request);
-        return trueRequest == null || !(trueRequest.getRequest() instanceof Delivery delivery);
+        return trueRequest == null || !(trueRequest.getRequest() instanceof Delivery);
     }
 
     /**

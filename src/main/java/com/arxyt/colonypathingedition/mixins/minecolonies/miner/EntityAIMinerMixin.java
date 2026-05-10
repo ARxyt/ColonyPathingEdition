@@ -29,6 +29,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.START_BUILDING;
+import static com.minecolonies.api.research.util.ResearchConstants.BLOCK_PLACE_SPEED;
+import static com.minecolonies.api.util.constant.CitizenConstants.PROGRESS_MULTIPLIER;
 import static com.minecolonies.api.util.constant.CitizenConstants.STANDARD_WORKING_RANGE;
 
 @Mixin(value = EntityAIStructureMiner.class, remap = false)
@@ -61,11 +63,7 @@ public abstract class EntityAIMinerMixin extends AbstractEntityAIStructureWithWo
     }
 
     /**
-     * 像矿工一样一边走一边工作，而非等到到达目的地，这个步骤需要开启一个寻路代理。
-     * Work while moving like a miner, instead of waiting to reach the destination; this step requires activating a pathfinding proxy.
-     * @return Whether block can be placed.
-     * @author sxtkl
-     * @since 2025/7/21
+     * Related explains on those modes are seen in EntityAIStructureBuilderMixin.
      */
     @Unique
     private boolean formalist(final BlockPos currentBlock) {
@@ -74,13 +72,6 @@ public abstract class EntityAIMinerMixin extends AbstractEntityAIStructureWithWo
         return true;
     }
 
-    /**
-     * 像哨兵一样站在工地的某个位置开始工作。
-     * Start working at a specific position on the construction site, like a sentinel.
-     * @return Whether worker reached work site.
-     * @author sxtkl ARxyt
-     * @since 2025/8/19
-     */
     @Unique
     private boolean sentry() {
         BlockPos workPos = building.getWorkOrder().getLocation();
@@ -120,35 +111,47 @@ public abstract class EntityAIMinerMixin extends AbstractEntityAIStructureWithWo
         return true;
     }
 
-    /**
-     * 你的建筑工人会和神一样，无视物理法则直接在小屋平地起高楼。
-     * Your construction workers will be like gods, ignoring the laws of physics and building tall structures directly on flat hut grounds.
-     * @return always true
-     * @author sxtkl
-     * @since 2025/7/22
-     */
     @Unique
     private boolean god() {
         return true;
     }
 
-    /**
-     * 你的建筑工人会像长臂猿一样，一边在工地上蹿下跳，一边无限距离得建造，当然前提是他们在工地附近。
-     * Your construction workers will behave like gibbons, leaping around the construction site while building at unlimited distances—of course, provided they are near the site.
-     * @param currentBlock: As its name.
-     * @return 待实现
-     * @author sxtkl
-     * @since 2025/7/22
-     */
     @Unique
     private boolean gibbon(final BlockPos currentBlock) {
-        workFrom = currentBlock;
-        boolean stopPathing = walkWithProxy(workFrom, STANDARD_WORKING_RANGE);
-        if(MathUtils.twoDimDistance(worker.blockPosition(), workFrom) < PathingConfig.GIBBON_RANGE.get()){
-            repathCounter = 0;
+        boolean success = MathUtils.twoDimDistance(worker.blockPosition(), currentBlock) < PathingConfig.GIBBON_RANGE.get();
+        if (workFrom == null || success) {
+            if (gotoPath == null || gotoPath.isCancelled()) {
+                final PathJobMoveCloseToXNearY pathJob = new PathJobMoveCloseToXNearY(world,
+                        currentBlock,
+                        building.getWorkOrder().getLocation(),
+                        4,
+                        worker);
+                gotoPath = ((MinecoloniesAdvancedPathNavigate) worker.getNavigation()).setPathJob(pathJob, currentBlock, 1.0, false);
+                pathJob.getPathingOptions().dropCost = 1.5;
+                pathJob.extraNodes = 0;
+            }
+            else if (gotoPath.isDone()) {
+                if (gotoPath.getPath() != null)
+                {
+                    workFrom = gotoPath.getPath().getTarget();
+                }
+                gotoPath = null;
+            }
+            if (workFrom == null) {
+                return success || repathCounter >= 600;
+            }
+        }
+        boolean hasReached = walkToSafePos(workFrom);
+        if(hasReached){
+            workFrom = null;
+            repathCounter = 600;
+        }
+        if(success || repathCounter >= 600) {
             return true;
         }
-        return stopPathing && ++repathCounter >= 3;
+        final double decrease = 1 - worker.getCitizenColonyHandler().getColonyOrRegister().getResearchManager().getResearchEffects().getEffectStrength(BLOCK_PLACE_SPEED);
+        repathCounter += (int)(BUILD_BLOCK_DELAY * PROGRESS_MULTIPLIER / (getPlaceSpeedLevel() / 2.0 + PROGRESS_MULTIPLIER) * decrease);
+        return false;
     }
 
     /**
