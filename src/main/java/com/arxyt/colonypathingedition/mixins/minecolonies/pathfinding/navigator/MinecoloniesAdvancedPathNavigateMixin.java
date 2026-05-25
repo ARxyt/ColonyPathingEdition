@@ -214,7 +214,7 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         final Vec3 thisPos = thisNode.asBlockPos().getCenter();
         double minDist = DistanceUtils.manhattanDistanceVWithYWeight(ourEntity.getX(), ourEntity.getY() + 0.5D, ourEntity.getZ(), thisPos, 0.5);
         boolean skipOnce = false;
-        if(minDist < 0.5D){
+        if(minDist < 0.75D){
             this.path.advance();
             skipOnce = true;
             if (isTracking)

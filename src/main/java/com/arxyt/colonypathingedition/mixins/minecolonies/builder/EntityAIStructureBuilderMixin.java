@@ -163,7 +163,11 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
             return true;
         }
         final double decrease = 1 - worker.getCitizenColonyHandler().getColonyOrRegister().getResearchManager().getResearchEffects().getEffectStrength(BLOCK_PLACE_SPEED);
-        repathCounter += (int)(BUILD_BLOCK_DELAY * PROGRESS_MULTIPLIER / (getPlaceSpeedLevel() / 2.0 + PROGRESS_MULTIPLIER) * decrease);
+        repathCounter += Math.max(2, (int)(BUILD_BLOCK_DELAY * PROGRESS_MULTIPLIER / (getPlaceSpeedLevel() / 2.0 + PROGRESS_MULTIPLIER) * decrease));
+        if(repathCounter < 0) {
+            repathCounter = 300;
+            return true;
+        }
         return false;
     }
 

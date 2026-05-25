@@ -11,7 +11,10 @@ import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.entity.pathfinding.navigation.EntityNavigationUtils;
 import com.minecolonies.core.entity.pathfinding.pathresults.PathResult;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -115,6 +118,9 @@ public class NewEntityAIFlee implements IStateAI {
             safeTime = 0;
             performMoveAway();
             citizen.getCitizenAI().setCurrentDelay(1);
+            if(currentClosest instanceof LivingEntity livingEntity && !(livingEntity.hasEffect(MobEffects.GLOWING))) {
+                livingEntity.addEffect(new MobEffectInstance(MobEffects.GLOWING, 20 * 15));
+            }
             return RUNNING;
         }
 
