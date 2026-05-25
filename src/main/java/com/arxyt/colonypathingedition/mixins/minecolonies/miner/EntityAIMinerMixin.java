@@ -138,19 +138,23 @@ public abstract class EntityAIMinerMixin extends AbstractEntityAIStructureWithWo
                 gotoPath = null;
             }
             if (workFrom == null) {
-                return success || repathCounter >= 600;
+                return success || repathCounter >= 300;
             }
         }
         boolean hasReached = walkToSafePos(workFrom);
         if(hasReached){
             workFrom = null;
-            repathCounter = 600;
+            repathCounter = 300;
         }
-        if(success || repathCounter >= 600) {
+        if(success || repathCounter >= 300) {
             return true;
         }
         final double decrease = 1 - worker.getCitizenColonyHandler().getColonyOrRegister().getResearchManager().getResearchEffects().getEffectStrength(BLOCK_PLACE_SPEED);
-        repathCounter += (int)(BUILD_BLOCK_DELAY * PROGRESS_MULTIPLIER / (getPlaceSpeedLevel() / 2.0 + PROGRESS_MULTIPLIER) * decrease);
+        repathCounter += Math.max(2, (int)(BUILD_BLOCK_DELAY * PROGRESS_MULTIPLIER / (getPlaceSpeedLevel() / 2.0 + PROGRESS_MULTIPLIER) * decrease));
+        if(repathCounter < 0) {
+            repathCounter = 300;
+            return true;
+        }
         return false;
     }
 

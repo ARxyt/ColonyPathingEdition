@@ -13,6 +13,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -34,8 +35,8 @@ public class HurtAlertEvent {
         if (!(event.getEntity() instanceof EntityCitizen citizen)) return;
 
         Entity src = event.getSource().getEntity();
-        // 判断是否受到的伤害来源为实体
-        if (src == null) return;
+        // 判断是否受到的伤害来源为可标记实体
+        if (!(src instanceof LivingEntity livingEntity)) return;
         // 判断是否为卫兵
         if (citizen.getCitizenJobHandler().getColonyJob() != null && citizen.getCitizenJobHandler().getColonyJob().isGuard())
             return;
@@ -49,8 +50,8 @@ public class HurtAlertEvent {
                 (int) citizen.getZ()
         );
         message = message.withStyle(ChatFormatting.GOLD);
-        // 为受到攻击的市民加入荧光效果，高亮显示其位置
-        citizen.addEffect(new MobEffectInstance(MobEffects.GLOWING, 20 * 3));
+        // 为攻击市民的生物加入荧光效果，高亮显示其位置
+        livingEntity.addEffect(new MobEffectInstance(MobEffects.GLOWING, 20 * 15));
         IColony colony = citizen.getCitizenColonyHandler().getColonyOrRegister();
         if (colony == null) return;
         final IJob<?> job = citizen.getCitizenJobHandler().getColonyJob();

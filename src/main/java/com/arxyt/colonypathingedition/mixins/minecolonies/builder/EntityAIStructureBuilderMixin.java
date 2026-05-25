@@ -25,7 +25,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.LOAD_STRUCTURE;
+import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.*;
 import static com.minecolonies.api.research.util.ResearchConstants.BLOCK_PLACE_SPEED;
 import static com.minecolonies.api.util.constant.CitizenConstants.PROGRESS_MULTIPLIER;
 import static com.minecolonies.api.util.constant.CitizenConstants.STANDARD_WORKING_RANGE;
@@ -158,19 +158,23 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
                 gotoPath = null;
             }
             if (workFrom == null) {
-                return success || repathCounter >= 600;
+                return success || repathCounter >= 300;
             }
         }
         boolean hasReached = walkToSafePos(workFrom);
         if(hasReached){
             workFrom = null;
-            repathCounter = 600;
+            repathCounter = 300;
         }
-        if(success || repathCounter >= 600) {
+        if(success || repathCounter >= 300) {
             return true;
         }
         final double decrease = 1 - worker.getCitizenColonyHandler().getColonyOrRegister().getResearchManager().getResearchEffects().getEffectStrength(BLOCK_PLACE_SPEED);
-        repathCounter += (int)(BUILD_BLOCK_DELAY * PROGRESS_MULTIPLIER / (getPlaceSpeedLevel() / 2.0 + PROGRESS_MULTIPLIER) * decrease);
+        repathCounter += Math.max(2, (int)(BUILD_BLOCK_DELAY * PROGRESS_MULTIPLIER / (getPlaceSpeedLevel() / 2.0 + PROGRESS_MULTIPLIER) * decrease));
+        if(repathCounter < 0) {
+            repathCounter = 300;
+            return true;
+        }
         return false;
     }
 
@@ -194,12 +198,16 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
 
 
     /**
-     * Simply reset the repath count
-     * @return original return value
+     * Reset repath counter，delay remaster.
+     * @return original return
      */
     @Override
     protected IAIState structureStep(){
         IAIState returnState = super.structureStep();
+        if(returnState == MINE_BLOCK) {
+            setDelay(0);
+            return MINE_BLOCK;
+        }
         if (returnState != getState()){
             repathCounter = 0;
         }
@@ -207,13 +215,14 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
     }
 
     /**
-     * Simply reset the repath count
-     * @return original return value
+     * Reset repath counter，delay remaster.
+     * @return original return
      */
     @Override
     public IAIState doMining(){
+        setDelay(1);
         IAIState returnState = super.doMining();
-        if (returnState != getState()){
+        if (returnState != getState() && returnState != BUILDING_STEP){
             repathCounter = 0;
         }
         return returnState;

@@ -11,7 +11,10 @@ import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.entity.pathfinding.navigation.EntityNavigationUtils;
 import com.minecolonies.core.entity.pathfinding.pathresults.PathResult;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -112,7 +115,10 @@ public class NewEntityAIFlee implements IStateAI {
             closestLivingEntity = currentClosest;
             safeTime = 0;
             performMoveAway();
-            citizen.getCitizenAI().setTickRate(1);
+            citizen.getCitizenAI().setCurrentDelay(1);
+            if(currentClosest instanceof LivingEntity livingEntity && !(livingEntity.hasEffect(MobEffects.GLOWING))) {
+                livingEntity.addEffect(new MobEffectInstance(MobEffects.GLOWING, 20 * 15));
+            }
             return RUNNING;
         }
 
@@ -141,13 +147,13 @@ public class NewEntityAIFlee implements IStateAI {
         }
         else
         {
-            float healthMultiplyer = 1 + 2 * (citizen.getMaxHealth() - citizen.getHealth()) / citizen.getMaxHealth();
+            float healthMultiplier = 1 + 2 * (citizen.getMaxHealth() - citizen.getHealth()) / citizen.getMaxHealth();
             final Optional<Entity> entityOptional = CompatibilityUtils.getWorldFromCitizen(citizen).getEntities(
                             citizen,
                             citizen.getBoundingBox().inflate(
-                                    MOVE_AWAY_DIST * healthMultiplyer,
+                                    MOVE_AWAY_DIST * healthMultiplier,
                                     3.0D,
-                                    MOVE_AWAY_DIST * healthMultiplyer),
+                                    MOVE_AWAY_DIST * healthMultiplier),
                             Entity::isAlive)
                     .stream()
                     .filter(targetEntityClass::isInstance)
@@ -163,12 +169,12 @@ public class NewEntityAIFlee implements IStateAI {
      */
     private boolean performMoveAway()
     {
-        float healthMultiplyer = 1 + 2 * (citizen.getMaxHealth() - citizen.getHealth()) / citizen.getMaxHealth();
+        float healthMultiplier = 1 + 2 * (citizen.getMaxHealth() - citizen.getHealth()) / citizen.getMaxHealth();
         if ((moveAwayPath == null || !moveAwayPath.isInProgress()) && citizen.getNavigation().isDone() && closestLivingEntity != null)
         {
             EntityNavigationUtils.walkAwayFrom(citizen,
                     closestLivingEntity.blockPosition(),
-                    Math.max((int)(MOVE_AWAY_DIST * healthMultiplyer), KEEP_AWAY_DIST),
+                    Math.max((int)(MOVE_AWAY_DIST * healthMultiplier), KEEP_AWAY_DIST),
                     fasterSpeed);
             moveAwayPath = citizen.getNavigation().getPathResult();
             return true;
@@ -188,12 +194,13 @@ public class NewEntityAIFlee implements IStateAI {
 
         if (moveAwayPath == null || !moveAwayPath.isInProgress())
         {
+            citizen.getCitizenAI().setCurrentDelay(1);
             return true;
         }
         else
         {
-            float healthMultiplyer = 1 + 2 * (citizen.getMaxHealth() - citizen.getHealth()) / citizen.getMaxHealth();
-            if (closestLivingEntity == null || citizen.distanceTo(closestLivingEntity) > MOVE_AWAY_DIST * healthMultiplyer)
+            float healthMultiplier = 1 + 2 * (citizen.getMaxHealth() - citizen.getHealth()) / citizen.getMaxHealth();
+            if (closestLivingEntity == null || citizen.distanceTo(closestLivingEntity) > MOVE_AWAY_DIST * healthMultiplier)
             {
                 citizen.getNavigation().setSpeedModifier(1);
             }
