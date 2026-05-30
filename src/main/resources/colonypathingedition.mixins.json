@@ -68,6 +68,9 @@
     "minecolonies.lumberjack.EntityAIWorkLumberjackMixin",
     "minecolonies.lumberjack.MangroveTreeMixin",
     "minecolonies.miner.EntityAIMinerMixin",
+    "minecolonies.module.AbstractCraftingBuildingModuleMixin",
+    "minecolonies.module.view.CraftingModuleViewMixin",
+    "minecolonies.module.window.RequestTreeWindowModuleMixin",
     "minecolonies.netherworker.EntityAIWorkNetherMixin",
     "minecolonies.netherworker.JobNetherWorkerMixin",
     "minecolonies.pathfinding.AbstractPathJobMixin",
@@ -120,6 +123,7 @@
     "minecolonies.linkage.RestaurantMenuModuleWindowMixin",
     "minecolonies.linkage.WindowHutAllInventoryMixin",
     "minecolonies.linkage.WindowPostBoxMixin",
+    "minecolonies.module.window.WindowListRecipesMixin",
     "minecolonies.workersetting.MinimumStockViewMixin",
     "structurize.WindowReplaceBlockMixin",
     "structurize.WindowSelectResMixin"
