@@ -1,7 +1,7 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.builder;
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
-import com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra;
+import com.arxyt.colonypathingedition.core.util.ExtraFoodUtils;
 import com.arxyt.colonypathingedition.core.util.DistanceUtils;
 import com.minecolonies.api.crafting.ItemStorage;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
@@ -51,7 +51,7 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
     @Unique
     private boolean hasFood()
     {
-        return FoodUtilExtra.getBestFoodForCitizenWithRestaurantCheck(worker.getInventoryCitizen(), worker.getCitizenData() ,null ,true) != -1;
+        return ExtraFoodUtils.getBestFoodForCitizenWithRestaurantCheck(worker.getInventoryCitizen(), worker.getCitizenData() ,null ,true) != -1;
     }
 
     /**

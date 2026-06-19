@@ -34,6 +34,7 @@ public abstract class AbstractCraftingBuildingModuleMixin extends AbstractBuildi
     @Shadow(remap = false) protected abstract boolean isPreTaughtRecipe(IRecipeStorage storage, Map<ResourceLocation, CustomRecipe> crafterRecipes);
     @Shadow(remap = false) @Final protected List<IToken<?>> disabledRecipes;
     @Shadow(remap = false) protected abstract int getMaxRecipes();
+    @Shadow(remap = false) protected abstract int getActiveRecipes();
 
     @Override
     public void serializeToView(@NotNull final FriendlyByteBuf buf, final boolean fullSync)
@@ -114,6 +115,7 @@ public abstract class AbstractCraftingBuildingModuleMixin extends AbstractBuildi
 
         recipesDirty = false;
 
+        buf.writeVarInt(getActiveRecipes());
         buf.writeInt(getMaxRecipes());
         buf.writeUtf(getId());
         buf.writeBoolean(isVisible());

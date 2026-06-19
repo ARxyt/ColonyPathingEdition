@@ -1,8 +1,10 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.food;
 
 import com.google.common.collect.EvictingQueue;
+import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenFoodHandler;
 import com.minecolonies.api.items.IMinecoloniesFoodItem;
+import com.minecolonies.api.util.FoodUtils;
 import com.minecolonies.core.entity.citizen.citizenhandlers.CitizenFoodHandler;
 import net.minecraft.util.Mth;
 import net.minecraft.world.food.FoodProperties;
@@ -24,6 +26,10 @@ public class CitizenFoodHandlerMixin {
     @Shadow(remap = false) private ICitizenFoodHandler.CitizenFoodStats foodStatCache;
     @Shadow(remap = false) private boolean dirty;
 
+    @Shadow
+    @Final
+    private ICitizenData citizenData;
+
     /**
      * Remaster quality/diversity requirements.
      */
@@ -37,25 +43,27 @@ public class CitizenFoodHandlerMixin {
             Set<Item> uniqueFoods = new HashSet<>();
             for (final Item foodItem : lastEatenFoods)
             {
+                float qualityFoodAdder = 0;
+                float diversityFoodAdder = 0;
                 if (foodItem instanceof IMinecoloniesFoodItem)
                 {
-                    qualityFoodCounter += 0.5;
+                    qualityFoodAdder += 0.5F;
+                    diversityFoodAdder += 0.5F;
                 }
                 FoodProperties foodProperties = foodItem.getFoodProperties(new ItemStack(foodItem),null);
                 if(foodProperties != null){
-                    qualityFoodCounter += foodProperties.getSaturationModifier();
+                    qualityFoodAdder += foodProperties.getSaturationModifier();
+                    diversityFoodAdder += Math.max(foodProperties.getSaturationModifier() * 2.0f , 1.0f);
+                }
+                if(!FoodUtils.canEatLevel(new ItemStack(foodItem), citizenData.getHomeBuilding() == null ? 1 : citizenData.getHomeBuilding().getBuildingLevel())) {
+                    qualityFoodAdder /= 1.5F;
+                    diversityFoodAdder /= 1.2F;
+                }
+                qualityFoodCounter += qualityFoodAdder;
+                if(!uniqueFoods.contains(foodItem)){
+                    diversityFoodCounter += diversityFoodAdder;
                 }
                 uniqueFoods.add(foodItem);
-            }
-            for (final Item foodItem : uniqueFoods){
-                if (foodItem instanceof IMinecoloniesFoodItem)
-                {
-                    diversityFoodCounter += 0.5;
-                }
-                FoodProperties foodProperties = foodItem.getFoodProperties(new ItemStack(foodItem),null);
-                if(foodProperties != null){
-                    diversityFoodCounter += Math.max(foodProperties.getSaturationModifier() * 2.0f , 1.0f);
-                }
             }
             foodStatCache = new ICitizenFoodHandler.CitizenFoodStats(Mth.ceil(diversityFoodCounter), Mth.ceil(qualityFoodCounter));
         }

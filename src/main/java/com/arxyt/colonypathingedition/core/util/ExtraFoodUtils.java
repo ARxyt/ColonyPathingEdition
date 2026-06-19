@@ -1,4 +1,4 @@
-package com.arxyt.colonypathingedition.core.minecolonies;
+package com.arxyt.colonypathingedition.core.util;
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.minecolonies.api.colony.ICitizenData;
@@ -8,17 +8,25 @@ import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenFoodHandler;
 import com.minecolonies.api.inventory.InventoryCitizen;
 import com.minecolonies.api.items.IMinecoloniesFoodItem;
 import com.minecolonies.api.util.FoodUtils;
+import com.minecolonies.api.util.MathUtils;
+import com.minecolonies.api.util.WorldUtil;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingCook;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingDeliveryman;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingWareHouse;
+import com.minecolonies.core.tileentities.TileEntityRack;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 
+import javax.annotation.Nullable;
 import java.util.Set;
 
-public class FoodUtilExtra {
+import static com.minecolonies.api.util.FoodUtils.EDIBLE;
+
+public class ExtraFoodUtils {
 
     public static boolean getShouldEatAtHut(ICitizenData citizenData, Item food){
         // 如果食物栏末尾不是当前食物，且当前食物存在于历史食物栏中，那么食用此食物可能导致生活水平下降，这里会严格检测。
@@ -107,5 +115,83 @@ public class FoodUtilExtra {
             return -1;
         }
         return bestSlot;
+    }
+
+    public static ItemStorage checkForForceEatingInBuilding(final ICitizenData citizenData, @Nullable final Set<ItemStorage> menu, final IBuilding building) {
+        // Smaller score is better.
+        float bestScore = Integer.MAX_VALUE;
+        ItemStorage bestStorage = null;
+
+        final Level world = building.getColony().getWorld();
+
+        IBuilding workBuilding = citizenData.getWorkBuilding();
+        if (PathingConfig.DELIVERY_EAT_AT_WAREHOUSE.get() && workBuilding instanceof BuildingDeliveryman && building instanceof BuildingWareHouse) {
+            workBuilding = building;
+        }
+
+        for (final BlockPos pos : building.getContainers()) {
+            if (WorldUtil.isBlockLoaded(world, pos))
+            {
+                final BlockEntity entity = world.getBlockEntity(pos);
+                if (entity instanceof TileEntityRack rackEntity)
+                {
+                    for (final ItemStorage storage : rackEntity.getAllContent().keySet())
+                    {
+                        if ((menu == null || menu.contains(storage)) && canForceEat(storage.getItemStack(), workBuilding))
+                        {
+                            final Item food = storage.getItem();
+                            final float localScore = getRecalLocalScore(citizenData, food);
+                            if (localScore == Float.MIN_VALUE){
+                                return new ItemStorage(storage.getItemStack().copy());
+                            }
+                            if (localScore < bestScore)
+                            {
+                                bestScore = localScore;
+                                bestStorage = storage;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return bestStorage == null ? null : new ItemStorage(bestStorage.getItemStack().copy());
+    }
+
+    public static int getBestFoodForceEating(InventoryCitizen inventoryCitizen, ICitizenData citizenData, Set<ItemStorage> menu){
+        // Smaller score is better.
+        float bestScore = Float.MAX_VALUE;
+        int bestSlot = -1;
+
+        IBuilding workBuilding = citizenData.getWorkBuilding();
+        if (PathingConfig.DELIVERY_EAT_AT_WAREHOUSE.get() && workBuilding instanceof BuildingDeliveryman && citizenData.getEntity().isPresent()) {
+            BlockPos alterBuildingPos = citizenData.getColony().getServerBuildingManager().getBestBuilding(citizenData.getEntity().get(), BuildingWareHouse.class);
+            if(alterBuildingPos != null) {
+                workBuilding = citizenData.getColony().getServerBuildingManager().getBuilding(alterBuildingPos);
+            }
+        }
+
+        for (int i = 0; i < inventoryCitizen.getSlots(); i++)
+        {
+            final ItemStorage invStack = new ItemStorage(inventoryCitizen.getStackInSlot(i));
+            if ((menu == null || menu.contains(invStack)) && canForceEat(invStack.getItemStack(), workBuilding))
+            {
+                final Item food = invStack.getItem();
+                final float localScore = getRecalLocalScore(citizenData, food);
+                if (localScore == Float.MIN_VALUE){
+                    return i;
+                }
+                if (localScore < bestScore)
+                {
+                    bestScore = localScore;
+                    bestSlot = i;
+                }
+            }
+        }
+        return bestSlot;
+    }
+
+    public static boolean canForceEat(final ItemStack stack, final IBuilding workBuilding)
+    {
+        return EDIBLE.test(stack) || workBuilding == null || workBuilding.canEat(stack);
     }
 }

@@ -30,6 +30,7 @@ public abstract class CraftingModuleViewMixin extends AbstractBuildingModuleView
     @Shadow(remap = false) private int maxRecipes;
     @Shadow(remap = false) private String id;
     @Shadow(remap = false) private boolean isVisible;
+    @Shadow(remap = false) private int activeRecipes;
 
     final protected List<IRecipeStorage> preTaughtRecipes = new ArrayList<>();
     final protected List<IRecipeStorage> disabledPreTaughtRecipes = new ArrayList<>();
@@ -107,6 +108,7 @@ public abstract class CraftingModuleViewMixin extends AbstractBuildingModuleView
             }
         }
 
+        this.activeRecipes = buf.readVarInt();
         this.maxRecipes = buf.readInt();
         this.id = buf.readUtf(32767);
         this.isVisible = buf.readBoolean();

@@ -2,7 +2,7 @@ package com.arxyt.colonypathingedition.mixins.minecolonies.food;
 
 import com.arxyt.colonypathingedition.api.workersetting.BuildingCookExtra;
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
-import com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra;
+import com.arxyt.colonypathingedition.core.util.ExtraFoodUtils;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.IColony;
 import com.minecolonies.api.colony.buildings.IBuilding;
@@ -35,7 +35,7 @@ import java.util.Objects;
 
 import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.JOBS_EAT_IMMEDIATELY;
 import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.JOBS_FORCE_EAT_AT_HUT;
-import static com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra.getRecalLocalScore;
+import static com.arxyt.colonypathingedition.core.util.ExtraFoodUtils.getRecalLocalScore;
 import static com.minecolonies.api.util.constant.CitizenConstants.FULL_SATURATION;
 import static com.minecolonies.api.util.constant.CitizenConstants.NIGHT;
 import static com.minecolonies.api.util.constant.Constants.SECONDS_A_MINUTE;
@@ -62,7 +62,7 @@ public abstract class EntityAIEatTaskMixin {
 
     @Unique
     private boolean hasFoodInRestaurant(){
-        final int slot = FoodUtilExtra.getBestFoodForCitizenWithRestaurantCheck(citizen.getInventoryCitizen(), citizen.getCitizenData(), restaurant == null ? null : restaurant.getModule(RESTAURANT_MENU).getMenu(),false);
+        final int slot = ExtraFoodUtils.getBestFoodForCitizenWithRestaurantCheck(citizen.getInventoryCitizen(), citizen.getCitizenData(), restaurant == null ? null : restaurant.getModule(RESTAURANT_MENU).getMenu(),false);
         if(slot != -1) {
             foodSlot = slot;
             return true;
