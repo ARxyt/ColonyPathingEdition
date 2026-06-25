@@ -115,7 +115,7 @@ public abstract class WindowListRecipesMixin extends AbstractModuleWindow<Crafti
                 {
                     rowPane.findPaneOfTypeByID("gradient", Gradient.class).setVisible(true);
                     rowPane.findPaneOfTypeByID(BUTTON_TOGGLE, Button.class).setText(Component.translatable("com.minecolonies.coremod.gui.recipe.enable"));
-                    rowPane.findPaneOfTypeByID(BUTTON_TOGGLE, Button.class).setVisible(isBuiltIn || moduleView.getActiveRecipes() - ((CraftingModuleViewExtra)moduleView).getActivePreTaughtRecipes() < moduleView.getMaxRecipes());
+                    rowPane.findPaneOfTypeByID(BUTTON_TOGGLE, Button.class).setVisible(isBuiltIn || ((CraftingModuleViewExtra)moduleView).getActiveRecipesQuick() < moduleView.getMaxRecipes());
                 }
                 else
                 {
@@ -129,9 +129,12 @@ public abstract class WindowListRecipesMixin extends AbstractModuleWindow<Crafti
                 for (int i = 0; i < Math.min(9, recipe.getInput().size()); i++)
                 {
                     if(skipThird && i == 2){
-                        j++;
+                        rowPane.findPaneOfTypeByID(String.format(RESOURCE, ++j), ItemIcon.class).setItem(ItemStack.EMPTY);
                     }
                     rowPane.findPaneOfTypeByID(String.format(RESOURCE, ++j), ItemIcon.class).setItem(getStackWithCount(recipe.getInput().get(i)));
+                }
+                while(j < 9){
+                    rowPane.findPaneOfTypeByID(String.format(RESOURCE, ++j), ItemIcon.class).setItem(ItemStack.EMPTY);
                 }
             }
         });
@@ -145,7 +148,7 @@ public abstract class WindowListRecipesMixin extends AbstractModuleWindow<Crafti
         {
             lifeCount++;
         }
-        recipeStatus.setText(Component.translatable(TranslationConstants.RECIPE_STATUS, moduleView.getActiveRecipes() - ((CraftingModuleViewExtra)moduleView).getActivePreTaughtRecipes() + " (+" + ((CraftingModuleViewExtra)moduleView).getActivePreTaughtRecipes() + ")", moduleView.getMaxRecipes()));
+        recipeStatus.setText(Component.translatable(TranslationConstants.RECIPE_STATUS, ((CraftingModuleViewExtra)moduleView).getActiveRecipesQuick() + " (+" + ((CraftingModuleViewExtra)moduleView).getActivePreTaughtRecipes() + ")", moduleView.getMaxRecipes()));
         window.findPaneOfTypeByID(RECIPE_LIST, ScrollingList.class).refreshElementPanes();
     }
 }

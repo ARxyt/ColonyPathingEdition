@@ -396,9 +396,6 @@ public abstract class EntityAIWorkNetherMixin extends AbstractEntityAICrafting<J
                             worker.invulnerableTime = 0;
                             float damageToDo = BASE_PHYSICAL_DAMAGE;
 
-                            // Figure out who gets to hit who this round
-                            boolean takeDamage = MineColonies.getConfig().getServer().netherWorkerTakesDamage.get();
-
                             // Calculate if the sword still exists, how much damage will be done to the mob
                             ItemStack sword = worker.getItemBySlot(EquipmentSlot.MAINHAND);
                             if (!sword.isEmpty())
@@ -419,7 +416,7 @@ public abstract class EntityAIWorkNetherMixin extends AbstractEntityAICrafting<J
                             mobHealth -= damageToDo;
 
                             // Get hit by the mob
-                            if (takeDamage && !worker.hurt(source, incomingDamage))
+                            if (!worker.hurt(source, incomingDamage))
                             {
                                 //Shouldn't get here, but if we do we can force the damage.
                                 incomingDamage = worker.calculateDamageAfterAbsorbs(source, incomingDamage);

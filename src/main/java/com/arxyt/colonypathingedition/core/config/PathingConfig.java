@@ -22,6 +22,12 @@ public class PathingConfig {
     public static ModConfigSpec.BooleanValue FLEE_AI_MODULE;
     public static ModConfigSpec.BooleanValue DELIVERYMAN_AI_MODULE;
 
+    public static ModConfigSpec.BooleanValue RESTAURANT_EXTRA_WORKER;
+    public static ModConfigSpec.BooleanValue KITCHEN_EXTRA_WORKER;
+    public static ModConfigSpec.BooleanValue HOSPITAL_EXTRA_WORKER;
+    public static ModConfigSpec.BooleanValue STONE_SMELTERY_EXTRA_WORKER;
+    public static ModConfigSpec.BooleanValue DELIVERY_EXTRA_WORKER;
+
     public static ModConfigSpec.BooleanValue TAVERN_ASSIGNMENT_MODULE;
     public static ModConfigSpec.BooleanValue ADDITIONAL_MINIMUM_STOCK_MODULE;
     public static ModConfigSpec.BooleanValue FOOD_BLACK_LIST_MODULE;
@@ -71,7 +77,6 @@ public class PathingConfig {
     public static ModConfigSpec.BooleanValue LUMBERJACK_BREAK_LEAVES_TO_GATHER;
     public static ModConfigSpec.IntValue LUMBERJACK_GATHER_WAITING_TIME;
 
-
     public static ModConfigSpec.EnumValue<BuilderModeEnum> BUILDER_MODE;
     public static ModConfigSpec.EnumValue<BuilderModeEnum> MINER_MODE;
     public static ModConfigSpec.EnumValue<BuilderModeEnum> QUARRIER_MODE;
@@ -120,7 +125,23 @@ public class PathingConfig {
                 .comment("Open the module to use the remastered deliveryman AI system (default: true)\n 开启此模块将会启用重制的快递员AI (默认开启)")
                 .define("enableNewDeliverymanModule", true);
         builder.pop();
-
+        builder.push("Extra Worker Opener #额外工人开关#");
+        RESTAURANT_EXTRA_WORKER = builder
+                .comment("Add 2 waiters in restaurant as level up. (default: true)\n 会随餐厅等级增加为其增加两个服务员 (默认开启)")
+                .define("restaurantExtraWorker", true);
+        KITCHEN_EXTRA_WORKER = builder
+                .comment("Add 2 chefs in kitchen as level up. (default: true)\n 会随厨房等级增加为其增加两个厨师 (默认开启)")
+                .define("kitchenExtraWorker", true);
+        HOSPITAL_EXTRA_WORKER = builder
+                .comment("Add 2 healer in stone hospital as level up. (default: true)\n 会随医院等级增加为其增加两个医生 (默认开启)")
+                .define("hospitalExtraWorker", true);
+        STONE_SMELTERY_EXTRA_WORKER = builder
+                .comment("Add 2 stone smelteries in stone smeltery‘s hut as level up. (default: true)\n 会随石材冶炼厂等级增加为其增加两个冶炼工 (默认开启)")
+                .define("stoneSmelteryExtraWorker", true);
+        DELIVERY_EXTRA_WORKER = builder
+                .comment("Add 2 deliverymen in deliveryman‘s hut as level up. (default: true)\n 会随快递员小屋等级增加为其增加两个快递员 (默认开启)")
+                .define("deliveryExtraWorker", true);
+        builder.pop();
         builder.push("Building Module Opener #房屋模块特性开关#");
         TAVERN_ASSIGNMENT_MODULE = builder
                 .comment("Open this to assign visitors directly trough tavern block (default: true)\n 开启这个可以直接在酒馆雇佣游客(默认开启)")

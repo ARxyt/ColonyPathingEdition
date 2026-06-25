@@ -25,8 +25,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Set;
 
-import static com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra.getBestFoodForCitizenWithRestaurantCheck;
-import static com.arxyt.colonypathingedition.core.minecolonies.FoodUtilExtra.getRecalLocalScore;
+import static com.arxyt.colonypathingedition.core.util.ExtraFoodUtils.getBestFoodForCitizenWithRestaurantCheck;
+import static com.arxyt.colonypathingedition.core.util.ExtraFoodUtils.getRecalLocalScore;
 import static com.minecolonies.api.util.FoodUtils.getBestFoodForCitizen;
 
 @Mixin(value = FoodUtils.class, remap = false)

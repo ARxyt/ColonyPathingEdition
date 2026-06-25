@@ -1,5 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.workersetting;
 
+import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.minecolonies.api.colony.buildings.modules.IBuildingModule;
 import com.minecolonies.api.colony.jobs.ModJobs;
 import com.minecolonies.api.entity.citizen.Skill;
@@ -34,14 +35,14 @@ public class BuildingModulesMixin
                     Skill.Adaptability,
                     Skill.Knowledge,
                     true,
-                    (b) -> Math.max(1, (b.getBuildingLevel() + 1) / 2)
+                    (b) -> PathingConfig.RESTAURANT_EXTRA_WORKER.get() ? Math.max(1, (b.getBuildingLevel() + 1) / 2) : 1
             );
             case "chef_work" -> () -> new CraftingWorkerBuildingModule(
                     ModJobs.chef.get(),
                     Skill.Creativity,
                     Skill.Knowledge,
                     true,
-                    (b) -> Math.max(1, (b.getBuildingLevel() + 1) / 2),
+                    (b) -> PathingConfig.KITCHEN_EXTRA_WORKER.get() ? Math.max(1, (b.getBuildingLevel() + 1) / 2) : 1,
                     Skill.Knowledge,
                     Skill.Creativity
             );
@@ -50,24 +51,24 @@ public class BuildingModulesMixin
                     Skill.Mana,
                     Skill.Knowledge,
                     true,
-                    (b) -> Math.max(1, (b.getBuildingLevel() + 1) / 2)
+                    (b) -> PathingConfig.HOSPITAL_EXTRA_WORKER.get() ? Math.max(1, (b.getBuildingLevel() + 1) / 2) : 1
             );
             case "stonesmelter_work" -> () -> new CraftingWorkerBuildingModule(ModJobs.stoneSmeltery.get(),
                     Skill.Athletics,
                     Skill.Dexterity,
                     true,
-                    (b) -> Math.max(1, (b.getBuildingLevel() + 1) / 2),
+                    (b) -> PathingConfig.STONE_SMELTERY_EXTRA_WORKER.get() ? Math.max(1, (b.getBuildingLevel() + 1) / 2) : 1,
                     Skill.Dexterity,
                     Skill.Athletics
             );
-            case "courier_work" -> () ->  new DeliverymanAssignmentModule(ModJobs.delivery.get(),
+            case "courier_work" -> () -> new DeliverymanAssignmentModule(ModJobs.delivery.get(),
                     Skill.Agility,
                     Skill.Adaptability,
                     true,
-                    (b) -> Math.max(1, (b.getBuildingLevel() + 1) / 2)
+                    (b) -> PathingConfig.DELIVERY_EXTRA_WORKER.get() ? Math.max(1, (b.getBuildingLevel() + 1) / 2) : 1
             );
             default ->
-                    // leave unchanged
+                // leave unchanged
                     moduleSupplier;
         };
     }
