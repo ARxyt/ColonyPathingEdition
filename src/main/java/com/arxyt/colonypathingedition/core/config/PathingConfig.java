@@ -25,6 +25,12 @@ public class PathingConfig {
     public static ForgeConfigSpec.BooleanValue FLEE_AI_MODULE;
     public static ForgeConfigSpec.BooleanValue DELIVERYMAN_AI_MODULE;
 
+    public static ForgeConfigSpec.BooleanValue RESTAURANT_EXTRA_WORKER;
+    public static ForgeConfigSpec.BooleanValue KITCHEN_EXTRA_WORKER;
+    public static ForgeConfigSpec.BooleanValue HOSPITAL_EXTRA_WORKER;
+    public static ForgeConfigSpec.BooleanValue STONE_SMELTERY_EXTRA_WORKER;
+    public static ForgeConfigSpec.BooleanValue DELIVERY_EXTRA_WORKER;
+
     public static ForgeConfigSpec.BooleanValue TAVERN_ASSIGNMENT_MODULE;
     public static ForgeConfigSpec.BooleanValue ADDITIONAL_MINIMUM_STOCK_MODULE;
     public static ForgeConfigSpec.BooleanValue FOOD_BLACK_LIST_MODULE;
@@ -120,6 +126,23 @@ public class PathingConfig {
         DELIVERYMAN_AI_MODULE = builder
                 .comment("Open the module to use the remastered deliveryman AI system (default: true)\n 开启此模块将会启用重制的快递员AI (默认开启)")
                 .define("enableNewDeliverymanModule", true);
+        builder.pop();
+        builder.push("Extra Worker Opener #额外工人开关#");
+        RESTAURANT_EXTRA_WORKER = builder
+                .comment("Add 2 waiters in restaurant as level up. (default: true)\n 会随餐厅等级增加为其增加两个服务员 (默认开启)")
+                .define("restaurantExtraWorker", true);
+        KITCHEN_EXTRA_WORKER = builder
+                .comment("Add 2 chefs in kitchen as level up. (default: true)\n 会随厨房等级增加为其增加两个厨师 (默认开启)")
+                .define("kitchenExtraWorker", true);
+        HOSPITAL_EXTRA_WORKER = builder
+                .comment("Add 2 healer in stone hospital as level up. (default: true)\n 会随医院等级增加为其增加两个医生 (默认开启)")
+                .define("hospitalExtraWorker", true);
+        STONE_SMELTERY_EXTRA_WORKER = builder
+                .comment("Add 2 stone smelteries in stone smeltery‘s hut as level up. (default: true)\n 会随石材冶炼厂等级增加为其增加两个冶炼工 (默认开启)")
+                .define("stoneSmelteryExtraWorker", true);
+        DELIVERY_EXTRA_WORKER = builder
+                .comment("Add 2 deliverymen in deliveryman‘s hut as level up. (default: true)\n 会随快递员小屋等级增加为其增加两个快递员 (默认开启)")
+                .define("deliveryExtraWorker", true);
         builder.pop();
         builder.push("Building Module Opener #房屋模块特性开关#");
         TAVERN_ASSIGNMENT_MODULE = builder

@@ -126,7 +126,7 @@ public abstract class AbstractPathJobMixin{
     /**
      * 重写 computeCost 方法，修改游泳进入成本并添加自定义逻辑。
      *
-     * @author YourName
+     * @author ARxyt
      * @reason 调整路径计算中的游泳成本
      */
     @Overwrite(remap = false)

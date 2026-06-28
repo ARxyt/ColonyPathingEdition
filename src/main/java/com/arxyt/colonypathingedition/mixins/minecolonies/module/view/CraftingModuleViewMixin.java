@@ -114,6 +114,10 @@ public abstract class CraftingModuleViewMixin extends AbstractBuildingModuleView
         this.isVisible = buf.readBoolean();
     }
 
+    public int getActiveRecipesQuick() {
+        return recipes.size() - disabledRecipes.size() - getActivePreTaughtRecipes();
+    }
+
     public int getActivePreTaughtRecipes() {
         return preTaughtRecipes.size() - disabledPreTaughtRecipes.size();
     }

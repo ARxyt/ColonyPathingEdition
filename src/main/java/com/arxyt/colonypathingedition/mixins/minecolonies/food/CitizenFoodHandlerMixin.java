@@ -23,12 +23,9 @@ import java.util.Set;
 @Mixin(value = CitizenFoodHandler.class, remap = false)
 public class CitizenFoodHandlerMixin {
     @Final @Shadow(remap = false) private EvictingQueue<Item> lastEatenFoods;
+    @Final @Shadow(remap = false) private ICitizenData citizenData;
     @Shadow(remap = false) private ICitizenFoodHandler.CitizenFoodStats foodStatCache;
     @Shadow(remap = false) private boolean dirty;
-
-    @Shadow
-    @Final
-    private ICitizenData citizenData;
 
     /**
      * Remaster quality/diversity requirements.

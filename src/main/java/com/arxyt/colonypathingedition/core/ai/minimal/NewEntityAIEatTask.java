@@ -577,14 +577,13 @@ public class NewEntityAIEatTask implements IStateAI {
         final ItemStorage storageToGet = ExtraFoodUtils.checkForForceEatingInBuilding(citizen.getCitizenData(), null, buildingToGo);
         if (storageToGet != null)
         {
-            // When restaurants out of food, would trigger "Force Eat At Hut".
-            // Worker would return to work hut to eat, regardless of food condition.
-            // If there isn't food at hut, go back to restaurants to wait for player.
             int qty = ((int) ((FULL_SATURATION - citizen.getCitizenData().getSaturation()) / FoodUtils.getFoodValue(storageToGet.getItemStack(), citizen))) + 1;
             if(InventoryUtils.transferItemStackIntoNextBestSlotInItemHandler(buildingToGo, storageToGet, qty, citizen.getInventoryCitizen())) {
                 return FORCE_EATING;
             }
+            // When force to eat, they'll go to warehouse if inventory is full, then try to dump first stack into warehouse and pick up things to eat.
             if(!(buildingToGo instanceof BuildingWareHouse)) {
+                stuckTier = CHECK_WAREHOUSE;
                 return FIND_FOOD_TO_EAT;
             }
             final IItemHandler workerInventory = citizen.getInventoryCitizen();
@@ -595,6 +594,7 @@ public class NewEntityAIEatTask implements IStateAI {
                     itemStack -> !ItemStackUtils.isEmpty(stackWorker)
             );
             if (!ItemStackUtils.isEmpty(stackBuilding)) {
+                workerInventory.extractItem(0, stackWorker.getCount(), false);
                 citizen.getCitizenAI().setCurrentDelay(WALKING_DELAY);
                 return GO_TO_PLACE_WITH_FOOD;
             }

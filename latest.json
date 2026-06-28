@@ -1,7 +1,9 @@
 {
-  "latest_version": "1.0.4",
-  "latest_stable_version": "1.0.4",
+  "latest_version": "1.0.5-ALPHA-10",
+  "latest_stable_version": "1.0.5-BETA-9.1",
   "history_stable_version": [
+    "1.0.5-BETA-9.1",
+    "1.0.4-fix-5",
     "1.0.4",
     "1.0.3"
   ],
@@ -14,12 +16,12 @@
     "1.0.4-ALPHA-5"
   ],
   "latest_changelog": {
-    "zh_cn": "- **农田将支持至多四季轮作，且支持休耕时自动调整农田**\n- **农田将能够适配更多特殊作物，目前已作tag兼容的有农夫乐事相关/甜浆果/森罗物语:厨房**\n- 农夫AI强化，他现在会工作的更有效率\n- 本次修改内容非常繁杂，此处只是简单介绍，详情见CurseForge/Modrinth主页视频和文件的更新日志",
-    "en_us": "- **Fields now support up to four-season crop rotation and auto-adjust when resting.**- **Farmland now supports more special crops**, currently tag-compatible with Farmer’s Delight, Sweet Berries, and Kaleidoscope Cookery.- Farmer AI improved for **higher work efficiency**.- This update is extensive; this is only a brief summary. See the video and full changelog on the CurseForge/Modrinth page for details."
+    "zh_cn": "- 市民挨饿太久会启动新的寻找食物状态，在殖民地内找未加入食物黑名单的食物进食\n- 修复了合成系统显示与高版本不兼容的问题\n- 支持的版本上调至（1.20.1 - 1197 / 1.21.1 - 1285）\n- 这里只是更新日志摘要，详情见CurseForge/Modrinth主页视频和文件的更新日志",
+    "en_us": "- **Added fallback eating transitions for citizens when they are starving, they'll search for any edible food available.**\n- Fixed a bug causing incorrect recipe counts in newer MineColonies versions\n- Raised the supported MineColonies dependency version to (1.20.1 - 1197 / 1.21.1 - 1285)\n- This is only a brief summary. See full changelog on the CurseForge/Modrinth page for details."
   },
   "latest_stable_changelog": {
-    "zh_cn": "- **农田将支持至多四季轮作，且支持休耕时自动调整农田**\n- **农田将能够适配更多特殊作物，目前已作tag兼容的有农夫乐事相关/甜浆果/森罗物语:厨房**\n- 农夫AI强化，他现在会工作的更有效率\n- 本次修改内容非常繁杂，此处只是简单介绍，详情见CurseForge/Modrinth主页视频和文件的更新日志",
-    "en_us": "- **Fields now support up to four-season crop rotation and auto-adjust when resting.**- **Farmland now supports more special crops**, currently tag-compatible with Farmer’s Delight, Sweet Berries, and Kaleidoscope Cookery.- Farmer AI improved for **higher work efficiency**.- This update is extensive; this is only a brief summary. See the video and full changelog on the CurseForge/Modrinth page for details."
+    "zh_cn": "- 对合成GUI的配方显示做了优化，同时对部分其他GUI按钮的错误显示进行了修复\n- 这里只是更新日志摘要，详情见CurseForge/Modrinth主页视频和文件的更新日志",
+    "en_us": "- Reworked recipe count displays, fixed vanilla MineColonies bugs on button displays.\n- This is only a brief summary. See full changelog on the CurseForge/Modrinth page for details."
   },
   "displayURL": "https://arxyt.github.io/ColonyPathingEdition/updates/changelog.md"
 }

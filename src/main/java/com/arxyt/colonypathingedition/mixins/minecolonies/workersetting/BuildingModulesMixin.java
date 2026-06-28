@@ -1,5 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.workersetting;
 
+import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.minecolonies.api.colony.buildings.modules.IBuildingModule;
 import com.minecolonies.api.colony.jobs.ModJobs;
 import com.minecolonies.api.entity.citizen.Skill;
@@ -28,52 +29,47 @@ public class BuildingModulesMixin
     )
     private static Supplier<IBuildingModule> modifyProducerArg(String key , Supplier<IBuildingModule> moduleSupplier , Supplier<?> viewSupplier)
     {
-        switch (key) {
-            case "cook_craft":
-                return  () -> new NoPrivateCrafterWorkerModule(
-                        ModJobs.cook.get(),
-                        Skill.Adaptability,
-                        Skill.Knowledge,
-                        true,
-                        (b) -> Math.max(1, (b.getBuildingLevel() + 1) / 2)
-                );
-            case "chef_work":
-                return  () -> new CraftingWorkerBuildingModule(
-                        ModJobs.chef.get(),
-                        Skill.Creativity,
-                        Skill.Knowledge,
-                        true,
-                        (b) -> Math.max(1, (b.getBuildingLevel() + 1) / 2),
-                        Skill.Knowledge,
-                        Skill.Creativity
-                );
-            case "healer_work":
-                return () -> new HospitalAssignmentModule(
-                        ModJobs.healer.get(),
-                        Skill.Mana,
-                        Skill.Knowledge,
-                        true,
-                        (b) -> Math.max(1, (b.getBuildingLevel() + 1) / 2)
-                );
-            case "stonesmelter_work":
-                return () -> new CraftingWorkerBuildingModule(ModJobs.stoneSmeltery.get(),
-                        Skill.Athletics,
-                        Skill.Dexterity,
-                        true,
-                        (b) -> Math.max(1, (b.getBuildingLevel() + 1) / 2),
-                        Skill.Dexterity,
-                        Skill.Athletics
-                );
-            case "courier_work":
-                return () ->  new DeliverymanAssignmentModule(ModJobs.delivery.get(),
-                        Skill.Agility,
-                        Skill.Adaptability,
-                        true,
-                        (b) -> Math.max(1, (b.getBuildingLevel() + 1) / 2)
-                );
-            default:
+        return switch (key) {
+            case "cook_craft" -> () -> new NoPrivateCrafterWorkerModule(
+                    ModJobs.cook.get(),
+                    Skill.Adaptability,
+                    Skill.Knowledge,
+                    true,
+                    (b) -> PathingConfig.RESTAURANT_EXTRA_WORKER.get() ? Math.max(1, (b.getBuildingLevel() + 1) / 2) : 1
+            );
+            case "chef_work" -> () -> new CraftingWorkerBuildingModule(
+                    ModJobs.chef.get(),
+                    Skill.Creativity,
+                    Skill.Knowledge,
+                    true,
+                    (b) -> PathingConfig.KITCHEN_EXTRA_WORKER.get() ? Math.max(1, (b.getBuildingLevel() + 1) / 2) : 1,
+                    Skill.Knowledge,
+                    Skill.Creativity
+            );
+            case "healer_work" -> () -> new HospitalAssignmentModule(
+                    ModJobs.healer.get(),
+                    Skill.Mana,
+                    Skill.Knowledge,
+                    true,
+                    (b) -> PathingConfig.HOSPITAL_EXTRA_WORKER.get() ? Math.max(1, (b.getBuildingLevel() + 1) / 2) : 1
+            );
+            case "stonesmelter_work" -> () -> new CraftingWorkerBuildingModule(ModJobs.stoneSmeltery.get(),
+                    Skill.Athletics,
+                    Skill.Dexterity,
+                    true,
+                    (b) -> PathingConfig.STONE_SMELTERY_EXTRA_WORKER.get() ? Math.max(1, (b.getBuildingLevel() + 1) / 2) : 1,
+                    Skill.Dexterity,
+                    Skill.Athletics
+            );
+            case "courier_work" -> () -> new DeliverymanAssignmentModule(ModJobs.delivery.get(),
+                    Skill.Agility,
+                    Skill.Adaptability,
+                    true,
+                    (b) -> PathingConfig.DELIVERY_EXTRA_WORKER.get() ? Math.max(1, (b.getBuildingLevel() + 1) / 2) : 1
+            );
+            default ->
                 // leave unchanged
-        }
-        return moduleSupplier;
+                    moduleSupplier;
+        };
     }
 }
