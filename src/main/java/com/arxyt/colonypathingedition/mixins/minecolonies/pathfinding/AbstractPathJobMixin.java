@@ -792,16 +792,16 @@ public abstract class AbstractPathJobMixin{
                 nextNode.setLadder();
             }
 
-            MNode extraNextNode = extraNodeState(nextNode);
+            extraNodeState(nextNode);
             if ((onRoad || onRails) && Math.abs(dY) <= 1 ){
-                extraNextNode.setHeuristic(modifyHeuristic(node, extraNextNode, nextNode.getHeuristic(), onRoad, onRails));
+                nextNode.setHeuristic(modifyHeuristic(node, nextNode, nextNode.getHeuristic(), onRoad, onRails));
             }
             else {
-                extraNextNode.setHeuristic(modifyHeuristic(extraNextNode, nextNode.getHeuristic(), state));
+                nextNode.setHeuristic(modifyHeuristic(nextNode, nextNode.getHeuristic(), state));
             }
-            nodesToVisit.offer(extraNextNode);
+            nodesToVisit.offer(nextNode);
             if((onRoad || onRails) && Math.abs(dY) <= 2){
-                pathNodesToVisit.offer(extraNextNode);
+                pathNodesToVisit.offer(nextNode);
             }
         }
         else
@@ -889,7 +889,7 @@ public abstract class AbstractPathJobMixin{
     }
 
     @Unique
-    private MNode extraNodeState(final MNode nextNode)
+    private void extraNodeState(final MNode nextNode)
     {
         IMNodeExtras extras = (IMNodeExtras) nextNode;
         if (nextNode.isCornerNode() && nextNode.parent!=null) {
@@ -915,7 +915,6 @@ public abstract class AbstractPathJobMixin{
         {
             extras.setStation();
         }
-        return nextNode;
     }
 
     /**
