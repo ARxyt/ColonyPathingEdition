@@ -1,7 +1,11 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.workersetting;
 
 import com.arxyt.colonypathingedition.api.workersetting.BuildingCookExtra;
+import com.minecolonies.api.colony.IColony;
+import com.minecolonies.core.colony.buildings.AbstractBuilding;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingCook;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 
@@ -10,10 +14,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 @Mixin(value = BuildingCook.class, remap = false)
-public class BuildingCookMixin implements BuildingCookExtra {
+public abstract class BuildingCookMixin extends AbstractBuilding implements BuildingCookExtra {
     private final Queue<Integer> customerQueue = new ConcurrentLinkedQueue<>();
     private final Set<Integer> processingCustomers = ConcurrentHashMap.newKeySet();
     private final HashSet<Integer> customersOnTheWay = new HashSet<>();
+    private final HashMap<UUID,Integer> playerFed = new HashMap<>();
+    private final HashMap<UUID,Integer> playerServing = new HashMap<>();
+
+    public BuildingCookMixin(final IColony c, final BlockPos l)
+    {
+        super(c, l);
+    }
 
     // 预定餐桌
     public void preorderTable(int customerId){
@@ -77,5 +88,56 @@ public class BuildingCookMixin implements BuildingCookExtra {
     // 获取当前顾客数量
     public int checkSize(){
         return customerQueue.size() + processingCustomers.size();
+    }
+
+    // 获取当前可提供食物的玩家
+    public boolean getPlayCanServe(UUID playerID) {
+        return !playerServing.containsKey(playerID) && !playerFed.containsKey(playerID);
+    }
+
+    // 增加玩家服务冷却
+    public void setPlayerServed(UUID playerID) {
+        playerServing.remove(playerID);
+        playerFed.put(playerID, 5); // 5 -> 2500 tick, about 2 minutes.
+    }
+
+    // 添加正在接收服务的玩家
+    public void setPlayerServing(Queue<Player> playerList) {
+        for(Player player : playerList) {
+            playerServing.put(player.getUUID(), 5);
+        }
+    }
+
+    // 删除正在接收服务的玩家
+    public void removePlayerServing(UUID playerID) {
+        playerServing.remove(playerID);
+    }
+    public void removePlayerListServing(Queue<Player> playerList) {
+        for(Player player : playerList) {
+            playerServing.remove(player.getUUID());
+        }
+    }
+
+    @Override
+    public void onColonyTick(final IColony colony) {
+        super.onColonyTick(colony);
+        for(UUID playerID : playerFed.keySet()) {
+            int cooldown = playerFed.get(playerID);
+            if(--cooldown <= 0){
+                playerFed.remove(playerID);
+            }
+            else{
+                playerFed.replace(playerID, cooldown);
+            }
+        }
+        for(UUID playerID : playerServing.keySet()) {
+            int cooldown = playerServing.get(playerID);
+            if(--cooldown <= 0){
+                playerServing.remove(playerID);
+            }
+            else{
+                playerServing.replace(playerID, cooldown);
+            }
+        }
     }
 }

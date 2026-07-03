@@ -60,6 +60,7 @@
     "minecolonies.item.ItemLargeBottleMixin",
     "minecolonies.job.JobBakerMixin",
     "minecolonies.job.JobChefMixin",
+    "minecolonies.job.JobCookMixin",
     "minecolonies.job.JobDeliverymanMixin",
     "minecolonies.job.JobDyerMixin",
     "minecolonies.job.JobFarmerMixin",
