@@ -29,6 +29,8 @@ public abstract class BuildingCookMixin extends AbstractBuilding implements Buil
     // 预定餐桌
     public void preorderTable(int customerId){
         customersOnTheWay.add(customerId);
+        processingCustomers.remove(customerId);
+        customerQueue.remove(customerId);
     }
 
     // 客人到店

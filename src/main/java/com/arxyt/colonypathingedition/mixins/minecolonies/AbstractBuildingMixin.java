@@ -127,7 +127,7 @@ public abstract class AbstractBuildingMixin extends AbstractBuildingContainer {
         buf.writeBoolean(canAssignCitizens());
 
         final List<IBuildingModule> syncedModules = new ArrayList<>();
-        for(final IBuildingModule module:modules)
+        for (final IBuildingModule module : modules)
         {
             if (module.getProducer().hasView())
             {
@@ -136,7 +136,7 @@ public abstract class AbstractBuildingMixin extends AbstractBuildingContainer {
         }
 
         buf.writeInt(syncedModules.size());
-        for (final IBuildingModule module: syncedModules)
+        for (final IBuildingModule module : syncedModules)
         {
             buf.writeInt(module.getProducer().getRuntimeID());
             buf.writeUtf(module.getProducer().key);
