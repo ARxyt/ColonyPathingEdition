@@ -513,11 +513,22 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
                     }
                     this.path.setNextNodeIndex(path.getNextNodeIndex() + 1);
                 }
-
+                double xOffset = 0;
+                double zOffset = 0;
+                BlockState blockstate = level.getBlockState(path.getNextNode().asBlockPos());
+                // Magic number 0.1, just sufficient.
+                if(blockstate.getBlock() instanceof LadderBlock) {
+                    switch (blockstate.getValue(HorizontalDirectionalBlock.FACING)) {
+                        case EAST -> xOffset = 0.1;
+                        case WEST -> xOffset = -0.1;
+                        case NORTH -> zOffset = -0.1;
+                        case SOUTH -> zOffset = 0.1;
+                    }
+                }
                 ourEntity.xxa = 0;
                 ourEntity.zza = 0;
-                wantedPosition.set(nextX, nextY, nextZ);
-                this.ourEntity.getMoveControl().setWantedPosition(nextX, nextY, nextZ, 0.4);
+                wantedPosition.set(nextX + xOffset, nextY, nextZ + zOffset);
+                this.ourEntity.getMoveControl().setWantedPosition(nextX + xOffset, nextY, nextZ + zOffset, 0.6);
             }
             // Scaling ladder, move
             else
@@ -577,7 +588,7 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         if (newSpeed)
         {
             wantedPosition.set(vec3.x, vec3.y, vec3.z);
-            this.ourEntity.getMoveControl().setWantedPosition(wantedPosition.getX(), wantedPosition.getY(), wantedPosition.getZ(),1);
+            this.ourEntity.getMoveControl().setWantedPosition(vec3.x, vec3.y, vec3.z,1);
         }
         else
         {
