@@ -192,7 +192,7 @@ public class ExtraFoodUtils {
 
     public static boolean canForceEat(final ItemStack stack, final IBuilding workBuilding)
     {
-        return EDIBLE.test(stack) || workBuilding == null || workBuilding.canEat(stack);
+        return EDIBLE.test(stack) && (workBuilding == null || workBuilding.canEat(stack));
     }
 
 }

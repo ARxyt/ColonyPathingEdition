@@ -26,11 +26,8 @@ public abstract class WindowHireWorkerMixin extends AbstractWindowSkeleton{
     //TODO:别忘了回头测试过关了把这个mixin加回去
 
     @Shadow(remap = false) @Final protected List<IAssignmentModuleView> moduleViews;
-
+    @Shadow(remap = false) protected IAssignmentModuleView selectedModule;
     @Shadow(remap = false) protected abstract void jobClicked(@NotNull Button button);
-
-    @Shadow
-    protected IAssignmentModuleView selectedModule;
 
     public WindowHireWorkerMixin()
     {
