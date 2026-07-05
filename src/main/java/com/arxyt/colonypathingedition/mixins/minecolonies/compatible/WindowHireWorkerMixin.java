@@ -29,8 +29,7 @@ public abstract class WindowHireWorkerMixin extends AbstractWindowSkeleton{
 
     @Shadow(remap = false) protected abstract void jobClicked(@NotNull Button button);
 
-    @Shadow
-    protected IAssignmentModuleView selectedModule;
+    @Shadow(remap = false) protected IAssignmentModuleView selectedModule;
 
     public WindowHireWorkerMixin()
     {
@@ -48,7 +47,6 @@ public abstract class WindowHireWorkerMixin extends AbstractWindowSkeleton{
         for (final IAssignmentModuleView hireModule : moduleViews)
         {
             JobEntry entry = hireModule.getJobEntry();
-
             if(entry == null){
                 continue;
             }

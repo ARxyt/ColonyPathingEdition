@@ -612,7 +612,7 @@ public class NewEntityAIEatTask implements IStateAI {
             citizen.getCitizenAI().setCurrentDelay(STUCK_DELAY);
             return CHECK_FOOD;
         }
-        return EatingAction();
+        return EatingAction(EAT);
     }
 
     private IState forceEat()
@@ -621,10 +621,10 @@ public class NewEntityAIEatTask implements IStateAI {
             citizen.getCitizenAI().setCurrentDelay(STUCK_DELAY);
             return CHECK_FOOD;
         }
-        return EatingAction();
+        return EatingAction(FORCE_EATING);
     }
 
-    private IState EatingAction()
+    private IState EatingAction(IState returnState)
     {
         final ICitizenData citizenData = citizen.getCitizenData();
         final ItemStack foodStack = citizenData.getInventory().getStackInSlot(foodSlot);
@@ -643,7 +643,7 @@ public class NewEntityAIEatTask implements IStateAI {
 
         if (++waitingTicks < REQUIRED_TIME_TO_EAT) {
             citizen.getCitizenAI().setCurrentDelay(WAITING_DELAY);
-            return EAT;
+            return returnState;
         }
 
         final ICitizenFoodHandler foodHandler = citizenData.getCitizenFoodHandler();
@@ -657,7 +657,7 @@ public class NewEntityAIEatTask implements IStateAI {
 
         if (citizenData.getSaturation() < FULL_SATURATION && !citizenData.getInventory().getStackInSlot(foodSlot).isEmpty()) {
             waitingTicks = 0;
-            return EAT;
+            return returnState;
         }
 
         for (final Item foodItem : eatenFood) {

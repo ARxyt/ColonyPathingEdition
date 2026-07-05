@@ -78,7 +78,6 @@ public abstract class EntityAIWorkLumberjackMixin extends AbstractEntityAICrafti
             CallbackInfo ci
     ) {
         Tree tree = job.getTree();
-
         InventoryCitizen inventory = getInventory();
         assert tree != null;
         int required = tree.getStumpLocations().size();
