@@ -119,6 +119,11 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
     private int repeatTime = 0;
 
     /**
+     * If we return to a working state after pick up.
+     */
+    private AIWorkerState withSpecialReturn = START_WORKING;
+
+    /**
      * If the farmland is normal.
      */
     private final Predicate<BlockState> normal =
@@ -162,6 +167,14 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
         return state;
     }
 
+    @Override
+    public IAIState getStateAfterPickUp()
+    {
+        AIWorkerState returnState = withSpecialReturn;
+        withSpecialReturn = START_WORKING;
+        return returnState;
+    }
+
     /**
      * Prepares the farmer for farming. Also requests the tools, the compost (if needed) and checks if the farmer has sufficient fields.
      *
@@ -170,6 +183,11 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
     @NotNull
     private IAIState prepareForFarming()
     {
+        if (job.getCurrentTask() != null)
+        {
+            return getNextCraftingState();
+        }
+
         worker.getCitizenData().setJobStatus(JobStatus.IDLE);
         if (building == null || building.getBuildingLevel() < 1)
         {
@@ -222,6 +240,7 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
                 requestSize = a * b - 1;
             }
             needsCurrently = new Tuple<>(this::isCompost, requestSize);
+            withSpecialReturn = PREPARING;
             return GATHERING_REQUIRED_MATERIALS;
         }
 
@@ -242,6 +261,7 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
                 {
                     needsCurrently = new Tuple<>(itemStack -> isItemOfFarmland(itemStack,farmland), STACKSIZE);
                     isMissingFarmland = false;
+                    withSpecialReturn = PREPARING;
                     return GATHERING_REQUIRED_MATERIALS;
                 }
             }
@@ -368,6 +388,7 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
                                     needsCurrently = new Tuple<>(itemStack -> itemStack.getItem() == farmField.getSeed().getItem(), STACKSIZE);
                                     isMissingSeed = false;
                                     needRecheck = false;
+                                    withSpecialReturn = FARMER_PLANT;
                                     return GATHERING_REQUIRED_MATERIALS;
                                 }
                                 else {
@@ -428,6 +449,9 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
                 needsCurrently = new Tuple<>(itemStack -> itemStack.getItem() == farmField.getSeed().getItem(), STACKSIZE);
                 isMissingSeed = false;
                 needRecheck = false;
+                if(getState() instanceof AIWorkerState aiWorkerState) {
+                    withSpecialReturn = aiWorkerState;
+                }
                 return GATHERING_REQUIRED_MATERIALS;
             }
             else {

@@ -515,11 +515,11 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
                         reached.add(thisNode.asBlockPos());
                         PathfindingUtils.syncDebugReachedPositions(reached, pathResult.getDebugWatchers());
                     }
-                    this.path.setNextNodeIndex(path.getNextNodeIndex() + 1);
+                    this.path.advance();
                 }
                 double xOffset = 0;
                 double zOffset = 0;
-                BlockState blockstate = level.getBlockState(path.getNextNode().asBlockPos());
+                BlockState blockstate = level.getBlockState(thisNode.asBlockPos());
                 if(blockstate.getBlock() instanceof LadderBlock) {
                     switch (blockstate.getValue(HorizontalDirectionalBlock.FACING)) {
                         case EAST -> xOffset = 0.1;

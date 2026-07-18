@@ -1,6 +1,7 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.home;
 
 import com.arxyt.colonypathingedition.api.BedHandlingModuleExtra;
+import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.minecolonies.api.colony.buildings.modules.IAssignsCitizen;
 import com.minecolonies.api.colony.buildings.modules.IBuildingEventsModule;
 import com.minecolonies.api.colony.buildings.modules.IPersistentModule;
@@ -38,7 +39,7 @@ public abstract class LivingBuildingModuleMixin extends AbstractAssignedCitizenM
             } else {
                 bedCount = bedSize;
             }
-            return Math.min(bedSize, Math.max(3, building.getBuildingLevel()));
+            return Math.min(bedSize, Math.max(3, building.getBuildingLevel() * PathingConfig.MAX_BED_PER_LEVEL.get()));
         }
         return building.getBuildingLevel();
     }

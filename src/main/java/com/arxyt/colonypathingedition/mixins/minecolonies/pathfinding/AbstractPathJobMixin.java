@@ -87,8 +87,8 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) protected abstract boolean stopOnNodeLimit(int totalNodesVisited, MNode bestNode, int nodesSinceEndNode);
     @Shadow(remap = false) @NotNull protected abstract Path finalizePath(MNode targetNode);
     @Shadow(remap = false) protected abstract boolean checkHeadBlock(@Nullable MNode parent, int x, int y, int z);
-    @Shadow(remap = false) protected abstract int handleNotStanding(@Nullable MNode parent, int x, int y, int z, @NotNull BlockState below);
     @Shadow(remap = false) protected abstract double computeHeuristic(final int x, final int y, final int z);
+    @Shadow(remap = false) protected abstract int handleInLiquid(int x, int y, int z, @NotNull BlockState below, boolean isSwimming);
 
     @Invoker(value="createNode",remap = false)
     public abstract MNode invokeCreateNode(final MNode parent, final int x, final int y, final int z, final double heuristic, final double cost);
@@ -331,7 +331,7 @@ public abstract class AbstractPathJobMixin{
                     }
                 }
 
-                if (!reachesDestination && isAtDestination(node)) {
+                if (isAtDestination(node)) {
                     bestNode = node;
                     bestNodeEndScore = getEndNodeScore(node);
                     result.setPathReachesDestination(true);
@@ -345,18 +345,10 @@ public abstract class AbstractPathJobMixin{
                     // Calculates a score for a possible end node, defaults to heuristic(closest)
                     final double nodeEndSCore = getEndNodeScore(node);
                     if (nodeEndSCore < bestNodeEndScore) {
-                        if (!reachesDestination || isAtDestination(node)) {
-                            nodesSinceEndNode = 0;
-                            bestNode = node;
-                            bestNodeEndScore = nodeEndSCore;
-                        }
+                        nodesSinceEndNode = 0;
+                        bestNode = node;
+                        bestNodeEndScore = nodeEndSCore;
                     }
-                }
-
-                // Don't keep searching more costly nodes when there is a destination
-                if (reachesDestination && node.getScore() > bestNode.getScore()) {
-                    shouldSkip = true;
-                    break;
                 }
 
                 handleDebugOptions(node);
@@ -376,21 +368,12 @@ public abstract class AbstractPathJobMixin{
             {
                 // Search only closest nodes to the goal
                 final Queue<MNode> original = nodesToVisit;
-                nodesToVisit = new PriorityQueue<>(nodesToVisit.size(), (a, b) -> {
-                    if ((a.getHeuristic()) < (b.getHeuristic()))
-                    {
-                        return -1;
-                    }
-                    else if (a.getHeuristic() > b.getHeuristic())
-                    {
-                        return 1;
-                    }
-                    else
-                    {
-                        return a.getCounterAdded() - b.getCounterAdded();
-                    }
-                });
+                nodesToVisit = new PriorityQueue<>(nodesToVisit.size(), Comparator.comparingDouble(MNode::getHeuristic));
                 nodesToVisit.addAll(original);
+
+                if(extraNodes > 0) {
+                    extraNodes = Math.min(Math.max(extraNodes, 100), Math.max(extraNodes, (int)(bestNodeEndScore * 20)));
+                }
 
                 while (!nodesToVisit.isEmpty())
                 {
@@ -400,29 +383,28 @@ public abstract class AbstractPathJobMixin{
                     }
 
                     final MNode node = nodesToVisit.poll();
+
+                    // reset score
+                    final double nodeEndSCore = getEndNodeScore(node);
+                    if (nodeEndSCore < bestNodeEndScore && isAtDestination(node))
+                    {
+                        bestNode = node;
+                        bestNodeEndScore = nodeEndSCore;
+                    }
+
+                    // we already at best score, return.
+                    if(bestNodeEndScore <= 1) break;
+
+                    // no need to count, directly visit.
                     if (node.isVisited())
                     {
                         visitNode(node);
                         continue;
                     }
 
+                    // counter on actual extra nodes.
                     handleDebugExtraNode(node);
-
-                    final double nodeEndSCore = getEndNodeScore(node);
-                    if (nodeEndSCore < bestNodeEndScore && (!reachesDestination || isAtDestination(node)))
-                    {
-                        bestNode = node;
-                        bestNodeEndScore = nodeEndSCore;
-                    }
-
-                    if (extraNodes > 0)
-                    {
-                        extraNodes--;
-                        if (extraNodes == 0)
-                        {
-                            break;
-                        }
-                    }
+                    if (--extraNodes <= 0) break;
                     visitNode(node);
                 }
             }
@@ -461,7 +443,7 @@ public abstract class AbstractPathJobMixin{
         final SurfaceType walkability = SurfaceType.getSurfaceType(world, below, tempWorldPos.set(x, y - 1, z), pathingOptions);
         final BlockState thisState = cachedBlockLookup.getBlockState(x, y, z);
         final SurfaceType thisWalkability = SurfaceType.getSurfaceType(world, thisState, tempWorldPos.set(x, y, z), pathingOptions);
-        if (thisWalkability == SurfaceType.WALKABLE || walkability == SurfaceType.WALKABLE)
+        if (thisWalkability == SurfaceType.WALKABLE || walkability == SurfaceType.WALKABLE || PathfindingUtils.isLadder(thisState, pathingOptions, x, y, z, cachedBlockLookup))
         {
             //  Level path
             return y;
@@ -472,6 +454,28 @@ public abstract class AbstractPathJobMixin{
         }
 
         return handleNotStanding(node, x, y, z, below);
+    }
+
+    /**
+     * @author ARxyt
+     * @reason Some adjustments.
+     */
+    @Overwrite(remap = false)
+    private int handleNotStanding(@Nullable final MNode parent, final int x, final int y, final int z, @NotNull final BlockState below)
+    {
+        final boolean isSwimming = parent != null && parent.isSwimming();
+
+        if (!pathingOptions.canWalkUnderWater() && PathfindingUtils.isLiquid(below))
+        {
+            return handleInLiquid(x, y, z, below, isSwimming);
+        }
+
+        if (PathfindingUtils.isLadder(below, pathingOptions, x, y - 1, z, cachedBlockLookup))
+        {
+            return y;
+        }
+
+        return checkDrop(parent, x, y, z, isSwimming);
     }
 
     @Unique
@@ -622,40 +626,39 @@ public abstract class AbstractPathJobMixin{
             dZ = node.z - node.parent.z;
         }
 
-        if (node.isLadder() || node.isVisited())
-        {
-            exploreInDirection(node, 0, 1, 0);
-            exploreInDirection(node, 0, -1, 0);
-        }
-        // Only explore downwards when dropping
-        else if (node.isCornerNode() && (node.parent == null || !(dX == 0 && dY == 1 && dZ == 0)))
-        {
-            exploreInDirection(node, 0, -1, 0);
-            return;
-        }
-        // Walk downwards node if passable
-        else if (!node.isSwimming() && isPassable(node.x, node.y - 1, node.z, false, node.parent))
-        {
-            exploreInDirection(node, 0, -1, 0);
-        }
-
         List<Direction> directions = new ArrayList<>(Arrays.asList(Direction.values()));
         Collections.shuffle(directions, new Random());
 
         for (Direction dir : directions) {
             switch (dir) {
-                case NORTH:
+                case NORTH -> {
                     if (dZ <= 0 || dY <= -2) exploreInDirection(node, 0, 0, -1);
-                    break;
-                case EAST:
+                }
+                case EAST -> {
                     if (dX >= 0 || dY <= -2) exploreInDirection(node, 1, 0, 0);
-                    break;
-                case SOUTH:
+                }
+                case SOUTH -> {
                     if (dZ >= 0 || dY <= -2) exploreInDirection(node, 0, 0, 1);
-                    break;
-                case WEST:
+                }
+                case WEST -> {
                     if (dX <= 0 || dY <= -2) exploreInDirection(node, -1, 0, 0);
-                    break;
+                }
+                case UP -> {
+                    if (node.isLadder() || node.isVisited()) {
+                        exploreInDirection(node, 0, 1, 0);
+                    } else if (node.parent != null && !node.parent.isLadder() && cachedBlockLookup.getBlockState(node.x, node.y + 1, node.z).getBlock() instanceof LadderBlock) {
+                        exploreInDirection(node, 0, 1, 0);
+                    }
+                }
+                case DOWN -> {
+                    if (node.isLadder() || node.isVisited()) {
+                        exploreInDirection(node, 0, -1, 0);
+                    }
+                    // Walk downwards node if passable
+                    else if (!node.isSwimming() && isPassable(node.x, node.y - 1, node.z, false, node.parent)) {
+                        exploreInDirection(node, 0, -1, 0);
+                    }
+                }
             }
         }
     }

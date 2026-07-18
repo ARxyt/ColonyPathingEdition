@@ -10,6 +10,11 @@ import java.util.Set;
 public final class AdditionalContants {
     public static final int TAG_UPDATE_INTERVAL = 200;
 
+    public static final int IMMEDIATELY_DELAY = 1;
+    public static final int WAITING_DELAY = 10;
+    public static final int WALKING_DELAY = 20;
+    public static final int STUCK_DELAY = 100;
+
     public static final String SICK_TIME = "sick_time";
 
     public static final Set<Class<?>> JOBS_FORCE_EAT_AT_HUT = Set.of(JobChef.class, JobCook.class, JobMiner.class);

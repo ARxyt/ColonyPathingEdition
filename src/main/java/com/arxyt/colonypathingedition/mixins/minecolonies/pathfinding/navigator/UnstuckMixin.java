@@ -4,11 +4,16 @@ import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.MinecoloniesAdvancedPathNavigateAccessor;
 import com.minecolonies.api.entity.pathfinding.IMinecoloniesNavigator;
 import com.minecolonies.api.util.BlockPosUtil;
+import com.minecolonies.api.util.Log;
+import com.minecolonies.core.entity.pathfinding.SurfaceType;
 import com.minecolonies.core.entity.pathfinding.navigation.PathingStuckHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.pathfinder.Node;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -28,18 +33,15 @@ public abstract class UnstuckMixin<NAV extends PathNavigation & IMinecoloniesNav
     @Shadow (remap = false) private boolean canBreakBlocks;
     @Shadow (remap = false) private boolean canPlaceLadders;
     @Shadow (remap = false) private boolean canBuildLeafBridges;
-    @Shadow (remap = false) private int teleportRange;
     @Shadow (remap = false) private Direction movingAwayDir;
     @Shadow (remap = false) private BlockPos prevDestination;
+    @Shadow (remap = false) private boolean canTeleportGoal;
 
     @Shadow (remap = false) protected abstract void placeLadders(NAV navigator);
     @Shadow (remap = false) protected abstract void placeLeaves(NAV navigator);
     @Shadow (remap = false) protected abstract void breakBlocks(NAV navigator);
     @Shadow (remap = false) protected abstract void resetStuckTimers();
-    @Shadow (remap = false) protected abstract void completeStuckAction(NAV navigator);
     @Shadow (remap = false) public abstract void resetGlobalStuckTimers();
-
-    @Unique private static final int TICKS_PER_BLOCK = 20;
 
     @Unique private int stuckLevelRecorder = 0;
     @Unique private boolean needReset = false;
@@ -58,7 +60,7 @@ public abstract class UnstuckMixin<NAV extends PathNavigation & IMinecoloniesNav
 
         // (Patch) Attempt to prevent random wandering at the workstation
         if ((prevDestination == null || prevDestination.equals(BlockPos.ZERO)) && stuckLevel == 0 && stuckLevelRecorder != 0 ){
-            stuckLevelRecorder = 5;
+            completeStuckAction(navigator);
             return;
         }
 
@@ -164,6 +166,36 @@ public abstract class UnstuckMixin<NAV extends PathNavigation & IMinecoloniesNav
             }
             resetStuckTimers();
             stuckLevelRecorder = 0;
+            stuckLevel = 0;
         }
+    }
+
+    private void completeStuckAction(final NAV navigator)
+    {
+        final BlockPos desired = navigator.getSafeDestination();
+        final Level world = navigator.getOurEntity().level();
+        final Mob entity = navigator.getOurEntity();
+
+        if (!FMLEnvironment.production)
+        {
+            Log.getLogger()
+                    .warn("Entity complete stuck action stuck:" + navigator.getOurEntity() + " desired:" + navigator.getSafeDestination() + " stuckLevel:" + stuckLevel + " teleport:"
+                            + canTeleportGoal);
+        }
+
+        if (canTeleportGoal && desired != null && desired != BlockPos.ZERO)
+        {
+            final BlockPos tpPos = BlockPosUtil.findAround(world, desired, 10, 10,
+                    (posworld, pos) -> SurfaceType.getSurfaceType(posworld, posworld.getBlockState(pos.below()), pos.below()) == SurfaceType.WALKABLE
+                            && SurfaceType.getSurfaceType(posworld, posworld.getBlockState(pos), pos) == SurfaceType.DROPABLE
+                            && SurfaceType.getSurfaceType(posworld, posworld.getBlockState(pos.above()), pos.above()) == SurfaceType.DROPABLE);
+            if (tpPos != null)
+            {
+                entity.teleportTo(tpPos.getX() + 0.5, tpPos.getY(), tpPos.getZ() + 0.5);
+            }
+        }
+
+        navigator.stop();
+        resetGlobalStuckTimers();
     }
 }
