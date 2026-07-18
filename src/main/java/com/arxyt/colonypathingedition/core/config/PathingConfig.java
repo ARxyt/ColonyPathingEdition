@@ -21,6 +21,7 @@ public class PathingConfig {
     public static ModConfigSpec.BooleanValue FARMER_AI_MODULE;
     public static ModConfigSpec.BooleanValue FLEE_AI_MODULE;
     public static ModConfigSpec.BooleanValue DELIVERYMAN_AI_MODULE;
+    public static ModConfigSpec.BooleanValue PLANTER_AI_MODULE;
 
     public static ModConfigSpec.BooleanValue RESTAURANT_EXTRA_WORKER;
     public static ModConfigSpec.BooleanValue KITCHEN_EXTRA_WORKER;
@@ -98,6 +99,7 @@ public class PathingConfig {
     public static ModConfigSpec.IntValue LEISURE_TIME;
     public static ModConfigSpec.IntValue LEISURE_RATIO;
     public static ModConfigSpec.IntValue MAX_PRE_LEISURE_TIME;
+    public static ModConfigSpec.IntValue MAX_BED_PER_LEVEL;
     public static ModConfigSpec.DoubleValue FOOD_PUNISHER;
     public static ModConfigSpec.DoubleValue FOOD_BONUS_NORMAL;
     public static ModConfigSpec.DoubleValue FOOD_BONUS_MINECOLONIES;
@@ -124,6 +126,9 @@ public class PathingConfig {
         DELIVERYMAN_AI_MODULE = builder
                 .comment("Open the module to use the remastered deliveryman AI system (default: true)\n 开启此模块将会启用重制的快递员AI (默认开启)")
                 .define("enableNewDeliverymanModule", true);
+        PLANTER_AI_MODULE = builder
+                .comment("Open the module to use the remastered planter AI system (default: true)\n 开启此模块将会启用重制的种植工AI (默认开启)")
+                .define("enableNewPlanterModule", true);
         builder.pop();
         builder.push("Extra Worker Opener #额外工人开关#");
         RESTAURANT_EXTRA_WORKER = builder
@@ -421,6 +426,9 @@ public class PathingConfig {
                         Open this to disable citizens to teleport to their target when completely stuck. (default: false)
                         开启这个可以禁止市民寻路卡住时直接传送到目标地点 (默认 : 关闭)""")
                 .define("cancelTeleport", false);
+        MAX_BED_PER_LEVEL = builder
+                .comment("Set max bed per level for residents, e.g. 1 -> 1 2 3 4 5, 3 -> 3 6 9 12 15.\n 住宅每等级可增加的床位数目。")
+                .defineInRange("maxBedPerLevel",3, 1, 20);
         builder.pop();
 
         builder.push("Basic Logic Modifier #基础逻辑修改#");

@@ -7,18 +7,19 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
 import org.jetbrains.annotations.NotNull;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.*;
 
 @Mixin(value = MinecoloniesCropBlock.class, remap = false)
 public abstract class MinecoloniesCropBlockMixin extends AbstractBlockMinecolonies<MinecoloniesCropBlock> {
+
+    @Final @Shadow(remap = false) private Block preferredFarmland;
 
     public MinecoloniesCropBlockMixin()
     {
@@ -39,9 +40,7 @@ public abstract class MinecoloniesCropBlockMixin extends AbstractBlockMinecoloni
     public boolean canSurviveOnFarmland(@NotNull BlockState state, LevelReader level, @NotNull BlockPos pos)
     {
         BlockPos blockpos = pos.below();
-        boolean checkFarmland = true;
-        if (state.getBlock() == (MinecoloniesCropBlock)((Object)this)) //Forge: This function is called during world gen and placement, before this block is set, so if we are not 'here' then assume it's the pre-check.
-            checkFarmland = level.getBlockState(blockpos).getBlock() instanceof MinecoloniesFarmland;
+        boolean checkFarmland = level.getBlockState(blockpos).getBlock() == preferredFarmland || level.getBlockState(blockpos).getBlock() instanceof MinecoloniesFarmland;
         return checkFarmland && (level.getRawBrightness(pos, 0) >= 8 || level.canSeeSky(pos));
     }
 }

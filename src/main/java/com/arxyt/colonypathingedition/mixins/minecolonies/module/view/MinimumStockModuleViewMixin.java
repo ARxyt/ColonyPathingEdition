@@ -1,4 +1,4 @@
-package com.arxyt.colonypathingedition.mixins.minecolonies.workersetting;
+package com.arxyt.colonypathingedition.mixins.minecolonies.module.view;
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.arxyt.colonypathingedition.core.window.WindowPreciseMinimumStock;
@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = MinimumStockModuleView.class, remap = false)
-public abstract class MinimumStockViewMixin extends AbstractBuildingModuleView{
+public abstract class MinimumStockModuleViewMixin extends AbstractBuildingModuleView{
     @Inject(method = "getWindow", at = @At("HEAD"), cancellable = true, remap = false)
     public void getWindow(CallbackInfoReturnable<BOWindow> cir)
     {

@@ -1,4 +1,4 @@
-package com.arxyt.colonypathingedition.mixins.minecolonies.workersetting;
+package com.arxyt.colonypathingedition.mixins.minecolonies.module;
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.minecolonies.core.colony.buildings.modules.MinimumStockModule;
