@@ -1,11 +1,14 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.citizen;
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
+import com.arxyt.colonypathingedition.core.util.SwitchUtils;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.buildings.IBuilding;
 import com.minecolonies.api.colony.interactionhandling.IInteractionResponseHandler;
 import com.minecolonies.api.colony.jobs.IJob;
 import com.minecolonies.api.entity.ai.JobStatus;
+import com.minecolonies.api.inventory.InventoryCitizen;
+import com.minecolonies.api.util.InventoryUtils;
 import com.minecolonies.api.util.Log;
 import com.minecolonies.api.util.MathUtils;
 import com.minecolonies.core.colony.CitizenData;
@@ -35,6 +38,7 @@ public abstract class CitizenDataMixinForLeisure implements ICitizenData {
     @Shadow(remap = false) private IJob<?> job;
     @Shadow(remap = false) private int inactivityTimer;
     @Shadow(remap = false) private JobStatus jobStatus;
+    @Shadow(remap = false) protected InventoryCitizen inventory;
 
     @Final @Shadow(remap = false) private Set<UUID> interactedRecentlyPlayers;
     @Final @Shadow(remap = false) protected Map<Component, IInteractionResponseHandler> citizenChatOptions;
@@ -125,5 +129,22 @@ public abstract class CitizenDataMixinForLeisure implements ICitizenData {
 
         citizenDiseaseHandler.update(tickRate);
         ci.cancel();
+    }
+
+    @Override
+    public boolean needsBetterFood()
+    {
+        if (this.getHomeBuilding() == null)
+        {
+            return false;
+        }
+        else
+        {
+            int slotBadFood = InventoryUtils.findFirstSlotInItemHandlerNotEmptyWith(inventory,
+                    stack -> SwitchUtils.canEatSwitcher(stack, null, getWorkBuilding(),this));
+            int slotGoodFood = InventoryUtils.findFirstSlotInItemHandlerNotEmptyWith(inventory,
+                    stack -> SwitchUtils.canEatSwitcher(stack, getHomeBuilding(), getWorkBuilding(),this));
+            return slotBadFood != -1 && slotGoodFood == -1;
+        }
     }
 }

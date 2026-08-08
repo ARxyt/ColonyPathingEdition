@@ -4,7 +4,7 @@ import com.arxyt.colonypathingedition.api.AbstractMinecartAccessor;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.entity.citizen.Skill;
 import com.minecolonies.api.entity.other.MinecoloniesMinecart;
-import com.minecolonies.core.colony.jobs.JobDeliveryman;
+import com.minecolonies.core.colony.buildings.workerbuildings.BuildingDeliveryman;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
@@ -53,7 +53,7 @@ public abstract class MinecoloniesMinecartMixin extends Minecart implements Abst
             if(citizen.getCitizenColonyHandler() != null && citizen.getCitizenColonyHandler().getColony() != null && citizen.getCitizenColonyHandler().getColony().getResearchManager().getResearchEffects().getEffectStrength(WALKING) > 0){
                 speedFactor += citizen.getCitizenColonyHandler().getColony().getResearchManager().getResearchEffects().getEffectStrength(WALKING) * 2;
             }
-            if (citizen.getCitizenData() != null && citizen.getCitizenData().getJob() instanceof JobDeliveryman){
+            if (citizen.getCitizenData() != null && citizen.getCitizenData().getWorkBuilding() instanceof BuildingDeliveryman){
                 speedFactor += citizen.getCitizenData().getCitizenSkillHandler().getLevel(Skill.Agility) * 0.03;
             }
         }

@@ -2,7 +2,7 @@ package com.arxyt.colonypathingedition.core.ai.minimal;
 
 import com.arxyt.colonypathingedition.api.workersetting.BuildingCookExtra;
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
-import com.arxyt.colonypathingedition.core.util.ExtraFoodUtils;
+import com.arxyt.colonypathingedition.core.util.NewFoodUtils;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.IColony;
 import com.minecolonies.api.colony.buildings.IBuilding;
@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
 import static com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEatTask.NewEatingState.*;
 import static com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEatTask.EatingCheckState.*;
 import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.*;
-import static com.arxyt.colonypathingedition.core.util.ExtraFoodUtils.getShouldEatAtHut;
+import static com.arxyt.colonypathingedition.core.util.NewFoodUtils.getShouldEatAtHut;
 import static com.minecolonies.api.util.constant.CitizenConstants.FULL_SATURATION;
 import static com.minecolonies.api.util.constant.CitizenConstants.NIGHT;
 import static com.minecolonies.api.util.constant.GuardConstants.BASIC_VOLUME;
@@ -144,7 +144,7 @@ public class NewEntityAIEatTask implements IStateAI {
     }
 
     private boolean hasFood(boolean needRestaurantCheck){
-        final int slot = ExtraFoodUtils.getBestFoodForCitizenWithRestaurantCheck(citizen.getInventoryCitizen(), citizen.getCitizenData(), null ,needRestaurantCheck);
+        final int slot = NewFoodUtils.getBestFoodForCitizenWithRestaurantCheck(citizen.getInventoryCitizen(), citizen.getCitizenData(), null ,needRestaurantCheck);
         if(slot != -1) {
             foodSlot = slot;
             return true;
@@ -153,7 +153,7 @@ public class NewEntityAIEatTask implements IStateAI {
     }
 
     private boolean canForceEat(){
-        int slot = ExtraFoodUtils.getBestFoodForceEating(citizen.getInventoryCitizen(), citizen.getCitizenData(), null);
+        int slot = NewFoodUtils.getBestFoodForceEating(citizen.getInventoryCitizen(), citizen.getCitizenData(), null);
         if(slot != -1) {
             foodSlot = slot;
             return true;
@@ -227,7 +227,7 @@ public class NewEntityAIEatTask implements IStateAI {
                 // For citizens working outside their work huts, maybe more efficient to eat nearby.
                 // Chefs should eat at their workplace more often, as they are producers of food.
                 if ( bestRestaurantPos == null || BlockPosUtil.dist(citizenPos, buildingPos) < BlockPosUtil.dist(citizenPos, bestRestaurantPos) || (citizenData.getJob() != null && JOBS_FORCE_EAT_AT_HUT.contains(citizenData.getJob().getClass()))) {
-                    final ItemStorage storageToGet = FoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, buildingToCheck);
+                    final ItemStorage storageToGet = NewFoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, buildingToCheck);
                     if (storageToGet != null) {
                         boolean niceFood = getShouldEatAtHut(citizenData, storageToGet.getItem());
                         if (niceFood) {
@@ -296,13 +296,13 @@ public class NewEntityAIEatTask implements IStateAI {
             citizen.getCitizenAI().setCurrentDelay(WALKING_DELAY);
             return GO_TO_HUT;
         }
-        final ItemStorage storageToGet = FoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, buildingToGo);
+        final ItemStorage storageToGet = NewFoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, buildingToGo);
         if (storageToGet != null)
         {
             // When restaurants out of food, would trigger "Force Eat At Hut".
             // Worker would return to work hut to eat, regardless of food condition.
             // If there isn't food at hut, go back to restaurants to wait for player.
-            int qty = ((int) ((FULL_SATURATION - citizen.getCitizenData().getSaturation()) / FoodUtils.getFoodValue(storageToGet.getItemStack(), citizen))) + 1;
+            int qty = ((int) ((FULL_SATURATION - citizen.getCitizenData().getSaturation()) / NewFoodUtils.getFoodValue(storageToGet.getItemStack(), citizen))) + 1;
             if(InventoryUtils.transferItemStackIntoNextBestSlotInItemHandler(buildingToGo, storageToGet, qty, citizen.getInventoryCitizen())) {
                 return EAT;
             }
@@ -401,10 +401,10 @@ public class NewEntityAIEatTask implements IStateAI {
                 return GET_FOOD_YOURSELF;
             }
 
-            final ItemStorage storageToGet = FoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, cookBuilding);
+            final ItemStorage storageToGet = NewFoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, cookBuilding);
             if (storageToGet != null)
             {
-                int qty = ((int) ((FULL_SATURATION - citizen.getCitizenData().getSaturation()) / FoodUtils.getFoodValue(storageToGet.getItemStack(), citizen))) + 1;
+                int qty = ((int) ((FULL_SATURATION - citizen.getCitizenData().getSaturation()) / NewFoodUtils.getFoodValue(storageToGet.getItemStack(), citizen))) + 1;
                 if(!InventoryUtils.transferItemStackIntoNextBestSlotInItemHandler(cookBuilding, storageToGet, qty, citizen.getInventoryCitizen())){
                     // This caused by a fulfilled inventory, which means citizens can't eat by themselves, so reset to seek an assist.
                     BuildingCookExtra restaurantExtra = ((BuildingCookExtra)restaurant);
@@ -538,7 +538,7 @@ public class NewEntityAIEatTask implements IStateAI {
             }
         }
         if(buildingToGo != null) {
-            final ItemStorage storageToGet = ExtraFoodUtils.checkForForceEatingInBuilding(citizen.getCitizenData(), null, buildingToGo);
+            final ItemStorage storageToGet = NewFoodUtils.checkForForceEatingInBuilding(citizen.getCitizenData(), null, buildingToGo);
             if (storageToGet != null)
             {
                 eatPos = buildingToGo.getPosition();
@@ -567,10 +567,10 @@ public class NewEntityAIEatTask implements IStateAI {
             citizen.getCitizenAI().setCurrentDelay(WALKING_DELAY);
             return GO_TO_PLACE_WITH_FOOD;
         }
-        final ItemStorage storageToGet = ExtraFoodUtils.checkForForceEatingInBuilding(citizen.getCitizenData(), null, buildingToGo);
+        final ItemStorage storageToGet = NewFoodUtils.checkForForceEatingInBuilding(citizen.getCitizenData(), null, buildingToGo);
         if (storageToGet != null)
         {
-            int qty = ((int) ((FULL_SATURATION - citizen.getCitizenData().getSaturation()) / FoodUtils.getFoodValue(storageToGet.getItemStack(), citizen))) + 1;
+            int qty = ((int) ((FULL_SATURATION - citizen.getCitizenData().getSaturation()) / NewFoodUtils.getFoodValue(storageToGet.getItemStack(), citizen))) + 1;
             if(InventoryUtils.transferItemStackIntoNextBestSlotInItemHandler(buildingToGo, storageToGet, qty, citizen.getInventoryCitizen())) {
                 return FORCE_EATING;
             }
@@ -645,7 +645,7 @@ public class NewEntityAIEatTask implements IStateAI {
         }
         eatenFood.add(foodStack.getItem());
 
-        ItemStackUtils.consumeFood(foodStack, citizen, null);
+        NewFoodUtils.consumeFood(foodStack, citizen, null);
         citizen.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
 
         if (citizenData.getSaturation() < FULL_SATURATION && !citizenData.getInventory().getStackInSlot(foodSlot).isEmpty()) {

@@ -13,7 +13,7 @@ public class LinkageManager {
     private static LinkageManager instance;
 
     private boolean eclipticSeasonsLoaded = false;
-    private boolean tweaksAddonLoaded = false;
+    private boolean compatibilityAddonLoaded = false;
 
     /**
      * 判断是否加载了节气mod。
@@ -27,6 +27,17 @@ public class LinkageManager {
     }
 
     /**
+     * 判断是否加载了 Compatibility addon。
+     *
+     * @return 是否加载
+     * @author sxtkl
+     * @since 2025/12/12
+     */
+    public boolean isCompatibilityAddonLoaded() {
+        return compatibilityAddonLoaded;
+    }
+
+    /**
      * 加载模组，判断所有联动内容。
      *
      * @param modList 模组列表
@@ -37,8 +48,8 @@ public class LinkageManager {
         if (modList.isLoaded("eclipticseasons")) {
             this.eclipticSeasonsLoaded = true;
         }
-        if (modList.isLoaded("minecolonies_tweaks")) {
-            this.tweaksAddonLoaded = true;
+        if (modList.isLoaded("minecolonies_compatibility")) {
+            this.compatibilityAddonLoaded = true;
         }
     }
 

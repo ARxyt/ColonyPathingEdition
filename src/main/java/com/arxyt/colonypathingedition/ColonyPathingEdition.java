@@ -1,6 +1,7 @@
 package com.arxyt.colonypathingedition;
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
+import com.arxyt.colonypathingedition.core.initializer.InteractionInitializer;
 import com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModules;
 import com.arxyt.colonypathingedition.core.minecolonies.module.ModBuildingInitializer;
 import com.arxyt.colonypathingedition.core.network.CPENetwork;
@@ -32,11 +33,13 @@ public class ColonyPathingEdition {
         );
         LOGGER.info("Colony Pathing Edition mod loaded");
         CPENetwork.register(SpecialSeedSyncMessage.class, SpecialSeedSyncMessage::new);
+
     }
 
     @SubscribeEvent
     public static void onConfigLoad(@NotNull final ModConfigEvent event) {
         PathingConfig.onLoad();
+        InteractionInitializer.init();
     }
 
     @SubscribeEvent

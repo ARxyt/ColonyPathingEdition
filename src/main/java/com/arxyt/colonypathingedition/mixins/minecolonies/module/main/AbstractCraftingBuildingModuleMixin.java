@@ -1,4 +1,4 @@
-package com.arxyt.colonypathingedition.mixins.minecolonies.module;
+package com.arxyt.colonypathingedition.mixins.minecolonies.module.main;
 
 import com.minecolonies.api.IMinecoloniesAPI;
 import com.minecolonies.api.MinecoloniesAPIProxy;

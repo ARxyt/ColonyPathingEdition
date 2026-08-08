@@ -117,7 +117,8 @@ dependencies {
     // 如果是发布请修改为 compileOnly
     // 如果是测试请修改为 implementation
     compileOnly fg.deobf("curse.maven:ecliptic-seasons-1118306:7304569")
-
+    compileOnly fg.deobf("blank:MineColonies_Tweaks-1.20.1:libs")
+    compileOnly fg.deobf("blank:MineColonies_Compatibility-1.20.1:libs")
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
