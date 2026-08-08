@@ -1022,10 +1022,9 @@ public abstract class AbstractPathJobMixin{
     private BlockEntity computeInitialValue() {
         Mob entity = getEntity();
         if(entity instanceof AbstractEntityCitizen citizen) {
+            if(citizen.getCitizenData() == null) return null;
             ITownHall building = citizen.getCitizenData().getColony().getServerBuildingManager().getTownHall();
-            if(building == null){
-                return null;
-            }
+            if(building == null) return null;
             BlockEntity townHall = actualWorld.getBlockEntity(building.getPosition());
             if (!(townHall instanceof IBlueprintDataProviderBE)) {
                 if (townHall == null){

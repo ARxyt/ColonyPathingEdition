@@ -1,5 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.entity;
 
+import com.arxyt.colonypathingedition.core.util.SwitchUtils;
 import com.minecolonies.api.colony.IColony;
 import com.minecolonies.api.colony.IColonyManager;
 import com.minecolonies.api.colony.IColonyView;
@@ -11,16 +12,25 @@ import com.minecolonies.api.entity.ai.statemachine.tickratestatemachine.ITickRat
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenColonyHandler;
 import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenJobHandler;
+import com.minecolonies.api.util.ItemStackUtils;
+import com.minecolonies.api.util.MessageUtils;
+import com.minecolonies.api.util.SoundUtils;
 import com.minecolonies.core.colony.jobs.AbstractJobGuard;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
+import com.minecolonies.core.network.messages.client.ItemParticleEffectMessage;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
@@ -30,7 +40,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Locale;
 import java.util.Objects;
+
+import static com.minecolonies.api.util.constant.TranslationConstants.MESSAGE_INTERACTION_COOKIE;
 
 @Mixin(value = EntityCitizen.class, remap = false)
 public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
@@ -39,6 +52,9 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
     @Shadow(remap = false) public abstract ITickRateStateMachine<IState> getCitizenAI();
     @Shadow(remap = false) public abstract ICitizenColonyHandler getCitizenColonyHandler();
     @Shadow(remap = false) public abstract ICitizenJobHandler getCitizenJobHandler();
+
+    @Shadow
+    private int interactionCooldown;
 
     public EntityCitizenMixin(final EntityType<? extends PathfinderMob> type, final Level world)
     {
@@ -103,5 +119,39 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
         }
 
         return true;
+    }
+
+    /**
+     * @author ARxyt
+     * @reason some addon.
+     */
+    @Overwrite(remap = false)
+    private void childFoodInteraction(final ItemStack usedStack, final Player player, final InteractionHand hand)
+    {
+        if (usedStack.getDisplayName().getString().toLowerCase(Locale.US).contains("cookie"))
+        {
+            interactionCooldown = 100;
+
+            if (!level().isClientSide())
+            {
+                addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 300));
+
+                playSound(SoundEvents.GENERIC_EAT, 1.5f, (float) SoundUtils.getRandomPitch(getRandom()));
+                new ItemParticleEffectMessage(usedStack.copy(), getX(), getY(), getZ(), getXRot(), getYRot(), getEyeHeight()).sendToTrackingEntity(this);
+                SwitchUtils.consumeFoodSwitcher(usedStack, this, player);
+            }
+        }
+        else
+        {
+            player.getInventory().removeItem(usedStack);
+            player.drop(usedStack, true, true);
+            if (!level().isClientSide())
+            {
+                playSound(SoundEvents.VILLAGER_NO, 1.0f, (float) SoundUtils.getRandomPitch(getRandom()));
+                MessageUtils.format(MESSAGE_INTERACTION_COOKIE, this.getCitizenData().getName())
+                        .withPriority(MessageUtils.MessagePriority.DANGER)
+                        .sendTo(player);
+            }
+        }
     }
 }

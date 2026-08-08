@@ -2,7 +2,7 @@ package com.arxyt.colonypathingedition.mixins.minecolonies.food;
 
 import com.arxyt.colonypathingedition.api.workersetting.BuildingCookExtra;
 import com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEatTask;
-import com.arxyt.colonypathingedition.core.util.ExtraFoodUtils;
+import com.arxyt.colonypathingedition.core.util.NewFoodUtils;
 import com.arxyt.colonypathingedition.mixins.minecolonies.AbstractEntityAIBasicMixin;
 import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.AbstractEntityAIBasicAccessor;
 import com.minecolonies.api.colony.ICitizenData;
@@ -135,7 +135,7 @@ public abstract class EntityAIWorkCookMixin extends AbstractEntityAIBasicMixin<B
 
         if (!handler.hasSpace()) {
             for (int feedingAttempts = 0; feedingAttempts < 10; feedingAttempts++) {
-                final int foodSlot = ExtraFoodUtils.getBestFoodForCitizenWithRestaurantCheck(getWorker().getInventoryCitizen(), citizenData, module.getMenu(), false);
+                final int foodSlot = NewFoodUtils.getBestFoodForCitizenWithRestaurantCheck(getWorker().getInventoryCitizen(), citizenData, module.getMenu(), false);
                 if (foodSlot != -1) {
                     final ItemStack stack = getWorker().getInventoryCitizen().extractItem(foodSlot, 1, false);
                     citizenData.increaseSaturation(FoodUtils.getFoodValue(stack, getWorker()));
@@ -155,7 +155,7 @@ public abstract class EntityAIWorkCookMixin extends AbstractEntityAIBasicMixin<B
             return invokeGetState();
         }
 
-        final int foodSlot = ExtraFoodUtils.getBestFoodForCitizenWithRestaurantCheck(getWorker().getInventoryCitizen(), citizenData, module.getMenu(),false);
+        final int foodSlot = NewFoodUtils.getBestFoodForCitizenWithRestaurantCheck(getWorker().getInventoryCitizen(), citizenData, module.getMenu(),false);
         if (foodSlot == -1) {
             if (InventoryUtils.getItemCountInItemHandler(getWorker().getInventoryCitizen(), canEatPredicate) <= 0) {
                 return invokeGetState();

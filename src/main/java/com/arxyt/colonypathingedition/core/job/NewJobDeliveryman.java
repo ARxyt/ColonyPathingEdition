@@ -1,0 +1,807 @@
+package com.arxyt.colonypathingedition.core.job;
+
+import com.arxyt.colonypathingedition.api.JobWithAdditionalHireCheck;
+import com.arxyt.colonypathingedition.api.JobWithEatingLimit;
+import com.arxyt.colonypathingedition.api.JobWithWaitingQueue;
+import com.arxyt.colonypathingedition.core.ai.worker.NewEntityAIWorkDeliveryman;
+import com.google.common.collect.ImmutableList;
+import com.minecolonies.api.client.render.modeltype.ModModelTypes;
+import com.minecolonies.api.colony.ICitizenData;
+import com.minecolonies.api.colony.buildings.IBuilding;
+import com.minecolonies.api.colony.buildings.workerbuildings.IWareHouse;
+import com.minecolonies.api.colony.requestsystem.StandardFactoryController;
+import com.minecolonies.api.colony.requestsystem.data.IRequestSystemDeliveryManJobDataStore;
+import com.minecolonies.api.colony.requestsystem.manager.IRequestManager;
+import com.minecolonies.api.colony.requestsystem.request.IRequest;
+import com.minecolonies.api.colony.requestsystem.request.RequestState;
+import com.minecolonies.api.colony.requestsystem.requestable.IRequestable;
+import com.minecolonies.api.colony.requestsystem.requestable.deliveryman.Delivery;
+import com.minecolonies.api.colony.requestsystem.requestable.deliveryman.IDeliverymanRequestable;
+import com.minecolonies.api.colony.requestsystem.requestable.deliveryman.Pickup;
+import com.minecolonies.api.colony.requestsystem.token.IToken;
+import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
+import com.minecolonies.api.util.Log;
+import com.minecolonies.api.util.constant.NbtTagConstants;
+import com.minecolonies.api.util.constant.TypeConstants;
+import com.minecolonies.core.colony.buildings.modules.BuildingModules;
+import com.minecolonies.core.colony.buildings.modules.CourierAssignmentModule;
+import com.minecolonies.core.colony.buildings.modules.WarehouseRequestQueueModule;
+import com.minecolonies.core.colony.jobs.AbstractJob;
+import com.minecolonies.core.colony.requestsystem.requests.StandardRequests;
+import com.minecolonies.core.util.AttributeModifierUtils;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
+import org.jetbrains.annotations.NotNull;
+import org.spongepowered.asm.mixin.Unique;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
+import static com.minecolonies.api.util.constant.BuildingConstants.TAG_ONGOING;
+import static com.minecolonies.api.util.constant.CitizenConstants.SKILL_BONUS_ADD;
+import static com.minecolonies.api.util.constant.CitizenConstants.SKILL_BONUS_ADD_NAME;
+import static com.minecolonies.api.util.constant.Suppression.UNCHECKED;
+
+public class NewJobDeliveryman extends AbstractJob<NewEntityAIWorkDeliveryman, NewJobDeliveryman> implements JobWithEatingLimit, JobWithAdditionalHireCheck, JobWithWaitingQueue
+{
+    private IToken<?> rsDataStoreToken;
+
+    /**
+     * Walking speed bonus per level
+     */
+    public static final double BONUS_SPEED_PER_LEVEL = 0.003;
+
+    /**
+     * Old field for backwards compatibility.
+     */
+    private int ongoingDeliveries;
+
+    private IWareHouse wareHouseWorkingFor = null;
+
+    private boolean waitingForJob = false;
+
+    /**
+     * Instantiates the job for the deliveryman.
+     *
+     * @param entity the citizen who becomes a deliveryman
+     */
+    public NewJobDeliveryman(final ICitizenData entity)
+    {
+        super(entity);
+        if (entity != null)
+        {
+            setupRsDataStore();
+        }
+    }
+
+    private void setupRsDataStore()
+    {
+        rsDataStoreToken = this.getCitizen()
+                .getColony()
+                .getRequestManager()
+                .getDataStoreManager()
+                .get(
+                        StandardFactoryController.getInstance().getNewInstance(TypeConstants.ITOKEN),
+                        TypeConstants.REQUEST_SYSTEM_DELIVERY_MAN_JOB_DATA_STORE
+                )
+                .getId();
+    }
+
+    @Override
+    public void onLevelUp()
+    {
+        if (getCitizen().getEntity().isPresent())
+        {
+            final AbstractEntityCitizen worker = getCitizen().getEntity().get();
+            final AttributeModifier speedModifier = new AttributeModifier(SKILL_BONUS_ADD_NAME, getCitizen().getCitizenSkillHandler().getLevel(getCitizen().getWorkBuilding().getModule(
+                    BuildingModules.COURIER_WORK).getPrimarySkill()) * BONUS_SPEED_PER_LEVEL, AttributeModifier.Operation.ADD_VALUE);
+            AttributeModifierUtils.addModifier(worker, speedModifier, Attributes.MOVEMENT_SPEED);
+        }
+    }
+
+    @NotNull
+    @Override
+    public ResourceLocation getModel()
+    {
+        return ModModelTypes.COURIER_ID;
+    }
+
+
+    @Override
+    public CompoundTag serializeNBT(@NotNull final HolderLookup.Provider provider)
+    {
+        final CompoundTag compound = super.serializeNBT(provider);
+        compound.put(NbtTagConstants.TAG_RS_DMANJOB_DATASTORE, StandardFactoryController.getInstance().serializeTag(provider, rsDataStoreToken));
+        compound.putInt(TAG_ONGOING, ongoingDeliveries);
+        return compound;
+    }
+
+    @Override
+    public void deserializeNBT(@NotNull final HolderLookup.Provider provider, final CompoundTag compound)
+    {
+        super.deserializeNBT(provider, compound);
+
+        if (compound.contains(NbtTagConstants.TAG_RS_DMANJOB_DATASTORE))
+        {
+            rsDataStoreToken = StandardFactoryController.getInstance().deserializeTag(provider, compound.getCompound(NbtTagConstants.TAG_RS_DMANJOB_DATASTORE));
+        }
+        else
+        {
+            setupRsDataStore();
+        }
+        this.ongoingDeliveries = compound.getInt(TAG_ONGOING);
+    }
+
+    /**
+     * Generate your AI class to register.
+     *
+     * @return your personal AI instance.
+     */
+    @NotNull
+    @Override
+    public NewEntityAIWorkDeliveryman generateAI()
+    {
+        return new NewEntityAIWorkDeliveryman(this);
+    }
+
+    private IRequestSystemDeliveryManJobDataStore getDataStore()
+    {
+        return getCitizen().getColony().getRequestManager().getDataStoreManager().get(rsDataStoreToken, TypeConstants.REQUEST_SYSTEM_DELIVERY_MAN_JOB_DATA_STORE);
+    }
+
+    @Override
+    public void serializeToView(final RegistryFriendlyByteBuf buffer)
+    {
+        super.serializeToView(buffer);
+        StandardFactoryController.getInstance().serialize(buffer, rsDataStoreToken);
+    }
+
+    private LinkedList<IToken<?>> getTaskQueueFromDataStore()
+    {
+        return getDataStore().getQueue();
+    }
+
+    @Override
+    public int getInactivityLimit()
+    {
+        return 60 * 10;
+    }
+
+    @Override
+    public void triggerActivityChangeAction(final boolean newState)
+    {
+        try
+        {
+            if (newState)
+            {
+                getColony().getRequestManager().onColonyUpdate(request -> request.getRequest() instanceof Delivery || request.getRequest() instanceof Pickup);
+            }
+            else
+            {
+                cancelAssignedRequests();
+            }
+        }
+        catch (final Exception ex)
+        {
+            Log.getLogger().warn("Active Triggered resulted in exception", ex);
+        }
+    }
+
+    /**
+     * Returns the {@link IRequest} of the current Task.
+     *
+     * @return {@link IRequest} of the current Task.
+     */
+    @SuppressWarnings(UNCHECKED)
+    public IRequest<IDeliverymanRequestable> getTaskToDeliver()
+    {
+        IToken<?> request = getTaskQueueFromDataStore().peekFirst();
+        return request == null ? null : (IRequest<IDeliverymanRequestable>) getColony().getRequestManager().getRequestForToken(request);
+    }
+
+    @SuppressWarnings(UNCHECKED)
+    public IRequest<IDeliverymanRequestable> getTaskToPickup()
+    {
+        IToken<?> request = getTaskQueueFromDataStore().peekLast();
+        return request == null ? null : (IRequest<IDeliverymanRequestable>) getColony().getRequestManager().getRequestForToken(request);
+    }
+
+    /**
+     * Returns the {@link IRequest} of the current Task.
+     *
+     * @return {@link IRequest} of the current Task.
+     */
+    @SuppressWarnings(UNCHECKED)
+    public IRequest<IDeliverymanRequestable> generateAndGetCurrentTask(int initialLimit)
+    {
+        IToken<?> request = getTaskQueueFromDataStore().peekFirst();
+        if (request == null)
+        {
+            IBuilding wareHouse = findWareHouse();
+            if (wareHouse == null)
+            {
+                return null;
+            }
+
+            final WarehouseRequestQueueModule module = wareHouse.getModule(BuildingModules.WAREHOUSE_REQUEST_QUEUE);
+            if (module.getMutableRequestList().isEmpty())
+            {
+                return null;
+            }
+
+            final List<IToken<?>> reqsToRemove = new ArrayList<>();
+            int extendedReqs = 0;
+            for (final IToken<?> reqId : module.getMutableRequestList())
+            {
+                final IRequest localRequest = getColony().getRequestManager().getRequestForToken(reqId);
+                if (localRequest == null)
+                {
+                    reqsToRemove.add(reqId);
+                    continue;
+                }
+
+                if (request == null)
+                {
+                    addRequest(reqId, 0);
+                    request = reqId;
+                    reqsToRemove.add(reqId);
+                }
+                else if (localRequest instanceof StandardRequests.DeliveryRequest && hasSameDestinationDelivery(localRequest))
+                {
+                    addRequest(reqId, 0);
+                    extendedReqs++;
+                    reqsToRemove.add(reqId);
+                }
+
+                if (extendedReqs >= initialLimit)
+                {
+                    break;
+                }
+
+            }
+
+            module.getMutableRequestList().removeAll(reqsToRemove);
+            module.markDirty();
+
+            if (request == null)
+            {
+                return null;
+            }
+
+        }
+        wareHouseWorkingFor = null;
+        return (IRequest<IDeliverymanRequestable>) getColony().getRequestManager().getRequestForToken(request);
+    }
+
+    /**
+     * Returns the {@link IRequest} of the current Task.
+     *
+     * @return {@link IRequest} of the current Task.
+     */
+    @SuppressWarnings(UNCHECKED)
+    public IRequest<IDeliverymanRequestable> generateAndGetCurrentTaskFormOtherWareHouse(int initialLimit)
+    {
+        IToken<?> request = getTaskQueueFromDataStore().peekFirst();
+        if (request == null)
+        {
+            for (IWareHouse wareHouse : getColony().getServerBuildingManager().getWareHouses()) {
+                if (wareHouse == null) return null;
+
+                boolean shouldSkip = false;
+                for (ICitizenData citizen : wareHouse.getAllAssignedCitizen()) {
+                    if (citizen.getJob() instanceof JobWithWaitingQueue jobWithWaitingQueue && jobWithWaitingQueue.isWaiting()) {
+                        shouldSkip = true;
+                        break;
+                    }
+                }
+                if (shouldSkip) continue;
+
+                final WarehouseRequestQueueModule module = wareHouse.getModule(BuildingModules.WAREHOUSE_REQUEST_QUEUE);
+                if (module.getMutableRequestList().isEmpty()) continue;
+
+                final List<IToken<?>> reqsToRemove = new ArrayList<>();
+                int extendedReqs = 0;
+                for (final IToken<?> reqId : module.getMutableRequestList())
+                {
+                    final IRequest localRequest = getColony().getRequestManager().getRequestForToken(reqId);
+                    if (localRequest == null)
+                    {
+                        reqsToRemove.add(reqId);
+                        continue;
+                    }
+
+                    if (request == null)
+                    {
+                        addRequest(reqId, 0);
+                        request = reqId;
+                        reqsToRemove.add(reqId);
+                    }
+                    else if (localRequest instanceof StandardRequests.DeliveryRequest && hasSameDestinationDelivery(localRequest))
+                    {
+                        addRequest(reqId, 0);
+                        extendedReqs++;
+                        reqsToRemove.add(reqId);
+                    }
+
+                    if (extendedReqs >= initialLimit) break;
+                }
+
+                module.getMutableRequestList().removeAll(reqsToRemove);
+                module.markDirty();
+
+                if (request != null)
+                {
+                    wareHouseWorkingFor = wareHouse;
+                    break;
+                }
+            }
+            if(request == null) return null;
+
+        }
+        return (IRequest<IDeliverymanRequestable>) getColony().getRequestManager().getRequestForToken(request);
+    }
+
+    @SuppressWarnings(UNCHECKED)
+    public IRequest<IDeliverymanRequestable> pickMoreDeliveryTask(int limit) {
+        if(limit <= 0) return null;
+
+        // this setting aims to separate tasks to more citizen, they should not get too much task to deliver for they have limits on tasks they get.
+        int trueLimit = Math.min(limit, 5);
+        IToken<?> request = getTaskQueueFromDataStore().getLast();
+        IRequest<?> trueRequest = getColony().getRequestManager().getRequestForToken(request);
+
+        if(trueRequest == null || !(trueRequest.getRequest() instanceof Delivery delivery))
+        {
+            return null;
+        }
+
+        IWareHouse wareHouse = wareHouseWorkingFor == null ? findWareHouse() : wareHouseWorkingFor;
+        if (wareHouse == null)
+        {
+            return null;
+        }
+
+        final WarehouseRequestQueueModule module = wareHouse.getModule(BuildingModules.WAREHOUSE_REQUEST_QUEUE);
+        if (module.getMutableRequestList().isEmpty())
+        {
+            return null;
+        }
+
+        final List<IToken<?>> reqsToRemove = new ArrayList<>();
+        int extendedReqs = 0;
+        for (final IToken<?> reqId : module.getMutableRequestList())
+        {
+            final IRequest<?> localRequest = getColony().getRequestManager().getRequestForToken(reqId);
+            if (localRequest == null)
+            {
+                reqsToRemove.add(reqId);
+                continue;
+            }
+
+            if (!(localRequest.getRequest() instanceof Delivery localDelivery))
+            {
+                continue;
+            }
+
+            if (localRequest instanceof StandardRequests.DeliveryRequest && haveTasksSameSourceAndDest(delivery, localDelivery))
+            {
+                addRequest(reqId, 0);
+                extendedReqs++;
+                reqsToRemove.add(reqId);
+            }
+
+            if (extendedReqs >= trueLimit)
+            {
+                break;
+            }
+
+        }
+
+        if (reqsToRemove.isEmpty())
+        {
+            request = null;
+            for (final IToken<?> reqId : module.getMutableRequestList())
+            {
+                final IRequest<?> localRequest = getColony().getRequestManager().getRequestForToken(reqId);
+                if (localRequest == null)
+                {
+                    reqsToRemove.add(reqId);
+                    continue;
+                }
+
+                if (!(localRequest.getRequest() instanceof Delivery localDelivery))
+                {
+                    continue;
+                }
+
+                if (request == null && hasSameStart(delivery, localDelivery))
+                {
+                    addRequest(reqId, 0);
+                    request = reqId;
+                    delivery = localDelivery;
+                    reqsToRemove.add(reqId);
+                }
+                else if (localRequest instanceof StandardRequests.DeliveryRequest && haveTasksSameSourceAndDest(delivery, localDelivery))
+                {
+                    addRequest(reqId, 0);
+                    extendedReqs++;
+                    reqsToRemove.add(reqId);
+                }
+
+                if (extendedReqs > trueLimit)
+                {
+                    break;
+                }
+
+            }
+        }
+
+        module.getMutableRequestList().removeAll(reqsToRemove);
+        module.markDirty();
+
+        return request == null ? null : (IRequest<IDeliverymanRequestable>) getColony().getRequestManager().getRequestForToken(request);
+    }
+
+    /**
+     * Method used to add a request to the queue
+     * @author ARxyt
+     * @param token The token of the requests to add.
+     */
+    @SuppressWarnings(UNCHECKED)
+    public void addRequest(@NotNull final IToken<?> token, final int insertionIndex)
+    {
+        final IRequestManager requestManager = getColony().getRequestManager();
+
+        LinkedList<IToken<?>> taskQueue = getTaskQueueFromDataStore();
+
+        int offset = 0;
+        for (int i = 0; i < taskQueue.size(); i++)
+        {
+            final IToken<?> theToken = taskQueue.get(i);
+            final IRequest<? extends IDeliverymanRequestable> request = (IRequest<? extends IDeliverymanRequestable>) (requestManager.getRequestForToken(theToken));
+            if (request == null || request.getState() == RequestState.COMPLETED)
+            {
+                taskQueue.remove(theToken);
+                i--;
+                if(i >= taskQueue.size() - insertionIndex) {
+                    offset--;
+                }
+            }
+            else
+            {
+                request.getRequest().incrementPriorityDueToAging();
+            }
+        }
+
+        getTaskQueueFromDataStore().add(Math.max(0, taskQueue.size() - insertionIndex + offset), token);
+    }
+
+    /**
+     * Method called to mark the current request as finished.
+     *
+     * @param successful True when the processing was successful, false when not.
+     */
+    public void finishRequest(final boolean successful)
+    {
+        if (getTaskQueueFromDataStore().isEmpty())
+        {
+            return;
+        }
+
+        final IToken<?> current = getTaskQueueFromDataStore().getFirst();
+
+        final IRequest<?> request = getColony().getRequestManager().getRequestForToken(current);
+
+        if (request == null)
+        {
+            if (!getTaskQueueFromDataStore().isEmpty() && current == getTaskQueueFromDataStore().getFirst())
+            {
+                getTaskQueueFromDataStore().removeFirst();
+            }
+            return;
+        }
+        else if (request.getRequest() instanceof Delivery)
+        {
+            final List<IRequest<? extends Delivery>> taskList = getTaskListWithSameDestination((IRequest<? extends Delivery>) request);
+            if (ongoingDeliveries != 0)
+            {
+                for (int i = 0; i < Math.max(1, Math.min(ongoingDeliveries, taskList.size())); i++)
+                {
+                    final IRequest<? extends Delivery> req = taskList.get(i);
+                    if (req.getState() == RequestState.IN_PROGRESS)
+                    {
+                        getColony().getRequestManager().updateRequestState(req.getId(), successful ? RequestState.RESOLVED : RequestState.FAILED);
+                    }
+                    getTaskQueueFromDataStore().remove(req.getId());
+                }
+            }
+            else
+            {
+                for (final IToken<?> token : new ArrayList<>(getDataStore().getOngoingDeliveries()))
+                {
+                    final IRequest<?> req = getColony().getRequestManager().getRequestForToken(token);
+                    if (req != null && req.getState() == RequestState.IN_PROGRESS)
+                    {
+                        getColony().getRequestManager().updateRequestState(req.getId(), successful ? RequestState.RESOLVED : RequestState.FAILED);
+                    }
+                    getTaskQueueFromDataStore().remove(token);
+                    getDataStore().getOngoingDeliveries().remove(token);
+                }
+            }
+        }
+        else if (request.getRequest() instanceof Pickup)
+        {
+            getTaskQueueFromDataStore().remove(request.getId());
+            getColony().getRequestManager().updateRequestState(current, successful ? RequestState.RESOLVED : RequestState.FAILED);
+        }
+        else
+        {
+            getColony().getRequestManager().updateRequestState(current, successful ? RequestState.RESOLVED : RequestState.FAILED);
+
+            //Just to be sure lets delete them!
+            if (!getTaskQueueFromDataStore().isEmpty() && current == getTaskQueueFromDataStore().getFirst())
+            {
+                getTaskQueueFromDataStore().removeFirst();
+            }
+        }
+
+        if(getCitizen().getWorkBuilding() != null) getCitizen().getWorkBuilding().markDirty();
+    }
+
+
+    public void setOngoingDeliveries(int target) {
+        ongoingDeliveries = target;
+    }
+
+    public boolean checkDeliveryFinished() {
+        IToken<?> request = getTaskQueueFromDataStore().peekFirst();
+        if (request == null) {
+            return true;
+        }
+        IRequest<?> trueRequest = getColony().getRequestManager().getRequestForToken(request);
+        return trueRequest == null || !(trueRequest.getRequest() instanceof Delivery);
+    }
+
+    @Unique
+    public boolean hasSameStart(@NotNull final Delivery requestA, @NotNull final Delivery requestB) {
+        if (requestA.getStart().equals(requestB.getStart()))
+        {
+            return true;
+        }
+        for (final IWareHouse wareHouse : getColony().getServerBuildingManager().getWareHouses())
+        {
+            if (wareHouse.hasContainerPosition(requestA.getStart().getInDimensionLocation()) && wareHouse.hasContainerPosition(requestB.getStart().getInDimensionLocation()))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Called when a task that is being scheduled is being canceled.
+     *
+     * @param token token of the task to be deleted.
+     */
+    public void onTaskDeletion(@NotNull final IToken<?> token)
+    {
+        getTaskQueueFromDataStore().remove(token);
+
+        if (getCitizen().getWorkBuilding() != null)
+        {
+            getCitizen().getWorkBuilding().markDirty();
+        }
+    }
+
+    /**
+     * Method to get the task queue of this job.
+     *
+     * @return The task queue.
+     */
+    public List<IToken<?>> getTaskQueue()
+    {
+        return ImmutableList.copyOf(getTaskQueueFromDataStore());
+    }
+
+    private void cancelAssignedRequests()
+    {
+        for (final IToken<?> t : getTaskQueue())
+        {
+            final IRequest<?> r = getColony().getRequestManager().getRequestForToken(t);
+            if (r != null)
+            {
+                getColony().getRequestManager().updateRequestState(t, RequestState.FAILED);
+            }
+            else
+            {
+                Log.getLogger().warn("Oops, the request with ID: {} couldn't be cancelled by the deliveryman because it doesn't exist", t);
+            }
+            getTaskQueueFromDataStore().remove(t);
+        }
+    }
+
+    @Override
+    public void onRemoval()
+    {
+        getCitizen().setWorking(false);
+        try
+        {
+            cancelAssignedRequests();
+        }
+        catch (final Exception ex)
+        {
+            Log.getLogger().warn("Active Triggered resulted in exception", ex);
+        }
+        super.onRemoval();
+        getColony().getRequestManager().getDataStoreManager().remove(this.rsDataStoreToken);
+    }
+
+    /**
+     * Check if the dman has the same destination request.
+     *
+     * @param request the incoming request.
+     * @return 0 if so, and 1 if not.
+     */
+    public boolean hasSameDestinationDelivery(@NotNull final IRequest<? extends Delivery> request)
+    {
+        for (final IToken<?> requestToken : getTaskQueue())
+        {
+            final IRequest<?> compareRequest = getColony().getRequestManager().getRequestForToken(requestToken);
+            if (compareRequest != null && compareRequest.getRequest() instanceof Delivery current)
+            {
+                final Delivery newDev = request.getRequest();
+                if (haveTasksSameSourceAndDest(current, newDev))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if two deliveries have the same source and destination.
+     *
+     * @param requestA the first request.
+     * @param requestB the second request.
+     * @return true if so.
+     */
+    private boolean haveTasksSameSourceAndDest(@NotNull final Delivery requestA, @NotNull final Delivery requestB)
+    {
+        if (requestA.getTarget().equals(requestB.getTarget()))
+        {
+            if (requestA.getStart().equals(requestB.getStart()))
+            {
+                return true;
+            }
+            for (final IWareHouse wareHouse : getColony().getServerBuildingManager().getWareHouses())
+            {
+                if (wareHouse.hasContainerPosition(requestA.getStart().getInDimensionLocation()) && wareHouse.hasContainerPosition(requestB.getStart().getInDimensionLocation()))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Build a list of all requests that have the same source/dest pair.
+     *
+     * @param request the first request.
+     * @return a list.
+     */
+    public List<IRequest<? extends Delivery>> getTaskListWithSameDestination(final IRequest<? extends Delivery> request)
+    {
+        final List<IRequest<? extends Delivery>> deliveryList = new ArrayList<>();
+        deliveryList.add(request);
+        for (final IToken<?> requestToken : getTaskQueue())
+        {
+            if (!requestToken.equals(request.getId()))
+            {
+                final IRequest<?> compareRequest = getColony().getRequestManager().getRequestForToken(requestToken);
+                if (compareRequest != null && compareRequest.getRequest() instanceof Delivery current)
+                {
+                    final Delivery newDev = request.getRequest();
+                    if (haveTasksSameSourceAndDest(current, newDev))
+                    {
+                        deliveryList.add((IRequest<? extends Delivery>) compareRequest);
+                    }
+                }
+            }
+        }
+        return deliveryList;
+    }
+
+    //An abandoned method, useless with their setting.
+    //public Tuple<Double, Integer> getScoreForDelivery(final IRequest<?> newRequest)
+
+
+    /**
+     * Finds the warehouse our dman is assigned to
+     *
+     * @return warehouse building or null
+     */
+    public IWareHouse findWareHouse()
+    {
+        for (final IWareHouse building : getColony().getServerBuildingManager().getWareHouses())
+        {
+            if (building.getFirstModuleOccurance(CourierAssignmentModule.class).hasAssignedCitizen(getCitizen()))
+            {
+                return building;
+            }
+        }
+
+        return null;
+    }
+
+    public List<IWareHouse> findWareHouses() {
+        return getColony().getServerBuildingManager().getWareHouses();
+    }
+
+    /**
+     * Add a concurrent delivery that is going on.
+     * @param requestToken the token of the request.
+     */
+    public void addConcurrentDelivery(final IToken<?> requestToken)
+    {
+        getDataStore().getOngoingDeliveries().add(requestToken);
+    }
+
+    /**
+     * Remove a concurrent delivery that is going on.
+     * @param requestToken the token of the request.
+     */
+    public void removeConcurrentDelivery(final IToken<?> requestToken)
+    {
+        getDataStore().getOngoingDeliveries().remove(requestToken);
+    }
+
+    /**
+     * @param requestToken the token of the request.
+     */
+    public void setTaskNotFinished(final IToken<?> requestToken)
+    {
+        getColony().getRequestManager().updateRequestState(requestToken, RequestState.FAILED);
+        getTaskQueueFromDataStore().remove(requestToken);
+    }
+
+    @Override
+    public double getSaturationFactor()
+    {
+        return 1.2;
+    }
+
+    @Override
+    public boolean canEat(final ItemStack stack) {
+        final IRequest<? extends IRequestable> currentTask = getTaskToDeliver();
+        if (currentTask == null)
+        {
+            return true;
+        }
+        final IRequestable request = currentTask.getRequest();
+        return !(request instanceof Delivery) || !ItemStack.isSameItem(((Delivery) request).getStack(), stack);
+    }
+
+    @Override
+    public boolean IsHiredByAdditionalWorkPlace() {
+        return findWareHouse() == null;
+    }
+
+    public void setWaitingForJob(boolean isWaiting) {
+        waitingForJob = isWaiting;
+    }
+
+    @Override
+    public boolean isWaiting() {
+        return waitingForJob;
+    }
+}

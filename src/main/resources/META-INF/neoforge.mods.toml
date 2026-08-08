@@ -89,7 +89,7 @@ config="${mod_id}.mixins.json"
 [[dependencies."${mod_id}"]]
     modId="minecolonies"
     type="required"
-    versionRange="[1.1.1285-1.21.1-snapshot,)"
+    versionRange="[1.1.1285-1.21.1-snapshot,1.1.1349-1.21.1-snapshot]"
     ordering="NONE"
     side="BOTH"
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares

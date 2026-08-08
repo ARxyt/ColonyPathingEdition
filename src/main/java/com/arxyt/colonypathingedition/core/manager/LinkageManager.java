@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 public class LinkageManager {
 
     public static boolean useJEAMatch = false;
+    public static boolean useCompatibilityAddon = false;
 
     public static Method match;
 
@@ -18,6 +19,12 @@ public class LinkageManager {
             match = clazz.getMethod("contains", String.class, CharSequence.class);
         } catch (ClassNotFoundException | NoSuchMethodException e) {
             useJEAMatch = false;
+        }
+        useCompatibilityAddon = true;
+        try {
+            Class.forName("steve_gall.minecolonies_compatibility.core.common.init.BuildingModules");
+        } catch (ClassNotFoundException e) {
+            useCompatibilityAddon = false;
         }
     }
 

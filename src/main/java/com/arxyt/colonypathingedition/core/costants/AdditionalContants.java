@@ -21,6 +21,8 @@ public final class AdditionalContants {
     public static final Set<Class<?>> JOBS_EAT_IMMEDIATELY = Set.of(JobChef.class, JobCook.class);
     public static final Set<Class<?>> JOBS_MAY_NOT_SLEEP = Set.of(AbstractJobGuard.class, JobHealer.class);
 
+    public static final String EATING_MODULE_ = "com.arxyt.colonypathingedition.core.eating.";
+
     public static final String UNSAFE_UPDATE = "com.arxyt.colonypathingedition.core.update.unstable";
     public static final String SAFE_UPDATE = "com.arxyt.colonypathingedition.core.update.stable";
     public static final String UPDATE_MESSAGE = "com.arxyt.colonypathingedition.core.update.latest";

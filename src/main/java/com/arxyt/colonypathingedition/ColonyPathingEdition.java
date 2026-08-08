@@ -8,6 +8,7 @@ import com.arxyt.colonypathingedition.core.easycolony.event.ReadMindEvent;
 import com.arxyt.colonypathingedition.core.easycolony.event.ResurrectEvent;
 import com.arxyt.colonypathingedition.core.event.CitizenTrackingHandler;
 import com.arxyt.colonypathingedition.core.event.LargeBottleCauldronInteractions;
+import com.arxyt.colonypathingedition.core.initializer.InteractionInitializer;
 import com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModules;
 import com.arxyt.colonypathingedition.core.minecolonies.module.ModBuildingInitializer;
 import com.arxyt.colonypathingedition.core.network.CPENetwork;
@@ -60,6 +61,7 @@ public class ColonyPathingEdition {
     @SubscribeEvent
     public static void onConfigLoad(@NotNull final ModConfigEvent event) {
         PathingConfig.onLoad();
+        InteractionInitializer.init();
     }
 
     @SubscribeEvent
