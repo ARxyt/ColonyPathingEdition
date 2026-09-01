@@ -5,4 +5,5 @@ public interface JobNetherWorkerExtra {
     boolean setExtraRounds(boolean extraRounds);
     boolean getShouldEat();
     boolean getExtraRounds();
+    boolean canExtraRounds(int limit);
 }

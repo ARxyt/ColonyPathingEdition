@@ -3,7 +3,10 @@ package com.arxyt.colonypathingedition.core.costants.states;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 
 public enum NewAIWorkerState implements IAIState {
-    PLANTATION_PRECHECK_FIELD(false);
+
+    PLANTATION_PRECHECK_FIELD(false),
+
+    NETHER_GATHER_REWARDS(false);
 
     /**
      * Is it okay to eat.

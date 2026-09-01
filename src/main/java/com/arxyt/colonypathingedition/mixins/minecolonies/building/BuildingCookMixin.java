@@ -1,4 +1,4 @@
-package com.arxyt.colonypathingedition.mixins.minecolonies.workersetting;
+package com.arxyt.colonypathingedition.mixins.minecolonies.building;
 
 import com.arxyt.colonypathingedition.api.workersetting.BuildingCookExtra;
 import com.minecolonies.api.colony.IColony;
@@ -7,7 +7,6 @@ import com.minecolonies.core.colony.buildings.workerbuildings.BuildingCook;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

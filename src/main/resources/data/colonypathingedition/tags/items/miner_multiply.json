@@ -1,0 +1,33 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#minecraft:stone_crafting_materials",
+      "required": false
+    },
+    {
+      "id": "minecraft:clay_ball",
+      "required": false
+    },
+    {
+      "id": "minecraft:flint",
+      "required": false
+    },
+    {
+      "id": "#forge:stone",
+      "required": false
+    },
+    {
+      "id": "#forge:cobblestone",
+      "required": false
+    },
+    {
+      "id": "#forge:sand",
+      "required": false
+    },
+    {
+      "id": "#forge:gravel",
+      "required": false
+    }
+  ]
+}

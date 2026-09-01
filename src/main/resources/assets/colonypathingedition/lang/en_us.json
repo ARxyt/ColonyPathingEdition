@@ -140,6 +140,7 @@
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.NETHER_RETURN": "NETHER_RETURN",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.NETHER_OPENPORTAL": "NETHER_OPENPORTAL",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.NETHER_CLOSEPORTAL": "NETHER_CLOSEPORTAL",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.NETHER_GATHER_REWARDS": "NETHER_GATHER_REWARDS",
 
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FLORIST_HARVEST": "FLORIST_HARVEST",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FLORIST_COMPOST": "FLORIST_COMPOST",
@@ -236,15 +237,18 @@
   "com.arxyt.colonypathingedition.core.black_list.sync_tooltip": "Sync black list on server, still need a refresh after click",
   "com.arxyt.colonypathingedition.core.field_is_null": "This field haven't “build up” now! Maybe you should… wait for a second?",
   "com.arxyt.colonypathingedition.core.module.no_such_module": "You are missing module: %s. The module exists at server side. Please check your minecolonies addons' config and open the module!",
-  "com.arxyt.colonypathingedition.core.eating.diversity": "It feels like we've been eating the same few dishes for ages. I wonder when the dining hall will introduce something new... Honestly, I'm looking forward to trying some fresh meals~",
-  "com.arxyt.colonypathingedition.core.eating.diversity.urgent": "The dining hall's menu is getting pretty boring lately. No matter how tasty the food is, eating the same things over and over is bound to get old...",
-  "com.arxyt.colonypathingedition.core.eating.quality": "Life in the colony has been getting better and better, but the meals at the dining hall still feel plain and uninspiring. It would be wonderful if they could serve some truly delicious dishes~",
-  "com.arxyt.colonypathingedition.core.eating.quality.urgent": "How can the food at the dining hall leave me feeling full but somehow still unsatisfied? If this keeps up, I'll start turning green from eating like this...",
+  "com.arxyt.colonypathingedition.core.eating.fooddiversity": "It feels like we've been eating the same few dishes for ages. I wonder when the dining hall will introduce something new... Honestly, I'm looking forward to trying some fresh meals~",
+  "com.arxyt.colonypathingedition.core.eating.fooddiversity.urgent": "The dining hall's menu is getting pretty boring lately. No matter how tasty the food is, eating the same things over and over is bound to get old...",
+  "com.arxyt.colonypathingedition.core.eating.foodquality": "Life in the colony has been getting better and better, but the meals at the dining hall still feel plain and uninspiring. It would be wonderful if they could serve some truly delicious dishes~",
+  "com.arxyt.colonypathingedition.core.eating.foodquality.urgent": "How can the food at the dining hall leave me feeling full but somehow still unsatisfied? If this keeps up, I'll start turning green from eating like this...",
+  "com.arxyt.colonypathingedition.core.actions.mining.alert": "I can't mine blocks with my tool! Target block: ",
   "com.minecolonies.research.technology.colonypathedition_precise_farming.name": "Intensive Cultivation I",
   "com.minecolonies.research.technology.colonypathedition_precise_farming.subtitle": "You reap what you sow.",
   "com.minecolonies.research.technology.colonypathedition_precise_farming2.name": "Intensive Cultivation II",
   "com.minecolonies.research.technology.colonypathedition_precise_farming2.subtitle": "Hard work pays off.",
   "com.minecolonies.research.technology.colonypathedition_precise_farming3.name": "Intensive Cultivation III",
   "com.minecolonies.research.technology.colonypathedition_precise_farming3.subtitle": "We have pushed the land to its limits...",
-  "com.minecolonies.research.effects.colonypathedition_precise_farming.description": "Farmer gain +%3$s%% crops, but harvesting will get much slower"
+  "com.minecolonies.research.effects.colonypathedition_precise_farming.description": "Farmer gain +%3$s%% crops, but harvesting will get much slower",
+  "com.minecolonies.coremod.gui.townhall.stats.escaped": "Successfully escaped: %d",
+  "com.minecolonies.coremod.gui.townhall.stats.extraRounds": "Extra exploring rounds: %d"
 }

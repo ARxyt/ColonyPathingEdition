@@ -1,4 +1,4 @@
-package com.arxyt.colonypathingedition.mixins.minecolonies.workersetting;
+package com.arxyt.colonypathingedition.mixins.minecolonies.building;
 
 import com.minecolonies.api.colony.IColony;
 import com.minecolonies.core.colony.buildings.AbstractBuilding;

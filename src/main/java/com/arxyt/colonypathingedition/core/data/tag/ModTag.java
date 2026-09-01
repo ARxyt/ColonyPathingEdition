@@ -5,13 +5,21 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 
 public class ModTag {
-    public static final TagKey<Item> SEEDS_UNDERWATER = createTag("seeds_underwater");
-    public static final TagKey<Item> SEEDS_NOFARMLAND = createTag("seeds_nofarmland");
-    public static final TagKey<Item> ADDITIONAL_SEEDS = createTag("additional_seeds");
+    public static final TagKey<Item> SEEDS_UNDERWATER = createItemTag("seeds_underwater");
+    public static final TagKey<Item> SEEDS_NOFARMLAND = createItemTag("seeds_nofarmland");
+    public static final TagKey<Item> ADDITIONAL_SEEDS = createItemTag("additional_seeds");
+    public static final TagKey<Item> MINER_MULTIPLY_ITEMS = createItemTag("miner_multiply");
 
-    private static TagKey<Item> createTag(String name) {
+    public static final TagKey<Block> MINER_MULTIPLY_BLOCKS = createBlockTag("miner_multiply");
+
+    private static TagKey<Item> createItemTag(String name) {
         return TagKey.create(Registries.ITEM, new ResourceLocation(ColonyPathingEdition.MODID, name));
+    }
+
+    private static TagKey<Block> createBlockTag(String name) {
+        return TagKey.create(Registries.BLOCK, new ResourceLocation(ColonyPathingEdition.MODID, name));
     }
 }

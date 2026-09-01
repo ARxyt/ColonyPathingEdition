@@ -100,7 +100,7 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
             return repathCounter >= 3;
         }
         BlockPos workerPos = worker.blockPosition();
-        if (!walkToSafePos(workFrom) && DistanceUtils.dist(workerPos, workFrom) >= 10 ){
+        if (!walkToSafePos(workFrom) && DistanceUtils.dist(workerPos, workFrom) >= 10){
             return repathCounter >= 3;
         }
         if(DistanceUtils.dist(workPos, workFrom) >= 10){

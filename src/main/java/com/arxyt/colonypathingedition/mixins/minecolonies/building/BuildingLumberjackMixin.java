@@ -1,4 +1,4 @@
-package com.arxyt.colonypathingedition.mixins.minecolonies.workersetting;
+package com.arxyt.colonypathingedition.mixins.minecolonies.building;
 
 import com.arxyt.colonypathingedition.api.workersetting.BuildingLumberjackExtra;
 import com.arxyt.colonypathingedition.core.config.PathingConfig;

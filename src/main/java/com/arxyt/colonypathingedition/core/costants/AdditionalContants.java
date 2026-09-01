@@ -13,6 +13,7 @@ public final class AdditionalContants {
     public static final int IMMEDIATELY_DELAY = 1;
     public static final int WAITING_DELAY = 10;
     public static final int WALKING_DELAY = 20;
+    public static final int ADVENTURE_DELAY = 40;
     public static final int STUCK_DELAY = 100;
 
     public static final String SICK_TIME = "sick_time";
@@ -29,6 +30,7 @@ public final class AdditionalContants {
     public static final String OUT_OF_DATE_MESSAGE = "com.arxyt.colonypathingedition.core.update.out_of_date";
     public static final String CHANGELOG = "com.arxyt.colonypathingedition.core.update.changelog";
     public static final String CLOSER = "com.arxyt.colonypathingedition.core.update.closer";
+    public static final String HANDLE_ALERT = "com.arxyt.colonypathingedition.core.actions.mining.alert";
     public static final String HURT_ALERT = "com.arxyt.colonypathingedition.core.easycolony.colony.hurt.message";
     public static final String READ_MIND = "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.message";
     public static final String READ_MIND_STATE = "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state";

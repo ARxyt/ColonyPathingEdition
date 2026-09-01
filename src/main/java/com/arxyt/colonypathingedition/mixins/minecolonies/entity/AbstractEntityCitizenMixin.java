@@ -3,14 +3,9 @@ package com.arxyt.colonypathingedition.mixins.minecolonies.entity;
 import com.minecolonies.api.entity.citizen.AbstractCivilianEntity;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenJobHandler;
+import com.minecolonies.core.entity.other.SittingEntity;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
-import net.minecraft.network.protocol.game.ClientboundAddEntityPacket;
-import net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,6 +23,16 @@ public abstract class AbstractEntityCitizenMixin extends AbstractCivilianEntity 
     public AbstractEntityCitizenMixin(final EntityType<? extends PathfinderMob> type, final Level world)
     {
         super(type, world);
+    }
+
+    public void setPos(double p_20210_, double p_20211_, double p_20212_) {
+        this.setPosRaw(p_20210_, p_20211_, p_20212_);
+        if(getVehicle() instanceof SittingEntity) {
+            this.setBoundingBox(this.getDimensions(Pose.STANDING).scale(1.15F,0.8F).makeBoundingBox(this.position()).move(0, 0.45F, 0));
+        }
+        else{
+            this.setBoundingBox(this.makeBoundingBox());
+        }
     }
 
     @Override

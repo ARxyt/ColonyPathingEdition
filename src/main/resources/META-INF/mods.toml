@@ -60,6 +60,6 @@ config="colonypathingedition.mixins.json"
 [[dependencies."${mod_id}"]]
     modId="minecolonies"
     mandatory=true
-    versionRange="[1.20.1-1.1.1160-snapshot,)"
+    versionRange="[1.20.1-1.1.1197-snapshot,1.20.1-1.1.1259-snapshot]"
     ordering="AFTER"
     side="BOTH"

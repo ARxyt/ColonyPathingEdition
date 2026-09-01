@@ -4,7 +4,6 @@ import com.arxyt.colonypathingedition.core.job.NewJobDeliveryman;
 import com.arxyt.colonypathingedition.core.manager.LinkageManager;
 import com.arxyt.colonypathingedition.core.util.DistanceUtils;
 import com.minecolonies.api.colony.buildings.IBuilding;
-import com.minecolonies.api.colony.buildings.modules.IBuildingModule;
 import com.minecolonies.api.colony.buildings.workerbuildings.IWareHouse;
 import com.minecolonies.api.colony.interactionhandling.ChatPriority;
 import com.minecolonies.api.colony.requestsystem.location.ILocation;
@@ -27,7 +26,6 @@ import com.minecolonies.core.colony.buildings.modules.WorkerBuildingModule;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingDeliveryman;
 import com.minecolonies.core.colony.interactionhandling.PosBasedInteraction;
 import com.minecolonies.core.colony.interactionhandling.StandardInteraction;
-import com.minecolonies.core.colony.jobs.JobDeliveryman;
 import com.minecolonies.core.colony.requestsystem.requests.StandardRequests;
 import com.minecolonies.core.entity.ai.workers.AbstractEntityAIInteract;
 import com.minecolonies.core.tileentities.TileEntityColonyBuilding;
@@ -49,7 +47,6 @@ import steve_gall.minecolonies_compatibility.core.common.building.module.Network
 import steve_gall.minecolonies_compatibility.core.common.init.ModBuildingModules;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.*;
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.*;
@@ -58,16 +55,10 @@ import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.D
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.PICKUP;
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.PREPARE_DELIVERY;
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.START_WORKING;
-import static com.minecolonies.api.util.constant.Constants.TICKS_SECOND;
 import static com.minecolonies.api.util.constant.StatisticsConstants.*;
 import static com.minecolonies.api.util.constant.TranslationConstants.*;
 
 public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<NewJobDeliveryman, BuildingDeliveryman> {
-
-    /**
-     * Wait a few ticks for the worker to decide what to pick up.
-     */
-    private static final int PICKUP_DELAY = 5;
 
     /**
      * The inventory's slot which is held in hand.
@@ -135,6 +126,7 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<NewJobD
      *
      * @param deliveryman the job he has.
      */
+    @SuppressWarnings("unchecked")
     public NewEntityAIWorkDeliveryman(@NotNull final NewJobDeliveryman deliveryman)
     {
         super(deliveryman);
@@ -142,12 +134,12 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<NewJobD
                 /*
                  * Check if tasks should be executed.
                  */
-                new AITarget(IDLE, () -> START_WORKING, 1),
-                new AITarget(START_WORKING, this::checkIfExecute, this::decide, 1),
-                new AITarget(PREPARE_DELIVERY, this::prepareDelivery, 1),
-                new AITarget(DELIVERY, this::deliver, 1),
-                new AITarget(PICKUP, this::pickup, WAITING_DELAY),
-                new AITarget(DUMPING, this::dump, WALK_DELAY)
+                new AITarget<IAIState>(IDLE, () -> START_WORKING, 1),
+                new AITarget<>(START_WORKING, this::checkIfExecute, this::decide, 1),
+                new AITarget<IAIState>(PREPARE_DELIVERY, this::prepareDelivery, 1),
+                new AITarget<IAIState>(DELIVERY, this::deliver, 1),
+                new AITarget<IAIState>(PICKUP, this::pickup, WAITING_DELAY),
+                new AITarget<IAIState>(DUMPING, this::dump, WALK_DELAY)
 
         );
         worker.setCanPickUpLoot(true);
@@ -383,17 +375,6 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<NewJobD
 
         setDelay(STUCK_DELAY);
         return START_WORKING;
-    }
-
-    /**
-     * Gets the colony's warehouse for the Deliveryman.
-     *
-     * @return the warehouse. null if no warehouse registered.
-     */
-    @Nullable
-    private IWareHouse getAndCheckWareHouse()
-    {
-        return job.findWareHouse();
     }
 
     /**
@@ -794,7 +775,7 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<NewJobD
             if (entity == null) {
                 return false;
             }
-            IWareHouse warehouse = this.getAndCheckWareHouse();
+            IWareHouse warehouse = job.getWareHouseWorkingFor();
             if (warehouse == null) {
                 return false;
             }
@@ -846,13 +827,12 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<NewJobD
 
             if(currentTask == null) {
                 // For we are using too much test on warehouses so we double the delay here.
-                if (!walkToBuilding(getAndCheckWareHouse())) {
+                if (!walkToBuilding(job.findWareHouse())) {
                     setDelay(WALKING_DELAY * 2);
-                    return START_WORKING;
                 } else {
                     setDelay(WAITING_DELAY * 2);
-                    return START_WORKING;
                 }
+                return START_WORKING;
             }
         }
         else {
@@ -888,7 +868,7 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<NewJobD
      */
     private boolean checkIfExecute()
     {
-        final IWareHouse wareHouse = getAndCheckWareHouse();
+        final IWareHouse wareHouse = job.findWareHouse();
         if (wareHouse != null)
         {
             worker.getCitizenData().setWorking(true);

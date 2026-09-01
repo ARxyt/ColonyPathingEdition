@@ -56,7 +56,10 @@ public class HurtAlertEvent {
         if (colony == null) return;
         final IJob<?> job = citizen.getCitizenJobHandler().getColonyJob();
         if (job != null) {
-            MessageUtils.format(job.getJobRegistryEntry().getTranslationKey())
+            MessageUtils.format("[")
+                    .append(colony.getName())
+                    .append("] ")
+                    .append(job.getJobRegistryEntry().getTranslationKey())
                     .append(Component.literal(" "))
                     .append(citizen.getCustomName())
                     .append(Component.literal(" ("))
@@ -66,7 +69,10 @@ public class HurtAlertEvent {
                     .sendTo(colony.getImportantMessageEntityPlayers());
             return;
         }
-        MessageUtils.format(citizen.getCustomName())
+        MessageUtils.format("[")
+                .append(colony.getName())
+                .append("] ")
+                .append(citizen.getCustomName())
                 .append(Component.literal(" ("))
                 .append(Integer.toString((int) (citizen.getHealth() - event.getAmount())))
                 .append(Component.literal(" ♥): "))

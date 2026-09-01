@@ -1,0 +1,45 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#minecraft:stone_ore_replaceables",
+      "required": false
+    },
+    {
+      "id": "#minecraft:deepslate_ore_replaceables",
+      "required": false
+    },
+    {
+      "id": "#minecraft:base_stone_overworld",
+      "required": false
+    },
+    {
+      "id": "#minecraft:azalea_root_replaceable",
+      "required": false
+    },
+    {
+      "id": "#forge:stone",
+      "required": false
+    },
+    {
+      "id": "#forge:cobblestone",
+      "required": false
+    },
+    {
+      "id": "#forge:sand",
+      "required": false
+    },
+    {
+      "id": "#forge:gravel",
+      "required": false
+    },
+    {
+      "id": "minecraft:sandstone",
+      "required": false
+    },
+    {
+      "id": "minecraft:red_sandstone",
+      "required": false
+    }
+  ]
+}

@@ -12,10 +12,13 @@ import com.minecolonies.api.entity.ai.statemachine.tickratestatemachine.ITickRat
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenColonyHandler;
 import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenJobHandler;
+import com.minecolonies.api.util.DamageSourceKeys;
+import com.minecolonies.api.util.Log;
 import com.minecolonies.api.util.MessageUtils;
 import com.minecolonies.api.util.SoundUtils;
 import com.minecolonies.core.Network;
 import com.minecolonies.core.colony.jobs.AbstractJobGuard;
+import com.minecolonies.core.colony.jobs.JobNetherWorker;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.network.messages.client.ItemParticleEffectMessage;
 import net.minecraft.nbt.CompoundTag;
@@ -36,6 +39,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Locale;
 import java.util.Objects;
@@ -53,13 +59,13 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
     @Shadow(remap = false) public abstract ICitizenColonyHandler getCitizenColonyHandler();
     @Shadow(remap = false) public abstract ICitizenJobHandler getCitizenJobHandler();
 
-    @Shadow
-    private int interactionCooldown;
+    @Shadow(remap = false) private int interactionCooldown;
 
     public EntityCitizenMixin(final EntityType<? extends PathfinderMob> type, final Level world)
     {
         super(type, world);
     }
+
 
     @Override
     public void tick() {
@@ -70,8 +76,20 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
             CompoundTag tag = getPersistentData();
             tag.putString("aiState", getCitizenAI().getState().toString());
             if (getCitizenColonyHandler() != null && getCitizenColonyHandler().getColony() != null) {
-                tag.putString("owner", getCitizenColonyHandler().getColony().getPermissions().getOwner().toString());
+                try {
+                    tag.putString("owner", getCitizenColonyHandler().getColony().getPermissions().getOwner().toString());
+                }
+                catch (Exception e) {
+                    Log.getLogger().error("We can't find owner for citizens!");
+                }
             }
+        }
+    }
+
+    @Inject(method = "performMoveAway", at = @At("HEAD"), remap = false, cancellable = true)
+    public void onPreformMoveAway(Entity attacker, CallbackInfo ci){
+        if(getCitizenJobHandler().getColonyJob() instanceof JobNetherWorker jobNetherWorker && jobNetherWorker.isInNether()) {
+            ci.cancel();
         }
     }
 
@@ -83,6 +101,10 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
     private boolean checkIfValidDamageSource(final DamageSource source, final float damage)
     {
         if(source.is(DamageTypes.SWEET_BERRY_BUSH)) {
+            return false;
+        }
+
+        if(getCitizenJobHandler().getColonyJob() instanceof JobNetherWorker jobNetherWorker && jobNetherWorker.isInNether() && !source.typeHolder().is(DamageSourceKeys.NETHER)) {
             return false;
         }
 

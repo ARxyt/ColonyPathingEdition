@@ -2,10 +2,12 @@ package com.arxyt.colonypathingedition.core.ai.worker;
 
 import com.arxyt.colonypathingedition.api.AbstractEntityAIBasicExtra;
 import com.arxyt.colonypathingedition.api.JobNetherWorkerExtra;
-import com.arxyt.colonypathingedition.core.config.PathingConfig;
-import com.arxyt.colonypathingedition.core.util.NewFoodUtils;
-import com.arxyt.colonypathingedition.core.util.SwitchUtils;
-import com.arxyt.colonypathingedition.mixins.minecraft.DamageSourcesAccessor;
+import com.arxyt.colonypathingedition.core.ai.actions.handler.AdventureActionHandler;
+import com.arxyt.colonypathingedition.core.ai.actions.netherworker.NetherWorkerCombatAction;
+import com.arxyt.colonypathingedition.core.ai.actions.netherworker.NetherWorkerMiningAction;
+import com.arxyt.colonypathingedition.core.ai.actions.netherworker.NetherWorkerPickupAction;
+import com.arxyt.colonypathingedition.core.ai.actions.netherworker.NetherWorkerPiglinTradeAction;
+import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.RecipeStorageAccessor;
 import com.google.common.collect.ImmutableList;
 import com.minecolonies.api.colony.IColonyManager;
 import com.minecolonies.api.colony.buildings.modules.ICraftingBuildingModule;
@@ -13,9 +15,9 @@ import com.minecolonies.api.colony.requestsystem.request.IRequest;
 import com.minecolonies.api.colony.requestsystem.requestable.IDeliverable;
 import com.minecolonies.api.colony.requestsystem.requestable.StackList;
 import com.minecolonies.api.colony.requestsystem.requestable.Tool;
-import com.minecolonies.api.compatibility.tinkers.TinkersToolHelper;
 import com.minecolonies.api.crafting.IRecipeStorage;
 import com.minecolonies.api.crafting.ItemStorage;
+import com.minecolonies.api.crafting.RecipeStorage;
 import com.minecolonies.api.entity.ai.JobStatus;
 import com.minecolonies.api.entity.ai.statemachine.AITarget;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
@@ -23,6 +25,7 @@ import com.minecolonies.api.entity.ai.workers.util.GuardGear;
 import com.minecolonies.api.entity.ai.workers.util.GuardGearBuilder;
 import com.minecolonies.api.equipment.ModEquipmentTypes;
 import com.minecolonies.api.equipment.registry.EquipmentTypeEntry;
+import com.minecolonies.api.inventory.InventoryCitizen;
 import com.minecolonies.api.util.*;
 import com.minecolonies.core.colony.buildings.modules.ExpeditionLogModule;
 import com.minecolonies.core.colony.buildings.modules.expedition.ExpeditionLog;
@@ -30,27 +33,18 @@ import com.minecolonies.core.colony.buildings.workerbuildings.BuildingNetherWork
 import com.minecolonies.core.colony.jobs.JobNetherWorker;
 import com.minecolonies.core.entity.ai.workers.crafting.AbstractEntityAICrafting;
 import com.minecolonies.core.items.ItemAdventureToken;
-import com.minecolonies.core.util.citizenutils.CitizenItemUtils;
+import com.minecolonies.core.util.WorkerUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.util.RandomSource;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.monster.MagmaCube;
-import net.minecraft.world.entity.monster.Slime;
 import net.minecraft.world.item.*;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.portal.PortalShape;
-import net.minecraft.world.level.storage.loot.LootParams;
-import net.minecraft.world.level.storage.loot.LootTable;
 import net.minecraftforge.common.ToolActions;
 import net.minecraftforge.items.IItemHandler;
 import org.jetbrains.annotations.NotNull;
@@ -59,13 +53,13 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.*;
+import static com.arxyt.colonypathingedition.core.costants.states.NewAIWorkerState.NETHER_GATHER_REWARDS;
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.*;
 import static com.minecolonies.api.util.constant.CitizenConstants.*;
 import static com.minecolonies.api.util.constant.EquipmentLevelConstants.*;
 import static com.minecolonies.api.util.constant.GuardConstants.*;
-import static com.minecolonies.api.util.constant.GuardConstants.BASE_PHYSICAL_DAMAGE;
-import static com.minecolonies.api.util.constant.NbtTagConstants.*;
-import static com.minecolonies.api.util.constant.NbtTagConstants.TAG_XP_DROPPED;
+import static com.minecolonies.api.util.constant.NbtTagConstants.TAG_ENTITY_TYPE;
 import static com.minecolonies.api.util.constant.StatisticsConstants.*;
 import static com.minecolonies.core.colony.buildings.modules.BuildingModules.NETHERMINER_MENU;
 import static com.minecolonies.core.entity.ai.workers.production.EntityAIStructureMiner.*;
@@ -80,18 +74,15 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
     private static final int TICK_DELAY = 40;
 
     /**
-     * Multiplier for damage reduction.
-     */
-    private static final float SECONDARY_DAMAGE_REDUCTION = .005f;
-
-    /**
      * Virtual slots for equipment, so we can track what is "equipped" without having it visible when the citizen is invisible.
      */
     private final Map<EquipmentSlot, ItemStack> virtualEquipmentSlots = new HashMap<>();
 
-    boolean extraRound;
-    int timeOutCounter = 0;
-    boolean hasEaten = false;
+    private boolean extraRound;
+    private int timeOutCounter = 0;
+    private boolean hasEaten = false;
+    private final AdventureActionHandler actionHandler = new AdventureActionHandler();
+    private IAIState dumpReturnState = IDLE;
 
     /**
      * Edibles that the worker will attempt to eat while in the nether (unfiltered)
@@ -108,15 +99,17 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
      */
     public final List<List<GuardGear>> itemsNeeded = new ArrayList<>();
 
+    @SuppressWarnings("unchecked")
     public NewEntityAIWorkNetherWorker(@NotNull JobNetherWorker job)
     {
         super(job);
         super.registerTargets(
-                new AITarget(NETHER_LEAVE, this::leaveForNether, TICK_DELAY),
-                new AITarget(NETHER_AWAY, this::stayInNether, TICK_DELAY),
-                new AITarget(NETHER_RETURN, this::returnFromNether, TICK_DELAY),
-                new AITarget(NETHER_OPENPORTAL, this::openPortal, TICK_DELAY),
-                new AITarget(NETHER_CLOSEPORTAL, this::closePortal, TICK_DELAY)
+                new AITarget<IAIState>(NETHER_LEAVE, this::leaveForNether, TICK_DELAY),
+                new AITarget<IAIState>(NETHER_AWAY, this::stayInNether, 1),
+                new AITarget<IAIState>(NETHER_GATHER_REWARDS, this::gatherRewards, 1),
+                new AITarget<IAIState>(NETHER_RETURN, this::returnFromNether, TICK_DELAY),
+                new AITarget<IAIState>(NETHER_OPENPORTAL, this::openPortal, TICK_DELAY),
+                new AITarget<IAIState>(NETHER_CLOSEPORTAL, this::closePortal, TICK_DELAY)
         );
         worker.setCanPickUpLoot(true);
 
@@ -214,34 +207,20 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
         return !worker.isInvisible();
     }
 
-    private void goToVault()
-    {
-        worker.playSound(SoundEvents.PORTAL_TRIGGER, worker.getRandom().nextFloat() * 0.5F + 0.25F, 0.25F);
-        worker.getCitizenData().getColony().getTravellingManager().startTravellingTo(
-                worker.getCitizenData(),
-                building.getPortalLocation(),
-                job.getCraftedResults().size() * 400 //Twenty seconds of travelling time per item, task or adventure that we complete, maybe parameterize in the config.
-        );
-
-        worker.remove(Entity.RemovalReason.DISCARDED);
-    }
-
     @Override
     protected IAIState decide()
     {
-        //Check if we are traveling, we don't spawn an entity if we are traveling.
-        if (worker.getCitizenData().getColony().getTravellingManager().isTravelling(worker.getCitizenData()) || job.isInNether())
+        //Check if we are traveling.
+        if (!job.getCraftedResults().isEmpty())
         {
             extraRound = ((JobNetherWorkerExtra)job).getExtraRounds();
+            worker.setInvisible(true);
+            setDelay(WAITING_DELAY);
             return NETHER_AWAY;
         }
-
-        //Now check if travelling finished.
-        final Optional<BlockPos> travelingTarget = worker.getCitizenData().getColony().getTravellingManager().getTravellingTargetFor(worker.getCitizenData());
-        if (travelingTarget.isPresent())
-        {
-            worker.getCitizenData().setNextRespawnPosition(EntityUtils.getSpawnPoint(job.getColony().getWorld(), travelingTarget.get()));
-            worker.getCitizenData().updateEntityIfNecessary();
+        if (!job.getProcessedResults().isEmpty() || job.isInNether()) {
+            setDelay(WAITING_DELAY);
+            return NETHER_GATHER_REWARDS;
         }
 
         job.setInNether(false);
@@ -250,18 +229,48 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
 
         if (crafterState != IDLE && crafterState != START_WORKING)
         {
+            setDelay(WAITING_DELAY);
             return crafterState;
+        }
+
+        if (!building.isReadyForTrip())
+        {
+            worker.getCitizenData().setJobStatus(JobStatus.IDLE);
+            setDelay(STUCK_DELAY);
+            return IDLE;
+        }
+
+        if (!walkToBuilding())
+        {
+            setDelay(WALKING_DELAY);
+            return getState();
+        }
+
+        if (!worker.getInventoryCitizen().hasSpace())
+        {
+            setDelay(WAITING_DELAY);
+            return INVENTORY_FULL;
         }
 
         // Get Armor if available.
         // This is async, but we'll wait extra time for it if it's craftable.
+        equipArmor(true);
         boolean isArmorCraftable = checkAndRequestArmorWithAvailableCheck();
 
         // Get food if available. We just ignore extra time waiting for it as armor is much more complex to craft.
         final IAIState tempState = checkAndRequestFood();
         if (tempState != getState())
         {
+            setDelay(WAITING_DELAY);
             return tempState;
+        }
+
+        final BlockPos portal = building.getPortalLocation();
+        if (portal == null)
+        {
+            Log.getLogger().warn("--- Missing Portal Tag In Nether Worker Building! Aborting Operation! ---");
+            setDelay(STUCK_DELAY);
+            return IDLE;
         }
 
         // Check for materials needed to go to the Nether:
@@ -278,50 +287,35 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
             }
         }
 
-        if (!hasItemsAvailable)
-        {
-            setDelay(60);
-            return IDLE;
-        }
+        // Optional
+        checkForToolOrWeapon(ModEquipmentTypes.axe.get());
+        checkForToolOrWeapon(ModEquipmentTypes.shovel.get());
+        checkForToolOrWeapon(ModEquipmentTypes.hoe.get());
 
-        final BlockPos portal = building.getPortalLocation();
-        if (portal == null)
-        {
-            Log.getLogger().warn("--- Missing Portal Tag In Nether Worker Building! Aborting Operation! ---");
-            setDelay(120);
-            return IDLE;
-        }
-
-        // Get other adventuring supplies. These are required.
-        // Done this way to get all the requests in parallel
-        boolean missingAxe = checkForToolOrWeapon(ModEquipmentTypes.axe.get());
+        // Demand
         boolean missingPick = checkForToolOrWeapon(ModEquipmentTypes.pickaxe.get());
-        boolean missingShovel = checkForToolOrWeapon(ModEquipmentTypes.shovel.get());
         boolean missingSword = checkForToolOrWeapon(ModEquipmentTypes.sword.get());
         boolean missingLighter = checkForToolOrWeapon(ModEquipmentTypes.flint_and_steel.get());
-        if (missingAxe || missingPick || missingShovel || missingSword || missingLighter)
+        if (!hasItemsAvailable || missingPick || missingSword || missingLighter)
         {
             worker.getCitizenData().setJobStatus(JobStatus.STUCK);
-            setDelay(60);
-            return IDLE;
+            setDelay(STUCK_DELAY);
+            return START_WORKING;
         }
 
         if(!hasEaten && worker.getCitizenData().getSaturation() < FULL_SATURATION){
-            if(worker.getCitizenJobHandler().getColonyJob() instanceof JobNetherWorker job){
-                ((JobNetherWorkerExtra) job).setShouldEat(true);
+            if(worker.getCitizenJobHandler().getColonyJob() instanceof JobNetherWorkerExtra jobExtra){
+                jobExtra.setShouldEat(true);
                 hasEaten = true;
             }
         }
 
         // We should wait for armor for extra 2 minutes if it's craftable.
         if(isArmorCraftable){
-            if(timeOutCounter++ < 12){
-                setDelay(200);
+            if(timeOutCounter++ < 6){
+                setDelay(STUCK_DELAY * 4);
                 return getState();
             }
-        }
-        else{
-            timeOutCounter = 0;
         }
 
         if (currentRecipeStorage == null)
@@ -341,41 +335,26 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
                     return NETHER_CLOSEPORTAL;
                 }
             }
-            setDelay(200);
+            setDelay(STUCK_DELAY);
             return getState();
         }
         else
         {
-            if (!building.isReadyForTrip())
-            {
-                worker.getCitizenData().setJobStatus(JobStatus.IDLE);
-                setDelay(120);
-                return IDLE;
-            }
-            if (walkTo != null || !walkToBuilding())
-            {
-                setDelay(200);
-                return getState();
-            }
-            if (!worker.getInventoryCitizen().hasSpace())
-            {
-                return INVENTORY_FULL;
-            }
-
             IAIState checkResult = checkForItems(currentRecipeStorage);
-
             if (checkResult == GET_RECIPE)
             {
                 currentRecipeStorage = null;
                 worker.getCitizenData().setJobStatus(JobStatus.STUCK);
-                setDelay(60);
+                setDelay(STUCK_DELAY);
                 return IDLE;
             }
             if (checkResult != CRAFT)
             {
+                setDelay(WAITING_DELAY);
                 return checkResult;
             }
         }
+
         timeOutCounter = 0;
         hasEaten = false;
         return NETHER_LEAVE;
@@ -418,7 +397,7 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
                 job.setInNether(true);
 
                 expeditionLog.setStatus(ExpeditionLog.Status.IN_PROGRESS);
-                logAllEquipment(expeditionLog, false);
+                logAllEquipment(expeditionLog);
 
                 List<ItemStack> result = currentRecipeStorage.fullfillRecipeAndCopy(getLootContext(), ImmutableList.of(worker.getItemHandlerCitizen()), false);
                 if (result != null)
@@ -429,8 +408,9 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
                     job.addCraftedResultsList(result);
                 }
 
-                goToVault();
+                worker.setInvisible(true);
                 worker.getCitizenData().setJobStatus(JobStatus.WORKING);
+                worker.playSound(SoundEvents.PORTAL_TRIGGER, worker.getRandom().nextFloat() * 0.5F + 0.25F, 0.25F);
                 return NETHER_AWAY;
             }
             return NETHER_OPENPORTAL;
@@ -445,273 +425,158 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
     protected IAIState stayInNether()
     {
         final ExpeditionLog expeditionLog = building.getFirstModuleOccurance(ExpeditionLogModule.class).getLog();
-
-        // Decide whether nether worker should escape.
-        boolean escaped = false;
-
         equipArmor(true);
+
+        // Action Loop
+        if(actionHandler.canActionTick()) {
+            switch (actionHandler.doAction()) {
+                case INVALID -> {
+                    actionHandler.onActionFinished();
+                    job.getCraftedResults().remove(actionHandler.getCurrStack());
+                    setDelay(WAITING_DELAY);
+                    return getState();
+                }
+                case FAIL -> {
+                    actionHandler.onActionFinished();
+                    job.getCraftedResults().clear();
+                    job.getProcessedResults().clear();
+                    setDelay(STUCK_DELAY);
+                    return IDLE;
+                }
+                case ESCAPE -> {
+                    actionHandler.onActionFinished();
+                    onTravelFinished(expeditionLog, true);
+                    StatsUtil.trackStat(building, "escaped", 1);
+                    return NETHER_RETURN;
+                }
+                case SUCCESS -> {
+                    List<ItemStack> rewards = actionHandler.onActionFinished();
+                    job.addProcessedResultsList(rewards);
+                    expeditionLog.addLoot(rewards);
+                    logAllEquipment(expeditionLog);
+                    setDelay(actionHandler.actionDelay());
+                    job.getCraftedResults().remove(actionHandler.getCurrStack());
+                    return getState();
+                }
+                case IN_PROGRESS -> {
+                    logAllEquipment(expeditionLog);
+                    setDelay(actionHandler.actionDelay());
+                    return getState();
+                }
+            }
+        }
 
         //This is the adventure loop.
         if (!job.getCraftedResults().isEmpty())
         {
-            for (ItemStack currStack : job.getCraftedResults())
-            {
-                if(extraRound && InventoryUtils.getItemCountInItemHandler(worker.getInventoryCitizen(), stack -> building.getModule(NETHERMINER_MENU).getMenu().contains(new ItemStorage(stack))) < 8){
-                    escaped = true;
-                    break;
-                }
-                if (currStack.getItem() instanceof ItemAdventureToken)
-                {
-                    if (currStack.hasTag())
-                    {
-                        CompoundTag tag = currStack.getTag();
-                        if (tag != null && tag.contains(TAG_DAMAGE))
-                        {
-                            worker.setItemSlot(EquipmentSlot.MAINHAND, findTool(ModEquipmentTypes.sword.get()));
-
-                            DamageSource source = ((DamageSourcesAccessor)world.damageSources()).invokerSource(DamageSourceKeys.NETHER);
-
-                            //Set up the mob to do battle with
-                            EntityType<?> mobType = EntityType.ZOMBIE;
-                            if (tag.contains(TAG_ENTITY_TYPE))
-                            {
-                                mobType = EntityType.byString(tag.getString(TAG_ENTITY_TYPE)).orElse(EntityType.ZOMBIE);
-                            }
-                            LivingEntity mob = (LivingEntity) mobType.create(world);
-                            assert mob != null;
-                            float mobHealth = mob.getHealth();
-
-                            // Calculate how much damage the mob will do if it lands a hit (Before armor)
-                            float incomingDamage = tag.getFloat(TAG_DAMAGE);
-                            incomingDamage -= incomingDamage * (getSecondarySkillLevel() * SECONDARY_DAMAGE_REDUCTION);
-
-
-                            while (mobHealth > 0 && !worker.isDeadOrDying() && !escaped) {
-                                // Clear anti-hurt timers.
-                                worker.hurtTime = 0;
-                                worker.invulnerableTime = 0;
-                                float damageToDo = BASE_PHYSICAL_DAMAGE;
-
-                                // Calculate if the sword still exists, how much damage will be done to the mob
-                                final ItemStack sword = worker.getItemBySlot(EquipmentSlot.MAINHAND);
-                                if (!sword.isEmpty())
-                                {
-                                    if (sword.getItem() instanceof SwordItem)
-                                    {
-                                        damageToDo += ((SwordItem) sword.getItem()).getDamage();
-                                    }
-                                    else
-                                    {
-                                        damageToDo += (float) TinkersToolHelper.getDamage(sword);
-                                    }
-                                    damageToDo += (float) (EnchantmentHelper.getDamageBonus(sword, mob.getMobType()) / 2.5);
-                                    sword.hurtAndBreak(1, worker, entity -> {
-                                        // the sword broke; try to find another sword
-                                        worker.setItemSlot(EquipmentSlot.MAINHAND, findTool(ModEquipmentTypes.sword.get()));
-                                    });
-                                }
-
-                                // Hit the mob
-                                mobHealth -= damageToDo;
-
-                                // Get hit by the mob
-                                if (!worker.hurt(source, incomingDamage))
-                                {
-                                    //Shouldn't get here, but if we do we can force the damage.
-                                    incomingDamage = worker.calculateDamageAfterAbsorbs(source, incomingDamage);
-                                    worker.setHealth(worker.getHealth() - incomingDamage);
-                                }
-
-                                // Every round, heal up if possible, to compensate for all of this happening in a single tick.
-                                final float saturationFactor = 0.25f;
-                                if(worker.getCitizenData().getSaturation() > LOW_SATURATION) {
-                                    float healAmount = (float) Math.min((worker.getCitizenData().getSaturation() - LOW_SATURATION) / saturationFactor, worker.getMaxHealth() - worker.getHealth());
-                                    worker.heal(healAmount);
-                                    worker.getCitizenData().decreaseSaturation(healAmount * saturationFactor);
-                                }
-
-                                if (worker.getCitizenData().getSaturation() < AVERAGE_SATURATION)
-                                {
-                                    attemptToEat();
-                                }
-
-                                if (!worker.isDeadOrDying() && (worker.getCitizenData().getSaturation() < LOW_SATURATION + 0.2 || worker.getHealth() < worker.getMaxHealth() * 0.2))
-                                {
-                                    escaped = worker.getRandom().nextFloat() < getPrimarySkillLevel() / 200.0F;
-                                }
-                            }
-                            expeditionLog.setCitizen(worker);
-                            logAllEquipment(expeditionLog, true);
-
-                            if (worker.isDeadOrDying())
-                            {
-                                expeditionLog.setKilled();
-
-                                StatsUtil.trackStat(building, MINER_DEATHS, 1);
-
-                                // Stop processing loot table data, as the worker died before finishing the trip.
-                                InventoryUtils.clearItemHandler(worker.getItemHandlerCitizen());
-                                job.getCraftedResults().clear();
-                                job.getProcessedResults().clear();
-                                return IDLE;
-                            }
-                            else if(!escaped)
-                            {
-                                // Generate loot for this mob, with all the right modifiers
-                                LootParams context = this.getLootContext();
-                                LootTable loot = Objects.requireNonNull(world.getServer()).getLootData().getLootTable(mob.getLootTable());
-                                List<ItemStack> mobLoot = loot.getRandomItems(context);
-                                if(mob instanceof MagmaCube){
-                                    mobLoot.add(new ItemStack(Items.MAGMA_CREAM,1));
-                                }
-                                else if(mob instanceof Slime){
-                                    mobLoot.add(new ItemStack(Items.SLIME_BALL,1));
-                                }
-                                job.addProcessedResultsList(mobLoot);
-                                expeditionLog.addMob(mobType);
-                                expeditionLog.addLoot(mobLoot);
-                            }
-
-                            worker.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
-                        }
-
-                        if(escaped){
-                            break;
-                        }
-
-                        if (currStack.getTag().contains(TAG_XP_DROPPED))
-                        {
-                            worker.getCitizenExperienceHandler().addExperience(CitizenItemUtils.applyMending(worker, currStack.getTag().getInt(TAG_XP_DROPPED)));
-                        }
-                    }
-                }
-                else if (!currStack.isEmpty())
-                {
-                    int itemDelay = 0;
-                    if (currStack.getItem() instanceof BlockItem bi)
-                    {
-                        final Block block = bi.getBlock();
-
-                        ItemStack tool = findTool(block.defaultBlockState(), worker.blockPosition());
-                        if (tool.getItem() instanceof TieredItem)
-                        {
-                            worker.setItemSlot(EquipmentSlot.MAINHAND, tool);
-
-                            for (int i = 0; i < currStack.getCount() && !tool.isEmpty(); i++)
-                            {
-                                LootParams context = this.getLootContext();
-                                LootTable loot = Objects.requireNonNull(world.getServer()).getLootData().getLootTable(block.getLootTable());
-                                List<ItemStack> mobLoot = loot.getRandomItems(context);
-
-                                job.addProcessedResultsList(mobLoot);
-                                expeditionLog.addLoot(mobLoot);
-                                worker.getCitizenExperienceHandler().addExperience(CitizenItemUtils.applyMending(worker, xpOnDrop(block)));
-
-                                itemDelay += TICK_DELAY;
-                            }
-
-                            worker.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
-                            logAllEquipment(expeditionLog, false);
-                        }
-                        else
-                        {
-                            //we didn't have a tool to use.
-                            itemDelay = TICK_DELAY;
-                        }
-                    }
-                    else
-                    {
-                        job.addProcessedResultsList(ImmutableList.of(currStack));
-                        expeditionLog.addLoot(Collections.singletonList(currStack));
-                        itemDelay = TICK_DELAY * currStack.getCount();
-                    }
-                    setDelay(itemDelay);
-                }
-            }
-            job.getCraftedResults().clear();
-            if(!escaped) {
+            ItemStack currStack = job.getCraftedResults().peek();
+            if(currStack == null) {
+                job.getCraftedResults().poll();
                 return getState();
             }
-        }
-
-        if (!job.getProcessedResults().isEmpty())
-        {
-            if (!worker.isDeadOrDying())
+            if (currStack.getItem() instanceof ItemAdventureToken && currStack.hasTag())
             {
-                expeditionLog.setStatus(ExpeditionLog.Status.RETURNING_HOME);
-                for (ItemStack item : job.getProcessedResults())
-                {
-                    if (InventoryUtils.addItemStackToItemHandler(worker.getItemHandlerCitizen(), item))
-                    {
-                        worker.decreaseSaturationForContinuousAction();
-                        worker.getCitizenExperienceHandler().addExperience(0.2);
-                        StatsUtil.trackStatByName(building, ITEMS_DISCOVERED, item.getHoverName(), item.getCount());
-                    }
+                CompoundTag tag = currStack.getTag();
+                assert tag != null;
+                if(tag.contains(TAG_ENTITY_TYPE)) {
+                    actionHandler.setAction(new NetherWorkerCombatAction(world, worker, job, tag, extraRound), currStack);
+                    return getState();
                 }
-
-                job.getProcessedResults().clear();
-                if(!escaped) {
+                if(tag.contains("tradeLoot")) {
+                    actionHandler.setAction(new NetherWorkerPiglinTradeAction(world, worker, job, tag), currStack);
                     return getState();
                 }
             }
-            else
+            else if (!currStack.isEmpty())
             {
-                job.getProcessedResults().clear();
+                if (currStack.getItem() instanceof BlockItem bi)
+                {
+                    final Block block = bi.getBlock();
+                    actionHandler.setAction(new NetherWorkerMiningAction(world, worker, job, currStack, getMostEfficientTool(block.defaultBlockState(), worker.blockPosition())), currStack);
+                    // we got a may-not-reliable tool slot, so immediately reset.
+                    setDelay(0);
+                    return NETHER_AWAY;
+                }
+                else
+                {
+                    actionHandler.setAction(new NetherWorkerPickupAction(currStack), currStack);
+                    return getState();
+                }
             }
+            job.getCraftedResults().poll();
+            return getState();
         }
-        else{
-            if(worker.getHealth() >= worker.getMaxHealth() && InventoryUtils.getItemCountInItemHandler(worker.getInventoryCitizen(), stack -> building.getModule(NETHERMINER_MENU).getMenu().contains(new ItemStorage(stack))) >= 10){
-                final ICraftingBuildingModule module = building.getFirstModuleOccurance(BuildingNetherWorker.CraftingModule.class);
-                currentRecipeStorage = module.getFirstFulfillableRecipe(ItemStackUtils::isEmpty, 1, false);
-                if(currentRecipeStorage != null) {
-                    List<ItemStack> result = currentRecipeStorage.fullfillRecipeAndCopy(getLootContext(), ImmutableList.of(worker.getItemHandlerCitizen()), false);
-                    if (result != null)
-                    {
-                        // by default all the adventure tokens are at the end (due to loot tables); space them better
-                        result = new ArrayList<>(result);
-                        Collections.shuffle(result, worker.getCitizenData().getRandom());
-                        job.addCraftedResultsList(result);
-                        goToVault();
-                        worker.getCitizenData().setJobStatus(JobStatus.WORKING);
-                        extraRound = ((JobNetherWorkerExtra)job).setExtraRounds(true);
-                        return getState();
-                    }
+
+        return onTravelFinished(expeditionLog, false);
+    }
+
+    private IAIState onTravelFinished(ExpeditionLog expeditionLog, Boolean escaped) {
+        job.getCraftedResults().clear();
+        if(job.getProcessedResults().isEmpty()) {
+            extraRound = ((JobNetherWorkerExtra) job).setExtraRounds(false);
+            expeditionLog.setStatus(ExpeditionLog.Status.RETURNING_HOME);
+            return NETHER_RETURN;
+        }
+
+        if (!escaped && ((JobNetherWorkerExtra) job).canExtraRounds(extraRoundsLimit()) && worker.getHealth() >= worker.getMaxHealth() && InventoryUtils.getItemCountInItemHandler(worker.getInventoryCitizen(), stack -> building.getModule(NETHERMINER_MENU).getMenu().contains(new ItemStorage(stack))) >= 10) {
+            if (currentRecipeStorage instanceof RecipeStorage recipeStorage) {
+                List<ItemStack> result = ((RecipeStorageAccessor)recipeStorage).invokeInsertCraftedItems(ImmutableList.of(worker.getItemHandlerCitizen()), recipeStorage.getPrimaryOutput(), getLootContext(),false);
+                if (result != null) {
+                    // by default all the adventure tokens are at the end (due to loot tables); space them better
+                    result = new ArrayList<>(result);
+                    Collections.shuffle(result, worker.getCitizenData().getRandom());
+                    job.addCraftedResultsList(result);
+                    worker.getCitizenData().setJobStatus(JobStatus.WORKING);
+                    extraRound = ((JobNetherWorkerExtra) job).setExtraRounds(true);
+                    StatsUtil.trackStat(building, "extraRounds", 1);
+                    setDelay(WAITING_DELAY);
+                    return getState();
                 }
             }
         }
 
-        expeditionLog.setStatus(ExpeditionLog.Status.COMPLETED);
-        return NETHER_RETURN;
+        extraRound = ((JobNetherWorkerExtra) job).setExtraRounds(false);
+        expeditionLog.setStatus(ExpeditionLog.Status.RETURNING_HOME);
+        return NETHER_GATHER_REWARDS;
     }
 
-    // calculate the XP coming from certain ores
-    private int xpOnDrop(Block block)
-    {
-        RandomSource rnd = worker.getRandom();
-        if (block == Blocks.COAL_ORE)
+    private int extraRoundsLimit() {
+        return getSecondarySkillLevel() / 16;
+    }
+
+    protected IAIState gatherRewards() {
+        final BlockPos portal = building.getPortalLocation();
+        worker.setInvisible(false);
+        if (!walkToWorkPos(portal))
         {
-            return rnd.nextInt(0, 2);
+            return getState();
         }
-        else if (block == Blocks.DIAMOND_ORE)
-        {
-            return rnd.nextInt(3, 7);
+
+        if(job.getProcessedResults().isEmpty()) {
+            return NETHER_RETURN;
         }
-        else if (block == Blocks.EMERALD_ORE)
-        {
-            return rnd.nextInt(3, 7);
+        for (ItemStack item : job.getProcessedResults().stream().toList()) {
+            if(!InventoryUtils.addItemStackToItemHandler(worker.getItemHandlerCitizen(), item)) {
+                continue;
+            }
+            worker.decreaseSaturationForContinuousAction();
+            worker.getCitizenExperienceHandler().addExperience(0.2);
+            job.getProcessedResults().remove(item);
+            StatsUtil.trackStatByName(building, ITEMS_DISCOVERED, item.getHoverName(), item.getCount());
         }
-        else if (block == Blocks.LAPIS_ORE)
-        {
-            return rnd.nextInt(2, 5);
+
+        dumpReturnState = NETHER_GATHER_REWARDS;
+        return INVENTORY_FULL;
+    }
+
+    @Override
+    public IAIState afterDump(){
+        IAIState state = super.afterDump();
+        if (state == IDLE) {
+            state = dumpReturnState;
+            dumpReturnState = IDLE;
         }
-        else if (block == Blocks.NETHER_QUARTZ_ORE)
-        {
-            return rnd.nextInt(2, 5);
-        }
-        else
-        {
-            return block == Blocks.NETHER_GOLD_ORE ? rnd.nextInt(0, 1) : 0;
-        }
+        return state;
     }
 
     /**
@@ -730,13 +595,13 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
             return getState();
         }
 
-        worker.getCitizenData().setJobStatus(JobStatus.STUCK);
-        worker.setInvisible(false);
-        job.setInNether(false);
+        final ExpeditionLog expeditionLog = building.getFirstModuleOccurance(ExpeditionLogModule.class).getLog();
+        expeditionLog.setStatus(ExpeditionLog.Status.COMPLETED);
 
+        job.setInNether(false);
         currentRecipeStorage = null;
         StatsUtil.trackStat(building, TRIPS_COMPLETED, 1);
-
+        dumpReturnState = START_WORKING;
         return INVENTORY_FULL;
     }
 
@@ -755,9 +620,9 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
             }
 
             final BlockState block = world.getBlockState(portal);
-            final Optional<PortalShape> ps = PortalShape.findPortalShape(world, portal, p -> p.isValid(), Direction.Axis.X);
+            final Optional<PortalShape> ps = PortalShape.findPortalShape(world, portal, PortalShape::isValid, Direction.Axis.X);
 
-            if (!ps.isPresent())
+            if (ps.isEmpty())
             {
                 // Can't find the portal
                 return IDLE;
@@ -821,10 +686,51 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
         return findItem(stack -> ItemStackUtils.hasEquipmentLevel(stack, tool, 0, building.getMaxEquipmentLevel()));
     }
 
-    private ItemStack findTool(@NotNull final BlockState target, final BlockPos pos)
+    @Override
+    protected int getMostEfficientTool(@NotNull final BlockState target, final BlockPos pos)
     {
-        int slotOfStack = getMostEfficientTool(target, pos);
-        return slotOfStack < 0 ? ItemStack.EMPTY : worker.getInventoryCitizen().getStackInSlot(slotOfStack);
+        final EquipmentTypeEntry toolType = WorkerUtil.getBestToolForBlock(target, target.getDestroySpeed(world, pos), building, world, pos);
+        final int required = WorkerUtil.getCorrectHarvestLevelForBlock(target);
+
+        @NotNull final InventoryCitizen inventory = worker.getInventoryCitizen();
+        if (toolType == ModEquipmentTypes.none.get())
+        {
+            int bestSlot = NO_TOOL;
+            int bestLevel = 0;
+            // find tool with special enchantment.
+            for (int i = 0; i < worker.getInventoryCitizen().getSlots(); i++)
+            {
+                final ItemStack item = inventory.getStackInSlot(i);
+                boolean silkTouch = item.getEnchantmentLevel(Enchantments.SILK_TOUCH) > 0;
+                if(silkTouch) {
+                    return i;
+                }
+                int fortune = item.getEnchantmentLevel(Enchantments.BLOCK_FORTUNE);
+                if(fortune > bestLevel) {
+                    bestLevel = fortune;
+                    bestSlot = i;
+                }
+            }
+            return bestSlot;
+        }
+
+        int bestSlot = -1;
+        int bestLevel = Integer.MAX_VALUE;
+        final int maxToolLevel = worker.getCitizenColonyHandler().getWorkBuilding().getMaxEquipmentLevel();
+
+        for (int i = 0; i < worker.getInventoryCitizen().getSlots(); i++)
+        {
+            final ItemStack item = inventory.getStackInSlot(i);
+            final int level = toolType.getMiningLevel(item);
+
+            if (level > -1 && level >= required && level < bestLevel && ItemStackUtils.verifyEquipmentLevel(item, level, required, maxToolLevel))
+            {
+                bestSlot = i;
+                bestLevel = level;
+            }
+        }
+
+        return (!target.requiresCorrectToolForDrops() && bestSlot == -1) ? NO_TOOL : bestSlot;
     }
 
     /**
@@ -873,12 +779,9 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
         setEquipSlot(EquipmentSlot.FEET, equip);
     }
 
-    private void logAllEquipment(@NotNull final ExpeditionLog expeditionLog, final boolean alreadyEquipped)
+    private void logAllEquipment(@NotNull final ExpeditionLog expeditionLog)
     {
-        if (!alreadyEquipped)
-        {
-            equipArmor(true);
-        }
+        equipArmor(true);
 
         final IDeliverable edible = new StackList(getEdiblesList(), "Edible Food", 1);
 
@@ -895,11 +798,6 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
         equipment.add(findTool(ModEquipmentTypes.shovel.get()));
         equipment.add(findItem(edible::matches));
         expeditionLog.setEquipment(equipment);
-
-        if (!alreadyEquipped)
-        {
-            equipArmor(false);
-        }
     }
 
     /**
@@ -910,20 +808,6 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
         final Set<ItemStorage> allowedItems = building.getModule(NETHERMINER_MENU).getMenu();
         netherEdible.removeIf(item -> !allowedItems.contains(new ItemStorage(item)));
         return netherEdible;
-    }
-
-    /**
-     * Attempt to eat to restore some saturation
-     */
-    protected void attemptToEat()
-    {
-        final IDeliverable edible = new StackList(getEdiblesList(), "Edible Food", 1);
-        final int slot = InventoryUtils.findFirstSlotInProviderNotEmptyWith(worker, edible::matches);
-        if (slot > -1)
-        {
-            final ItemStack stack = worker.getInventoryCitizen().getStackInSlot(slot);
-            SwitchUtils.consumeFoodSwitcher(stack, worker, null);
-        }
     }
 
     /**
@@ -951,7 +835,7 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
                 }
                 else
                 {
-                    ItemStack invItem = findItem(item::test);
+                    ItemStack invItem = findItem(item);
                     if (!invItem.isEmpty())
                     {
                         if (!virtualEquipmentSlots.containsKey(item.getType()) || ItemStackUtils.isEmpty(virtualEquipmentSlots.get(item.getType())))
@@ -966,7 +850,7 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
                     }
                 }
 
-                final Map<IItemHandler, List<Integer>> items = InventoryUtils.findAllSlotsInProviderWith(building, item::test);
+                final Map<IItemHandler, List<Integer>> items = InventoryUtils.findAllSlotsInProviderWith(building, item);
                 if (items.isEmpty())
                 {
                     // None found, check for equipped
@@ -1032,9 +916,10 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
 
         if (InventoryUtils.hasBuildingEnoughElseCount(building, stack -> building.getModule(NETHERMINER_MENU).getMenu().contains(new ItemStorage(stack)), 1) >= 1)
         {
-            needsCurrently = new Tuple<>(stack -> building.getModule(NETHERMINER_MENU).getMenu().contains(new ItemStorage(stack)), 16);
+            needsCurrently = new Tuple<>(stack -> building.getModule(NETHERMINER_MENU).getMenu().contains(new ItemStorage(stack)), 32);
             return GATHERING_REQUIRED_MATERIALS;
         }
         return getState();
     }
+
 }
