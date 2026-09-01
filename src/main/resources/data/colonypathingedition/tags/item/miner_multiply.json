@@ -1,0 +1,33 @@
+{
+  "replace": false,
+  "values": [
+    {
+      "id": "#minecraft:stone_crafting_materials",
+      "required": false
+    },
+    {
+      "id": "#minecraft:stone_crafting_materials",
+      "required": false
+    },
+    {
+      "id": "minecraft:clay_ball",
+      "required": false
+    },
+    {
+      "id": "minecraft:flint",
+      "required": false
+    },
+    {
+      "id": "#c:cobblestones",
+      "required": false
+    },
+    {
+      "id": "#c:sands",
+      "required": false
+    },
+    {
+      "id": "#c:gravels",
+      "required": false
+    }
+  ]
+}

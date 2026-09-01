@@ -128,12 +128,12 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<NewJobD
                 /*
                  * Check if tasks should be executed.
                  */
-                new AITarget(IDLE, () -> START_WORKING, 1),
-                new AITarget(START_WORKING, this::checkIfExecute, this::decide, 1),
-                new AITarget(PREPARE_DELIVERY, this::prepareDelivery, 1),
-                new AITarget(DELIVERY, this::deliver, 1),
-                new AITarget(PICKUP, this::pickup, WAITING_DELAY),
-                new AITarget(DUMPING, this::dump, WALK_DELAY)
+                new AITarget<IAIState>(IDLE, () -> START_WORKING, 1),
+                new AITarget<>(START_WORKING, this::checkIfExecute, this::decide, 1),
+                new AITarget<IAIState>(PREPARE_DELIVERY, this::prepareDelivery, 1),
+                new AITarget<IAIState>(DELIVERY, this::deliver, 1),
+                new AITarget<IAIState>(PICKUP, this::pickup, WAITING_DELAY),
+                new AITarget<IAIState>(DUMPING, this::dump, WALK_DELAY)
 
         );
         worker.setCanPickUpLoot(true);
@@ -372,17 +372,6 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<NewJobD
     }
 
     /**
-     * Gets the colony's warehouse for the Deliveryman.
-     *
-     * @return the warehouse. null if no warehouse registered.
-     */
-    @Nullable
-    private IWareHouse getAndCheckWareHouse()
-    {
-        return job.findWareHouse();
-    }
-
-    /**
      * Gets the colony's warehouse for the Deliveryman to dump.
      *
      * @return the warehouse. null if no warehouse available.
@@ -390,7 +379,7 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<NewJobD
     @Nullable
     private IWareHouse getDumpWareHouse()
     {
-        if(wareHouseIndex <= -1) {
+        if(wareHouseIndex < 0) {
             return job.findWareHouse();
         }
         List<IWareHouse> wareHouses = job.findWareHouses();
@@ -780,7 +769,7 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<NewJobD
             if (entity == null) {
                 return false;
             }
-            IWareHouse warehouse = this.getAndCheckWareHouse();
+            IWareHouse warehouse = job.getWareHouseWorkingFor();
             if (warehouse == null) {
                 return false;
             }
@@ -832,13 +821,12 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<NewJobD
 
             if(currentTask == null) {
                 // For we are using too much test on warehouses so we double the delay here.
-                if (!walkToBuilding(getAndCheckWareHouse())) {
+                if (!walkToBuilding(job.findWareHouse())) {
                     setDelay(WALKING_DELAY * 2);
-                    return START_WORKING;
                 } else {
                     setDelay(WAITING_DELAY * 2);
-                    return START_WORKING;
                 }
+                return START_WORKING;
             }
         }
         else {
@@ -874,7 +862,7 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<NewJobD
      */
     private boolean checkIfExecute()
     {
-        final IWareHouse wareHouse = getAndCheckWareHouse();
+        final IWareHouse wareHouse = job.findWareHouse();
         if (wareHouse != null)
         {
             worker.getCitizenData().setWorking(true);

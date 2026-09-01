@@ -12,7 +12,7 @@ public class LinkageManager {
 
     public static Method match;
 
-    public static void setup() {
+    public static void setupJEAMath() {
         useJEAMatch = true;
         try {
             Class<?> clazz = Class.forName("me.towdium.jecharacters.utils.Match");
@@ -20,12 +20,10 @@ public class LinkageManager {
         } catch (ClassNotFoundException | NoSuchMethodException e) {
             useJEAMatch = false;
         }
+    }
+
+    public static void setupCompatibilityAddon() {
         useCompatibilityAddon = true;
-        try {
-            Class.forName("steve_gall.minecolonies_compatibility.core.common.init.BuildingModules");
-        } catch (ClassNotFoundException e) {
-            useCompatibilityAddon = false;
-        }
     }
 
     public static boolean invokeMatch(String s, CharSequence cs) {

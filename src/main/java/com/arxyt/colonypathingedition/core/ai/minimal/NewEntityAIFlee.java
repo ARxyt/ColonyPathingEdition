@@ -7,6 +7,7 @@ import com.minecolonies.api.entity.ai.statemachine.states.CitizenAIState;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
 import com.minecolonies.api.util.CompatibilityUtils;
 import com.minecolonies.core.colony.jobs.AbstractJobGuard;
+import com.minecolonies.core.colony.jobs.JobNetherWorker;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.entity.pathfinding.navigation.EntityNavigationUtils;
 import com.minecolonies.core.entity.pathfinding.pathresults.PathResult;
@@ -189,7 +190,7 @@ public class NewEntityAIFlee implements IStateAI {
      */
     private void SpreadFear()
     {
-        List<Entity> toSpreadFear = CompatibilityUtils.getWorldFromCitizen(citizen).getEntities(
+        List<Entity> toSpreadFear = citizen.level().getEntities(
                         citizen,
                         citizen.getBoundingBox().inflate(
                                 SPREAD_FEAR_DIST_X,
@@ -197,7 +198,9 @@ public class NewEntityAIFlee implements IStateAI {
                                 SPREAD_FEAR_DIST_X),
                         Entity::isAlive)
                 .stream()
-                .filter(entity -> entity instanceof EntityCitizen aCitizen && !(aCitizen.getCitizenJobHandler().getColonyJob() instanceof AbstractJobGuard<?>))
+                .filter(entity -> entity instanceof EntityCitizen aCitizen
+                        && !(aCitizen.getCitizenJobHandler().getColonyJob() instanceof AbstractJobGuard<?>)
+                        && !(aCitizen.getCitizenJobHandler().getColonyJob() instanceof JobNetherWorker netherWorker && netherWorker.isInNether()))
                 .toList();
         for(Entity entity : toSpreadFear) {
             if(entity instanceof EntityCitizen aCitizen) {

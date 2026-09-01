@@ -90,7 +90,7 @@ config="${mod_id}.mixins.json"
     modId="minecolonies"
     type="required"
     versionRange="[1.1.1285-1.21.1-snapshot,1.1.1349-1.21.1-snapshot]"
-    ordering="NONE"
+    ordering="AFTER"
     side="BOTH"
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't

@@ -29,9 +29,9 @@ import com.minecolonies.core.colony.buildings.modules.WarehouseRequestQueueModul
 import com.minecolonies.core.colony.jobs.AbstractJob;
 import com.minecolonies.core.colony.requestsystem.requests.StandardRequests;
 import com.minecolonies.core.util.AttributeModifierUtils;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -120,6 +120,9 @@ public class NewJobDeliveryman extends AbstractJob<NewEntityAIWorkDeliveryman, N
         final CompoundTag compound = super.serializeNBT(provider);
         compound.put(NbtTagConstants.TAG_RS_DMANJOB_DATASTORE, StandardFactoryController.getInstance().serializeTag(provider, rsDataStoreToken));
         compound.putInt(TAG_ONGOING, ongoingDeliveries);
+        if(wareHouseWorkingFor != null) {
+            compound.putLong("wareHouseWorkingFor", wareHouseWorkingFor.getID().asLong());
+        }
         return compound;
     }
 
@@ -137,6 +140,9 @@ public class NewJobDeliveryman extends AbstractJob<NewEntityAIWorkDeliveryman, N
             setupRsDataStore();
         }
         this.ongoingDeliveries = compound.getInt(TAG_ONGOING);
+        if(compound.contains("wareHouseWorkingFor")) {
+            wareHouseWorkingFor = getColony().getServerBuildingManager().getBuilding(BlockPos.of(compound.getLong("wareHouseWorkingFor")), IWareHouse.class);
+        }
     }
 
     /**
@@ -745,6 +751,10 @@ public class NewJobDeliveryman extends AbstractJob<NewEntityAIWorkDeliveryman, N
 
     public List<IWareHouse> findWareHouses() {
         return getColony().getServerBuildingManager().getWareHouses();
+    }
+
+    public IWareHouse getWareHouseWorkingFor() {
+        return wareHouseWorkingFor == null ? findWareHouse() : wareHouseWorkingFor;
     }
 
     /**

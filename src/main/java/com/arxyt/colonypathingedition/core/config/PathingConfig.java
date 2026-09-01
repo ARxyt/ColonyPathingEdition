@@ -91,6 +91,7 @@ public class PathingConfig {
     public static ModConfigSpec.EnumValue<BuilderModeEnum> QUARRIER_MODE;
     public static ModConfigSpec.IntValue GIBBON_RANGE;
     public static ModConfigSpec.BooleanValue BUILDER_TAKE_ORDERS_EVERYWHERE;
+    public static ModConfigSpec.BooleanValue ENABLE_DROP_MULTIPLIER;
 
     public static ModConfigSpec.BooleanValue MAX_ANIMAL_MODIFIER;
     public static ModConfigSpec.BooleanValue BUTCHER_INSTANT_KILL;
@@ -361,7 +362,7 @@ public class PathingConfig {
                 .defineInRange("lumberjackGatherWaitingTime",5,2,10);
         builder.pop();
 
-        builder.push("Builder Mode Modifier #土木人修改#");
+        builder.push("Structure Builder Mode Modifier #蓝图建筑相关工人修改#");
         BUILDER_MODE = builder
                 .comment("""
                         Builder mode (default: GIBBON), optional below: 建筑工人模式, (默认: 长臂猿)，可选项如下：
@@ -385,6 +386,9 @@ public class PathingConfig {
                         .defineInRange("builderGibbonRange", 20, 0, 128);
         BUILDER_TAKE_ORDERS_EVERYWHERE = builder.comment("Can builder take orders everywhere. 打灰人能否随时随地接单。")
                         .define("builderTakeOrdersEverywhere", true);
+        ENABLE_DROP_MULTIPLIER = builder
+                .comment("Open this to allow quarriers and miners to drop multiple materials during mining.\n 开启后将允许采石工和矿工挖掘掉落多倍材料(取决于房屋等级)")
+                .define("enableDropMultiplier",true);
         builder.pop();
 
         builder.push("Herder Modifier #养殖户修改#");

@@ -1,6 +1,7 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.quarrier;
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
+import com.arxyt.colonypathingedition.core.data.tag.ModTag;
 import com.arxyt.colonypathingedition.core.util.NewFoodUtils;
 import com.arxyt.colonypathingedition.core.util.DistanceUtils;
 import com.minecolonies.api.crafting.ItemStorage;
@@ -17,6 +18,7 @@ import com.minecolonies.core.entity.pathfinding.pathjobs.PathJobMoveCloseToXNear
 import com.minecolonies.core.entity.pathfinding.pathresults.PathResult;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -45,13 +47,24 @@ public abstract class EntityAIQuarrierMixin extends AbstractEntityAIStructureWit
     @Override
     protected List<ItemStack> increaseBlockDrops(final List<ItemStack> drops)
     {
+        if(!PathingConfig.ENABLE_DROP_MULTIPLIER.get()) {
+            return drops;
+        }
         int multiplier = 1 + building.getBuildingLevel();
         for (ItemStack stack : drops) {
-            if (!stack.isEmpty()) {
+            if (!stack.isEmpty() && handleNormalRocks(stack)) {
                 stack.setCount(stack.getCount() * multiplier);
             }
         }
         return drops;
+    }
+
+    private boolean handleNormalRocks(ItemStack itemStack) {
+        if(itemStack.is(ModTag.MINER_MULTIPLY_ITEMS)) {
+            return true;
+        }
+        Block block = Block.byItem(itemStack.getItem());
+        return block.defaultBlockState().is(ModTag.MINER_MULTIPLY_BLOCKS);
     }
 
     @Unique

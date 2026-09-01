@@ -17,7 +17,10 @@ public class LinkageEvent {
     public static void onFMLCommonSetup(FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
             if (ModList.get().isLoaded("jecharacters")) {
-                LinkageManager.setup();
+                LinkageManager.setupJEAMath();
+            }
+            if (ModList.get().isLoaded("minecolonies_compatibility")) {
+                LinkageManager.setupCompatibilityAddon();
             }
         });
     }

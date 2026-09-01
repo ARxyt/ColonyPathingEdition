@@ -12,10 +12,9 @@ import com.minecolonies.api.entity.ai.statemachine.tickratestatemachine.ITickRat
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenColonyHandler;
 import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenJobHandler;
-import com.minecolonies.api.util.ItemStackUtils;
-import com.minecolonies.api.util.MessageUtils;
-import com.minecolonies.api.util.SoundUtils;
+import com.minecolonies.api.util.*;
 import com.minecolonies.core.colony.jobs.AbstractJobGuard;
+import com.minecolonies.core.colony.jobs.JobNetherWorker;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.network.messages.client.ItemParticleEffectMessage;
 import net.minecraft.nbt.CompoundTag;
@@ -68,7 +67,19 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
         //市民全局状态信息
         compound.putString("aiState", getCitizenAI().getState().toString());
         if(getCitizenColonyHandler() != null && getCitizenColonyHandler().getColony() != null) {
-            compound.putString("owner", getCitizenColonyHandler().getColony().getPermissions().getOwner().toString());
+            try {
+                compound.putString("owner", getCitizenColonyHandler().getColony().getPermissions().getOwner().toString());
+            }
+            catch (Exception e) {
+                Log.getLogger().error("We can't find owner for citizens!");
+            }
+        }
+    }
+
+    @Inject(method = "performMoveAway", at = @At("HEAD"), remap = false, cancellable = true)
+    public void onPreformMoveAway(Entity attacker, CallbackInfo ci){
+        if(getCitizenJobHandler().getColonyJob() instanceof JobNetherWorker jobNetherWorker && jobNetherWorker.isInNether()) {
+            ci.cancel();
         }
     }
 
@@ -82,6 +93,11 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
         if(source.is(DamageTypes.SWEET_BERRY_BUSH)) {
             return false;
         }
+
+        if(getCitizenJobHandler().getColonyJob() instanceof JobNetherWorker jobNetherWorker && jobNetherWorker.isInNether() && !source.typeHolder().is(DamageSourceKeys.NETHER)) {
+            return false;
+        }
+
         final Entity sourceEntity = source.getEntity();
         if (sourceEntity instanceof EntityCitizen)
         {

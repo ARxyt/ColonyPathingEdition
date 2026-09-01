@@ -1,6 +1,7 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.miner;
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
+import com.arxyt.colonypathingedition.core.data.tag.ModTag;
 import com.arxyt.colonypathingedition.core.util.NewFoodUtils;
 import com.arxyt.colonypathingedition.core.util.DistanceUtils;
 import com.minecolonies.api.crafting.ItemStorage;
@@ -16,8 +17,15 @@ import com.minecolonies.core.entity.pathfinding.navigation.MinecoloniesAdvancedP
 import com.minecolonies.core.entity.pathfinding.pathjobs.PathJobMoveCloseToXNearY;
 import com.minecolonies.core.entity.pathfinding.pathresults.PathResult;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -41,16 +49,29 @@ public abstract class EntityAIMinerMixin extends AbstractEntityAIStructureWithWo
         super(job);
     }
 
+
+
     @Override
     protected List<ItemStack> increaseBlockDrops(final List<ItemStack> drops)
     {
+        if(!PathingConfig.ENABLE_DROP_MULTIPLIER.get()) {
+            return drops;
+        }
         int multiplier = 1 + building.getBuildingLevel();
         for (ItemStack stack : drops) {
-            if (!stack.isEmpty()) {
+            if (!stack.isEmpty() && handleNormalRocks(stack)) {
                 stack.setCount(stack.getCount() * multiplier);
             }
         }
         return drops;
+    }
+
+    private boolean handleNormalRocks(ItemStack itemStack) {
+        if(itemStack.is(ModTag.MINER_MULTIPLY_ITEMS)) {
+            return true;
+        }
+        Block block = Block.byItem(itemStack.getItem());
+        return block.defaultBlockState().is(ModTag.MINER_MULTIPLY_BLOCKS);
     }
 
     @Unique

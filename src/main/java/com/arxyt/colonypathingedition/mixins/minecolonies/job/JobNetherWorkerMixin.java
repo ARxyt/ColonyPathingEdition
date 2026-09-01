@@ -20,7 +20,7 @@ import static com.arxyt.colonypathingedition.core.config.PathingConfig.NETHER_WO
 @Mixin(value = JobNetherWorker.class, remap = false)
 public abstract class JobNetherWorkerMixin  extends AbstractJobCrafter<EntityAIWorkNether, JobNetherWorker> implements JobNetherWorkerExtra {
     @Unique public boolean eatBeforeLeave = false;
-    @Unique public boolean extraRounds = false;
+    @Unique public int extraRounds = 0;
 
     public JobNetherWorkerMixin(ICitizenData entity)
     {
@@ -29,15 +29,15 @@ public abstract class JobNetherWorkerMixin  extends AbstractJobCrafter<EntityAIW
 
     @Inject(method = "deserializeNBT(Lnet/minecraft/core/HolderLookup$Provider;Lnet/minecraft/nbt/CompoundTag;)V", at = @At("RETURN"), remap = false)
     public void additionalDeserializeNBT(HolderLookup.Provider provider, CompoundTag compound, CallbackInfo ci){
-        if(compound.contains("extra_rounds")){
-            extraRounds = compound.getBoolean("extra_rounds");
+        if(compound.contains("extra_round_times")){
+            extraRounds = compound.getInt("extra_round_times");
         }
     }
 
     @Inject(method = "serializeNBT(Lnet/minecraft/core/HolderLookup$Provider;)Lnet/minecraft/nbt/CompoundTag;", at = @At("RETURN"), remap = false, cancellable = true)
     public void additionalSerializeNBT(CallbackInfoReturnable<CompoundTag> cir){
         CompoundTag tag = cir.getReturnValue();
-        tag.putBoolean("extra_rounds",extraRounds);
+        tag.putInt("extra_round_times", extraRounds);
         cir.setReturnValue(tag);
     }
 
@@ -54,12 +54,16 @@ public abstract class JobNetherWorkerMixin  extends AbstractJobCrafter<EntityAIW
     }
 
     public boolean setExtraRounds(boolean extraRounds) {
-        this.extraRounds = extraRounds;
+        this.extraRounds = extraRounds ? this.extraRounds + 1 : 0;
         return extraRounds;
     }
 
     public boolean getExtraRounds(){
-        return this.extraRounds;
+        return this.extraRounds > 0;
+    }
+
+    public boolean canExtraRounds(int limit){
+        return this.extraRounds < limit;
     }
 
     public void setShouldEat(boolean shouldEat){

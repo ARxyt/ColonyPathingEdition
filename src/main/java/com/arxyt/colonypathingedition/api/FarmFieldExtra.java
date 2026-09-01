@@ -1,7 +1,6 @@
 package com.arxyt.colonypathingedition.api;
 
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.NotNull;
 
 public interface FarmFieldExtra {
