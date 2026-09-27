@@ -41,4 +41,6 @@ public interface FarmFieldExtra {
     int getDate();
 
     void updateAdvanceDay(int date, int day, int season);
+
+    boolean isRotationWithWaterField();
 }

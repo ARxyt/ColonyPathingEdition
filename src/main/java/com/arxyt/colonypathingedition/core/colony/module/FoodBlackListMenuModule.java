@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
-public class FoodBlackListMenuModule extends AbstractBuildingModule implements IPersistentModule, ITickingModule, IAltersRequiredItems {
+public class FoodBlackListMenuModule extends AbstractBuildingModule implements IPersistentModule{
     /**
      * The black list stock tag.
      */
@@ -79,6 +79,7 @@ public class FoodBlackListMenuModule extends AbstractBuildingModule implements I
     public void removeBlackListItem(final ItemStack itemStack)
     {
         black_list.remove(new ItemStorage(itemStack));
+        markDirty();
     }
 
     @Override
@@ -117,10 +118,5 @@ public class FoodBlackListMenuModule extends AbstractBuildingModule implements I
         {
             buf.writeItem(menuItem.getItemStack());
         }
-    }
-
-    @Override
-    public void alterItemsToBeKept(TriConsumer<Predicate<ItemStack>, Integer, Boolean> consumer) {
-        // Item in black list no need to be kept.
     }
 }

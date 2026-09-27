@@ -10,7 +10,5 @@ import java.util.List;
 
 @Mixin(value = AbstractEntityAIInteract.class, remap = false)
 public interface AbstractEntityAIInteractAccessor {
-    @Invoker(value = "searchForItems",remap = false) void invokeSearchForItems(final AABB boundingBox);
-    @Invoker(value = "getItemsForPickUp",remap = false) List<BlockPos> invokeGetItemsForPickUp();
     @Invoker(value = "getAndRemoveClosestItemPosition",remap = false) BlockPos invokeGetAndRemoveClosestItemPosition();
 }

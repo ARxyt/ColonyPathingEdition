@@ -1,7 +1,7 @@
-package com.arxyt.colonypathingedition.core.colony.module;
+package com.arxyt.colonypathingedition.core.colony.view;
 
 import com.arxyt.colonypathingedition.ColonyPathingEdition;
-import com.arxyt.colonypathingedition.core.window.FoodBlackListMenuModuleWindow;
+import com.arxyt.colonypathingedition.core.colony.window.FoodBlackListMenuModuleWindow;
 import com.ldtteam.blockui.views.BOWindow;
 import com.minecolonies.api.colony.buildings.modules.AbstractBuildingModuleView;
 import com.minecolonies.api.crafting.ItemStorage;

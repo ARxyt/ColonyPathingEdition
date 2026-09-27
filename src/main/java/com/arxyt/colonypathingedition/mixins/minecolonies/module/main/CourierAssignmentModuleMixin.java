@@ -36,7 +36,7 @@ public abstract class CourierAssignmentModuleMixin extends AbstractAssignedCitiz
             {
                 final IJob<?> job = data.getJob();
                 // we assume all job deliveryman implements interface JobWithAdditionalHireCheck.
-                if (job != null && job.getJobRegistryEntry().equals(ModJobs.delivery.get()) && !hasAssignedCitizen(data) && job instanceof JobWithAdditionalHireCheck jobHireCheck && jobHireCheck.IsHiredByAdditionalWorkPlace())
+                if (job != null && job.getJobRegistryEntry().equals(ModJobs.delivery.get()) && !hasAssignedCitizen(data) && job instanceof JobWithAdditionalHireCheck jobHireCheck && !jobHireCheck.IsHiredByAdditionalWorkPlace())
                 {
                     assignCitizen(data);
                 }

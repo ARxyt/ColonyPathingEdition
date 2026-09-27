@@ -27,6 +27,7 @@ public class ModBuildingInitializer {
             insertBefore(ModBuildings.simpleQuarry.get(), SIMPLE_QUARRY, MIN_STOCK);
             insertBefore(ModBuildings.mediumQuarry.get(), MEDIUM_QUARRY, MIN_STOCK);
         }
+
         if(PathingConfig.TAVERN_ASSIGNMENT_MODULE.get()) {
             insertBefore(ModBuildings.tavern.get(), BED, TAVERN_RECRUIT);
         }
@@ -43,8 +44,11 @@ public class ModBuildingInitializer {
             insertBefore(ModBuildings.swineHerder.get(), STATS_MODULE, FOOD_BLACK_LIST);
             insertBefore(ModBuildings.chickenHerder.get(), STATS_MODULE, FOOD_BLACK_LIST);
             insertBefore(ModBuildings.beekeeper.get(), STATS_MODULE, FOOD_BLACK_LIST);
-            insertBefore(ModBuildings.wareHouse.get(), MIN_STOCK, FOOD_BLACK_LIST);
             insertBefore(ModBuildings.lumberjack.get(), MIN_STOCK, FOOD_BLACK_LIST);
+        }
+
+        if(PathingConfig.EATING_AI_MODULE.get()){
+            insertBefore(ModBuildings.wareHouse.get(), MIN_STOCK, WAREHOUSE_MENU);
         }
     }
 

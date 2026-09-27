@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class TavernBuildingModuleMixin extends AbstractBuildingModule {
 
     @Inject(method = "spawnVisitor", at = @At("TAIL"), remap = false)
-    public void a(CallbackInfoReturnable<IVisitorData> cir) {
+    public void afterSpawnVisitor(CallbackInfoReturnable<IVisitorData> cir) {
         if (building.hasModule(TAVERN_RECRUIT)) {
             building.getModule(TAVERN_RECRUIT).markDirty();
         }

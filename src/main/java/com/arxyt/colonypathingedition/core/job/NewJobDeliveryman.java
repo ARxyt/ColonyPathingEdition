@@ -40,9 +40,8 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Unique;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.minecolonies.api.util.constant.BuildingConstants.TAG_ONGOING;
 import static com.minecolonies.api.util.constant.CitizenConstants.SKILL_BONUS_ADD;
@@ -295,8 +294,14 @@ public class NewJobDeliveryman extends AbstractJob<NewEntityAIWorkDeliveryman, N
         IToken<?> request = getTaskQueueFromDataStore().peekFirst();
         if (request == null)
         {
-            for (IWareHouse wareHouse : getColony().getServerBuildingManager().getWareHouses()) {
-                if (wareHouse == null) return null;
+            IWareHouse myWareHouse = findWareHouse();
+            if (myWareHouse == null) return null;
+            Queue<IWareHouse> alterWareHouses = findWareHouses().stream()
+                    .filter(wareHouse -> wareHouse != null && !wareHouse.equals(myWareHouse))
+                    .sorted(Comparator.comparingDouble(wareHouse -> myWareHouse.getPosition().distManhattan(wareHouse.getPosition())))
+                    .collect(Collectors.toCollection(LinkedList::new));
+            for (IWareHouse wareHouse : alterWareHouses) {
+                if (wareHouse == null) continue;
 
                 boolean shouldSkip = false;
                 for (ICitizenData citizen : wareHouse.getAllAssignedCitizen()) {
@@ -366,7 +371,7 @@ public class NewJobDeliveryman extends AbstractJob<NewEntityAIWorkDeliveryman, N
             return null;
         }
 
-        IWareHouse wareHouse = wareHouseWorkingFor == null ? findWareHouse() : wareHouseWorkingFor;
+        IWareHouse wareHouse = getWareHouseWorkingFor();
         if (wareHouse == null)
         {
             return null;
@@ -579,7 +584,7 @@ public class NewJobDeliveryman extends AbstractJob<NewEntityAIWorkDeliveryman, N
         {
             return true;
         }
-        for (final IWareHouse wareHouse : getColony().getServerBuildingManager().getWareHouses())
+        for (final IWareHouse wareHouse : findWareHouses())
         {
             if (wareHouse.hasContainerPosition(requestA.getStart().getInDimensionLocation()) && wareHouse.hasContainerPosition(requestB.getStart().getInDimensionLocation()))
             {
@@ -802,7 +807,7 @@ public class NewJobDeliveryman extends AbstractJob<NewEntityAIWorkDeliveryman, N
 
     @Override
     public boolean IsHiredByAdditionalWorkPlace() {
-        return findWareHouse() == null;
+        return findWareHouse() != null;
     }
 
     public void setWaitingForJob(boolean isWaiting) {

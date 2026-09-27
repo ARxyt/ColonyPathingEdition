@@ -2,12 +2,21 @@ package com.arxyt.colonypathingedition.mixins.minecolonies;
 
 import com.arxyt.colonypathingedition.api.AbstractEntityAIInteractExtra;
 import com.minecolonies.api.blocks.AbstractColonyBlock;
+import com.minecolonies.api.entity.ai.JobStatus;
+import com.minecolonies.api.equipment.ModEquipmentTypes;
+import com.minecolonies.api.equipment.registry.EquipmentTypeEntry;
+import com.minecolonies.api.inventory.InventoryCitizen;
+import com.minecolonies.api.util.ItemStackUtils;
+import com.minecolonies.api.util.MathUtils;
 import com.minecolonies.core.MineColonies;
 import com.minecolonies.core.colony.buildings.AbstractBuilding;
 import com.minecolonies.core.colony.jobs.AbstractJob;
 import com.minecolonies.core.entity.ai.workers.AbstractEntityAIInteract;
 import com.minecolonies.core.entity.ai.workers.AbstractEntityAISkill;
+import com.minecolonies.core.util.WorkerUtil;
+import com.minecolonies.core.util.citizenutils.CitizenItemUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ItemStack;
@@ -22,6 +31,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import static com.minecolonies.api.research.util.ResearchConstants.BLOCK_BREAK_SPEED;
 
@@ -73,7 +83,7 @@ public abstract class AbstractEntityAIInteractMixin <J extends AbstractJob<?, J>
      * @reason So weird, remastered.
      */
     @Inject(method = "getBlockMiningTime", at = @At("HEAD"), remap = false, cancellable = true)
-    public void getBlockMiningTime(BlockState state, BlockPos pos, CallbackInfoReturnable<Integer> cir)
+    public void newGetBlockMiningTime(BlockState state, BlockPos pos, CallbackInfoReturnable<Integer> cir)
     {
         if(MineColonies.getConfig().getServer().pvp_mode.get() && state.getBlock() instanceof AbstractColonyBlock<?>) {
             cir.setReturnValue(500);

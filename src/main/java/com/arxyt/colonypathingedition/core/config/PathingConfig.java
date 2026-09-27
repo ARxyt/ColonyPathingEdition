@@ -408,11 +408,11 @@ public class PathingConfig {
                     .define("minimumStockPrecise",false);
             PICK_MATERIAL_AT_HUT = builder.comment("Should citizens pick material at their own hut.\n 你的非快递员市民是否应当在他们的小屋方块处取货。")
                             .define("pickMaterialAtHut", true);
-            EARLY_ENCHANT = builder.comment("Allows workers to use enchanted tools at their current level.\n 允许工人在工具允许等级时就启用一部分低级附魔工具。")
+            EARLY_ENCHANT = builder.comment("Allows workers to use more (I -> II) enchanted tools at their current level.\n 允许工人在工具允许等级时就启用更多(I -> II)低级附魔工具。")
                     .define("earlyEnchant", true);
             ENCHANT_LEVEL_SCALE = builder.comment("Controls how many enchantment levels require 1 worker's hut level upgrade.\n 每升一级可以允许额外附魔等级几级。")
                     .defineInRange("enchantLevelScale", 2, 1, 6);
-            MAX_ADDITIONAL_LEVEL_ENCHANT = builder.comment("Sets the maximum addtional worker's hut level enchantment tools.\n 设置附魔工具最多需求小屋增加几级可用。")
+            MAX_ADDITIONAL_LEVEL_ENCHANT = builder.comment("Set the maximum addtional worker's hut level enchantment tools.\n 设置附魔工具最多需求小屋增加几级可用。")
                     .defineInRange("maxAdditionalLevelForEnchantTools", 2, 1, 5);
             GENERAL_FOOD_BLACK_LIST = builder
                     .comment("""

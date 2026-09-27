@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.farm;
 
-import com.arxyt.colonypathingedition.core.window.NewWindowField;
+import com.arxyt.colonypathingedition.core.colony.window.NewWindowField;
 import com.minecolonies.api.blocks.huts.AbstractBlockMinecoloniesDefault;
 import com.minecolonies.api.blocks.interfaces.IBuildingBrowsableBlock;
 import com.minecolonies.core.blocks.BlockScarecrow;

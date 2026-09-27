@@ -6,7 +6,9 @@ public enum NewAIWorkerState implements IAIState {
 
     PLANTATION_PRECHECK_FIELD(false),
 
-    NETHER_GATHER_REWARDS(false);
+    NETHER_GATHER_REWARDS(false),
+
+    NETHER_GATHER_TOOLS(false);
 
     /**
      * Is it okay to eat.

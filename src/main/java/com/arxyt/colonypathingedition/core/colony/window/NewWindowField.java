@@ -1,4 +1,4 @@
-package com.arxyt.colonypathingedition.core.window;
+package com.arxyt.colonypathingedition.core.colony.window;
 
 import com.arxyt.colonypathingedition.ColonyPathingEdition;
 import com.arxyt.colonypathingedition.core.message.FarmFieldResizeMessage;
@@ -29,7 +29,6 @@ import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 

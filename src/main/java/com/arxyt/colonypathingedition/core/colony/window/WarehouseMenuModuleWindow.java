@@ -1,10 +1,8 @@
-package com.arxyt.colonypathingedition.core.window;
+package com.arxyt.colonypathingedition.core.colony.window;
 
 import com.arxyt.colonypathingedition.ColonyPathingEdition;
-import com.arxyt.colonypathingedition.core.colony.module.FoodBlackListMenuModuleView;
-import com.arxyt.colonypathingedition.core.easycolony.manager.LinkageManager;
-import com.arxyt.colonypathingedition.core.message.AlterBlackListMenuItemMessage;
-import com.arxyt.colonypathingedition.core.message.SyncBlackListMenuItemMessage;
+import com.arxyt.colonypathingedition.core.colony.view.WarehouseMenuModuleView;
+import com.arxyt.colonypathingedition.core.message.AlterWarehouseMenuItemMessage;
 import com.ldtteam.blockui.Pane;
 import com.ldtteam.blockui.PaneBuilders;
 import com.ldtteam.blockui.controls.*;
@@ -12,15 +10,12 @@ import com.ldtteam.blockui.views.ScrollingList;
 import com.minecolonies.api.colony.IColonyManager;
 import com.minecolonies.api.crafting.ItemStorage;
 import com.minecolonies.api.items.IMinecoloniesFoodItem;
+import com.minecolonies.api.util.FoodUtils;
 import com.minecolonies.core.Network;
 import com.minecolonies.core.client.gui.AbstractModuleWindow;
-import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -28,15 +23,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Predicate;
 
-import static com.minecolonies.api.util.constant.TranslationConstants.PARTIAL_BLOCK_HUT_FIELD_DIRECTION_ABSOLUTE;
+import static com.minecolonies.api.util.constant.TranslationConstants.FOOD_QUALITY_TOOLTIP;
 import static com.minecolonies.api.util.constant.WindowConstants.*;
 import static org.jline.utils.AttributedStyle.WHITE;
 
-@OnlyIn(Dist.CLIENT)
-public class FoodBlackListMenuModuleWindow extends AbstractModuleWindow<FoodBlackListMenuModuleView> {
+public class WarehouseMenuModuleWindow extends AbstractModuleWindow<WarehouseMenuModuleView>
+{
+    /**
+     * Limit reached label.
+     */
+    private static final String LABEL_LIMIT_REACHED = "com.minecolonies.coremod.gui.warehouse.limitreached";
 
-    public static final String SYNC_BLACK_LIST = "sync_black_list";
-    public static final String SYNC_TOOLTIP = "com.arxyt.colonypathingedition.core.black_list.sync_tooltip";
     /**
      * Resource scrolling list.
      */
@@ -77,19 +74,18 @@ public class FoodBlackListMenuModuleWindow extends AbstractModuleWindow<FoodBlac
      *
      * @param moduleView the module view.
      */
-    public FoodBlackListMenuModuleWindow(final FoodBlackListMenuModuleView moduleView)
+    public WarehouseMenuModuleWindow(final WarehouseMenuModuleView moduleView)
     {
-        super(moduleView, new ResourceLocation(ColonyPathingEdition.MODID, "gui/layouthuts/layoutfoodblacklist.xml"));
+        super(moduleView, new ResourceLocation(ColonyPathingEdition.MODID, "gui/layouthuts/layoutwarehousemenu.xml"));
 
         menuList = this.window.findPaneOfTypeByID("resourcesstock", ScrollingList.class);
 
         registerButton(BUTTON_SWITCH, this::switchClicked);
         registerButton(STOCK_REMOVE, this::removeStock);
-        registerButton(SYNC_BLACK_LIST, this::syncBlackList);
 
         resourceList = window.findPaneOfTypeByID(LIST_RESOURCES, ScrollingList.class);
 
-        groupedItemList = new ArrayList<>(IColonyManager.getInstance().getCompatibilityManager().getEdibles(0));
+        groupedItemList = new ArrayList<>(IColonyManager.getInstance().getCompatibilityManager().getEdibles(moduleView.getBuildingView().getBuildingLevel() - 1));
 
         window.findPaneOfTypeByID(INPUT_FILTER, TextField.class).setHandler(input -> {
             final String newFilter = input.getText();
@@ -111,18 +107,7 @@ public class FoodBlackListMenuModuleWindow extends AbstractModuleWindow<FoodBlac
         final int row = menuList.getListElementIndexByPane(button);
         final ItemStorage storage = menu.get(row);
         moduleView.getMenu().remove(storage);
-        Network.getNetwork().sendToServer(AlterBlackListMenuItemMessage.removeMenuItem(buildingView, storage.getItemStack()));
-        updateStockList();
-    }
-
-    /**
-     * Sync the stock.
-     *
-     * @param button the button.
-     */
-    private void syncBlackList(final Button button)
-    {
-        Network.getNetwork().sendToServer(new SyncBlackListMenuItemMessage(buildingView));
+        Network.getNetwork().sendToServer(AlterWarehouseMenuItemMessage.removeMenuItem(buildingView, storage.getItemStack()));
         updateStockList();
     }
 
@@ -151,14 +136,17 @@ public class FoodBlackListMenuModuleWindow extends AbstractModuleWindow<FoodBlac
      */
     private void switchClicked(@NotNull final Button button)
     {
-        final int row = resourceList.getListElementIndexByPane(button);
-        final ItemStorage storage = currentDisplayedList.get(row);
+        if (!moduleView.hasReachedLimit())
+        {
+            final int row = resourceList.getListElementIndexByPane(button);
+            final ItemStorage storage = currentDisplayedList.get(row);
 
-        Network.getNetwork().sendToServer(AlterBlackListMenuItemMessage.addMenuItem(buildingView, storage.getItemStack()));
-        moduleView.getMenu().add(storage);
-        updateStockList();
+            Network.getNetwork().sendToServer(AlterWarehouseMenuItemMessage.addMenuItem(buildingView, storage.getItemStack()));
+            moduleView.getMenu().add(storage);
+            updateStockList();
 
-        resourceList.refreshElementPanes();
+            resourceList.refreshElementPanes();
+        }
     }
 
 
@@ -174,18 +162,9 @@ public class FoodBlackListMenuModuleWindow extends AbstractModuleWindow<FoodBlac
         {
             findPaneByID("warning").show();
         }
-        else {
+        else
+        {
             findPaneByID("warning").hide();
-        }
-
-        Pane sync_button = findPaneByID(SYNC_BLACK_LIST);
-
-        if(sync_button != null) {
-            sync_button.show();
-            PaneBuilders.tooltipBuilder()
-                    .hoverPane(sync_button)
-                    .append(Component.translatable(SYNC_TOOLTIP))
-                    .build();
         }
 
         menuList.enable();
@@ -235,11 +214,21 @@ public class FoodBlackListMenuModuleWindow extends AbstractModuleWindow<FoodBlac
                         gradient.setGradientStart(205, 127, 50, 255);
                         gradient.setGradientEnd(205, 127, 50, 255);
                     }
+
+                    PaneBuilders.tooltipBuilder()
+                            .append(Component.translatable(FOOD_QUALITY_TOOLTIP, FoodUtils.getBuildingLevelForFood(resource)))
+                            .hoverPane(gradient)
+                            .build();
                 }
                 else
                 {
                     gradient.setGradientStart(0, 0, 0, 0);
                     gradient.setGradientEnd(0, 0, 0, 0);
+
+                    PaneBuilders.tooltipBuilder()
+                            .append(Component.translatable(FOOD_QUALITY_TOOLTIP, FoodUtils.getBuildingLevelForFood(resource)))
+                            .hoverPane(gradient)
+                            .build();
                 }
             }
         });
@@ -251,8 +240,8 @@ public class FoodBlackListMenuModuleWindow extends AbstractModuleWindow<FoodBlac
     private void updateResources()
     {
         final Predicate<ItemStack> filterPredicate = stack -> filter.isEmpty()
-                || LinkageManager.match(stack.getDescriptionId().toLowerCase(Locale.US),filter.toLowerCase(Locale.US))
-                || LinkageManager.match(stack.getHoverName().getString().toLowerCase(Locale.US),filter.toLowerCase(Locale.US));
+                || stack.getDescriptionId().toLowerCase(Locale.US).contains(filter.toLowerCase(Locale.US))
+                || stack.getHoverName().getString().toLowerCase(Locale.US).contains(filter.toLowerCase(Locale.US));
         currentDisplayedList.clear();
         for (final ItemStorage storage : groupedItemList)
         {
@@ -342,13 +331,32 @@ public class FoodBlackListMenuModuleWindow extends AbstractModuleWindow<FoodBlac
                         gradient.setGradientStart(205, 127, 50, 255);
                         gradient.setGradientEnd(205, 127, 50, 255);
                     }
+
+                    PaneBuilders.tooltipBuilder()
+                            .append(Component.translatable(FOOD_QUALITY_TOOLTIP, FoodUtils.getBuildingLevelForFood(resource)))
+                            .hoverPane(gradient)
+                            .build();
                 }
                 else
                 {
                     gradient.setGradientStart(0, 0, 0, 0);
                     gradient.setGradientEnd(0, 0, 0, 0);
+
+                    PaneBuilders.tooltipBuilder()
+                            .append(Component.translatable(FOOD_QUALITY_TOOLTIP, FoodUtils.getBuildingLevelForFood(resource)))
+                            .hoverPane(gradient)
+                            .build();
                 }
 
+                if (moduleView.hasReachedLimit())
+                {
+                    switchButton.disable();
+                    PaneBuilders.tooltipBuilder()
+                            .append(Component.translatable(LABEL_LIMIT_REACHED))
+                            .hoverPane(switchButton)
+                            .build();
+
+                }
                 if (isInMenu)
                 {
                     switchButton.disable();

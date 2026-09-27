@@ -1,11 +1,13 @@
 package com.arxyt.colonypathingedition.core.ai.minimal;
 
 import com.arxyt.colonypathingedition.api.workersetting.BuildingCookExtra;
+import com.arxyt.colonypathingedition.core.colony.module.WarehouseMenuModule;
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.arxyt.colonypathingedition.core.util.NewFoodUtils;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.IColony;
 import com.minecolonies.api.colony.buildings.IBuilding;
+import com.minecolonies.api.colony.buildings.workerbuildings.IWareHouse;
 import com.minecolonies.api.colony.interactionhandling.ChatPriority;
 import com.minecolonies.api.colony.jobs.IJob;
 import com.minecolonies.api.crafting.ItemStorage;
@@ -43,16 +45,17 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEatTask.NewEatingState.*;
-import static com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEatTask.EatingCheckState.*;
+import static com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEat.NewEatingState.*;
+import static com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEat.EatingCheckState.*;
 import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.*;
+import static com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModules.WAREHOUSE_MENU;
 import static com.arxyt.colonypathingedition.core.util.NewFoodUtils.getShouldEatAtHut;
 import static com.minecolonies.api.util.constant.CitizenConstants.FULL_SATURATION;
 import static com.minecolonies.api.util.constant.CitizenConstants.NIGHT;
 import static com.minecolonies.api.util.constant.GuardConstants.BASIC_VOLUME;
 import static com.minecolonies.api.util.constant.TranslationConstants.*;
 
-public class NewEntityAIEatTask implements IStateAI {
+public class NewEntityAIEat implements IStateAI {
 
     private static final Predicate<BuildingCook> STAFFED_RESTAURANTS = buildingCook -> buildingCook.getModule(BuildingModules.COOK_WORK).hasAssignedCitizen();
     private final double WAITING_MINUTES = PathingConfig.RESTAURANT_WAITING_TIME.get();
@@ -102,7 +105,7 @@ public class NewEntityAIEatTask implements IStateAI {
      *
      * @param citizen the citizen.
      */
-    public NewEntityAIEatTask(final EntityCitizen citizen)
+    public NewEntityAIEat(final EntityCitizen citizen)
     {
         super();
         this.citizen = citizen;
@@ -213,11 +216,14 @@ public class NewEntityAIEatTask implements IStateAI {
                 final BlockPos citizenPos = citizen.blockPosition();
                 BlockPos buildingPos = buildingWorker.getPosition();
                 IBuilding buildingToCheck = buildingWorker;
+                Set<ItemStorage> menu = null;
                 if (PathingConfig.DELIVERY_EAT_AT_WAREHOUSE.get() && buildingWorker instanceof BuildingDeliveryman){
                     BlockPos alterBuildingPos = colony.getServerBuildingManager().getBestBuilding(citizen, BuildingWareHouse.class);
                     if(alterBuildingPos != null) {
                         buildingPos = alterBuildingPos;
                         buildingToCheck = colony.getServerBuildingManager().getBuilding(alterBuildingPos);
+                        WarehouseMenuModule menuModule = buildingToCheck.getModule(WAREHOUSE_MENU);
+                        if (menuModule != null) menu = menuModule.getMenu();
                     }
                 }
                 if(buildingToCheck == null){
@@ -227,7 +233,7 @@ public class NewEntityAIEatTask implements IStateAI {
                 // For citizens working outside their work huts, maybe more efficient to eat nearby.
                 // Chefs should eat at their workplace more often, as they are producers of food.
                 if ( bestRestaurantPos == null || BlockPosUtil.dist(citizenPos, buildingPos) < BlockPosUtil.dist(citizenPos, bestRestaurantPos) || (citizenData.getJob() != null && JOBS_FORCE_EAT_AT_HUT.contains(citizenData.getJob().getClass()))) {
-                    final ItemStorage storageToGet = NewFoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, buildingToCheck);
+                    final ItemStorage storageToGet = NewFoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), menu, buildingToCheck);
                     if (storageToGet != null) {
                         boolean niceFood = getShouldEatAtHut(citizenData, storageToGet.getItem());
                         if (niceFood) {
@@ -296,7 +302,14 @@ public class NewEntityAIEatTask implements IStateAI {
             citizen.getCitizenAI().setCurrentDelay(WALKING_DELAY);
             return GO_TO_HUT;
         }
-        final ItemStorage storageToGet = NewFoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, buildingToGo);
+
+        Set<ItemStorage> menu = null;
+        if(buildingToGo instanceof IWareHouse) {
+            WarehouseMenuModule menuModule = buildingToGo.getModule(WAREHOUSE_MENU);
+            if (menuModule != null) menu = menuModule.getMenu();
+        }
+
+        final ItemStorage storageToGet = NewFoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), menu, buildingToGo);
         if (storageToGet != null)
         {
             // When restaurants out of food, would trigger "Force Eat At Hut".
@@ -393,8 +406,15 @@ public class NewEntityAIEatTask implements IStateAI {
         final IColony colony = citizen.getCitizenColonyHandler().getColonyOrRegister();
         assert colony != null;
         final IBuilding cookBuilding = colony.getServerBuildingManager().getBuilding(restaurantPos);
-        if (cookBuilding instanceof BuildingCook)
+        if (cookBuilding instanceof BuildingCook buildingCook)
         {
+            if(hasFood(false)) {
+                waitingTicks = 0;
+                timeOutWalking = 0;
+                ((BuildingCookExtra)buildingCook).deleteCustomer(citizen.getCivilianID());
+                return EAT;
+            }
+
             if (!EntityNavigationUtils.walkToBuilding(citizen, cookBuilding))
             {
                 citizen.getCitizenAI().setCurrentDelay(WALKING_DELAY);
@@ -567,7 +587,14 @@ public class NewEntityAIEatTask implements IStateAI {
             citizen.getCitizenAI().setCurrentDelay(WALKING_DELAY);
             return GO_TO_PLACE_WITH_FOOD;
         }
-        final ItemStorage storageToGet = NewFoodUtils.checkForForceEatingInBuilding(citizen.getCitizenData(), null, buildingToGo);
+
+        Set<ItemStorage> menu = null;
+        if(buildingToGo instanceof IWareHouse) {
+            WarehouseMenuModule menuModule = buildingToGo.getModule(WAREHOUSE_MENU);
+            if (menuModule != null) menu = menuModule.getMenu();
+        }
+
+        final ItemStorage storageToGet = NewFoodUtils.checkForForceEatingInBuilding(citizen.getCitizenData(), menu, buildingToGo);
         if (storageToGet != null)
         {
             int qty = ((int) ((FULL_SATURATION - citizen.getCitizenData().getSaturation()) / NewFoodUtils.getFoodValue(storageToGet.getItemStack(), citizen))) + 1;

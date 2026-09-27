@@ -1,6 +1,6 @@
-package com.arxyt.colonypathingedition.core.colony.module;
+package com.arxyt.colonypathingedition.core.colony.view;
 
-import com.arxyt.colonypathingedition.core.window.TavernRecruitModuleWindow;
+import com.arxyt.colonypathingedition.core.colony.window.TavernRecruitModuleWindow;
 import com.ldtteam.blockui.views.BOWindow;
 import com.minecolonies.api.colony.buildings.modules.AbstractBuildingModuleView;
 import com.minecolonies.api.colony.buildings.modules.IBuildingModuleView;

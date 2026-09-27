@@ -1,7 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.farm;
 
-import com.arxyt.colonypathingedition.core.window.WindowCropRotation;
-import com.minecolonies.api.tileentities.AbstractTileEntityScarecrow;
+import com.arxyt.colonypathingedition.core.colony.window.WindowCropRotation;
 import com.minecolonies.core.client.gui.containers.WindowField;
 import com.minecolonies.core.colony.buildingextensions.FarmField;
 import com.minecolonies.core.tileentities.TileEntityScarecrow;

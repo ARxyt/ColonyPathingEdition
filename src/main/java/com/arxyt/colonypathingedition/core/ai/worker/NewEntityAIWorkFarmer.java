@@ -1,5 +1,6 @@
 package com.arxyt.colonypathingedition.core.ai.worker;
 
+import com.arxyt.colonypathingedition.api.FarmFieldExtra;
 import com.arxyt.colonypathingedition.core.data.farmlandmap.SpecialSeedManager;
 import com.arxyt.colonypathingedition.core.data.tag.ModTag;
 import com.google.common.reflect.TypeToken;
@@ -122,6 +123,11 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
      * If we return to a working state after pick up.
      */
     private AIWorkerState withSpecialReturn = START_WORKING;
+
+    /**
+     * If we have seeds underWater in the rotation.
+     */
+    private boolean rotationWithWater = false;
 
     /**
      * If the farmland is normal.
@@ -283,6 +289,7 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
             }
             worker.getCitizenData().setVisibleStatus(FARMING_ICON);
             worker.getCitizenData().setJobStatus(JobStatus.WORKING);
+            rotationWithWater = ((FarmFieldExtra)farmField).isRotationWithWaterField();
             IAIState state = checkNextWorkspaceAndState(farmField,
                     pos -> this.newFindHarvestableSurface(pos, farmField) != null,
                     pos -> this.newFindHoeableSurface(pos, farmField) != null,
@@ -443,8 +450,8 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
             module.resetCurrentExtension();
         }
         else if(isMissingSeed) {
-            final int amountOfFarmlandInBuilding = InventoryUtils.hasBuildingEnoughElseCount(building, itemStack -> itemStack.getItem() == farmField.getSeed().getItem(), 0);
-            if (amountOfFarmlandInBuilding > 0)
+            final int amountOfSeedInBuilding = InventoryUtils.hasBuildingEnoughElseCount(building, itemStack -> itemStack.getItem() == farmField.getSeed().getItem(), 0);
+            if (amountOfSeedInBuilding > 0)
             {
                 needsCurrently = new Tuple<>(itemStack -> itemStack.getItem() == farmField.getSeed().getItem(), STACKSIZE);
                 isMissingSeed = false;
@@ -784,6 +791,7 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
                 blockState = world.getBlockState(position);
             }
         }
+
         if(SpecialSeedManager.isSpecialSeed(seed.getItem())){
             final Block farmland = SpecialSeedManager.getRequiredSoil(seed.getItem());
             if (farmField.isNoPartOfField(world, position)
@@ -791,7 +799,7 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
                     || (world.getBlockState(position.above()).getBlock() instanceof BushBlock)
                     || (world.getBlockState(position.above()).getBlock() instanceof BlockScarecrow)
                     || (blockState.getBlock() == farmland)
-                    || (!(blockState.is(BlockTags.DIRT) || blockState.is(Blocks.WATER) || SpecialSeedManager.isSpecialSoil(blockState.getBlock())) && !(blockState.getBlock() instanceof MinecoloniesFarmland) && !(blockState.getBlock() instanceof FarmBlock))
+                    || (!(blockState.is(BlockTags.DIRT) || (rotationWithWater && blockState.is(Blocks.WATER)) || SpecialSeedManager.isSpecialSoil(blockState.getBlock())) && !(blockState.getBlock() instanceof MinecoloniesFarmland) && !(blockState.getBlock() instanceof FarmBlock))
                     || (world.getBlockState(position.above()).getBlock() instanceof MinecoloniesCropBlock)
             )
             {
@@ -809,7 +817,7 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
                     || (world.getBlockState(position.above()).getBlock() instanceof CropBlock)
                     || (world.getBlockState(position.above()).getBlock() instanceof BushBlock)
                     || (world.getBlockState(position.above()).getBlock() instanceof BlockScarecrow)
-                    || (!(blockState.is(BlockTags.DIRT) || blockState.is(Blocks.WATER) || SpecialSeedManager.isSpecialSoil(blockState.getBlock())) && !(blockState.getBlock() instanceof MinecoloniesFarmland) && !(blockState.getBlock() instanceof FarmBlock))
+                    || (!(blockState.is(BlockTags.DIRT) || (rotationWithWater && blockState.is(Blocks.WATER)) || SpecialSeedManager.isSpecialSoil(blockState.getBlock())) && !(blockState.getBlock() instanceof MinecoloniesFarmland) && !(blockState.getBlock() instanceof FarmBlock))
                     || (world.getBlockState(position.above()).getBlock() instanceof MinecoloniesCropBlock)
             )
             {
@@ -830,7 +838,7 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
                 || (world.getBlockState(position.above()).getBlock() instanceof CropBlock)
                 || (world.getBlockState(position.above()).getBlock() instanceof BushBlock)
                 || (world.getBlockState(position.above()).getBlock() instanceof BlockScarecrow)
-                || (!(blockState.is(BlockTags.DIRT) || blockState.is(Blocks.WATER) || SpecialSeedManager.isSpecialSoil(blockState.getBlock())) && !(blockState.getBlock() instanceof MinecoloniesFarmland) && !(blockState.getBlock() instanceof FarmBlock))
+                || (!(blockState.is(BlockTags.DIRT) || (rotationWithWater && blockState.is(Blocks.WATER)) || SpecialSeedManager.isSpecialSoil(blockState.getBlock())) && !(blockState.getBlock() instanceof MinecoloniesFarmland) && !(blockState.getBlock() instanceof FarmBlock))
                 || (world.getBlockState(position.above()).getBlock() instanceof MinecoloniesCropBlock)
         )
         {
@@ -1149,6 +1157,7 @@ public class NewEntityAIWorkFarmer extends AbstractEntityAICrafting<JobFarmer, B
     private static boolean isUnderWater(@NotNull ItemStack stack) {
         return stack.is(ModTag.SEEDS_UNDERWATER);
     }
+
     private static boolean isNoFarmland(@NotNull ItemStack stack) {
         return stack.is(ModTag.SEEDS_NOFARMLAND);
     }

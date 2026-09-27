@@ -21,6 +21,7 @@ public abstract class NetworkChannelMixin {
     @Inject(method = "registerCommonMessages",at = @At("TAIL"),locals = LocalCapture.CAPTURE_FAILHARD, remap = false)
     void registerNewMessage(CallbackInfo ci, int idx){
         registerMessage(++idx, AlterBlackListMenuItemMessage.class, AlterBlackListMenuItemMessage::new);
+        registerMessage(++idx, AlterWarehouseMenuItemMessage.class, AlterWarehouseMenuItemMessage::new);
         registerMessage(++idx, CompatibleBuildingHiringModeMessage.class, CompatibleBuildingHiringModeMessage::new);
         registerMessage(++idx, CompatibleHireFireMessage.class, CompatibleHireFireMessage::new);
         registerMessage(++idx, CropRotationLengthUpdateMessage.class, CropRotationLengthUpdateMessage::new);

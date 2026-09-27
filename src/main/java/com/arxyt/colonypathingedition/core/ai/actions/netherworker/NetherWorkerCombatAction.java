@@ -44,6 +44,7 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.common.util.FakePlayerFactory;
+import net.minecraftforge.items.IItemHandler;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -72,17 +73,22 @@ public class NetherWorkerCombatAction extends AdventureActionHandler.Action {
     private final DamageSource damageSource;
     private final IBuilding building;
     private final List<ItemStack> netherEdible;
+    private final int swordSlot;
+    private final int alterSwordSlot;
+    private final int mendingSlot;
 
     private final LivingEntity mob;
     private float mobDamage = 5.0F;
     private float mobHealth;
     private EntityType<?> mobType = EntityType.ZOMBIE;
 
-    public NetherWorkerCombatAction(Level world, AbstractEntityCitizen worker, AbstractJob<?, ?> job, CompoundTag tag, boolean extraRound) {
+    public NetherWorkerCombatAction(Level world, AbstractEntityCitizen worker, AbstractJob<?, ?> job, CompoundTag tag, boolean extraRound, int swordSlot, int alterSwordSlot, int mendingSlot) {
         super(COMBAT);
         this.world = world;
         this.extraRound = extraRound;
-
+        this.swordSlot = swordSlot;
+        this.alterSwordSlot = alterSwordSlot;
+        this.mendingSlot = mendingSlot;
         this.worker = worker;
         this.primarySkillLevel = worker.getCitizenData().getCitizenSkillHandler().getLevel(((WorkerBuildingModule) job.getWorkModule()).getPrimarySkill());
         this.secondarySkillLevel = worker.getCitizenData().getCitizenSkillHandler().getLevel(((WorkerBuildingModule) job.getWorkModule()).getSecondarySkill());
@@ -137,7 +143,10 @@ public class NetherWorkerCombatAction extends AdventureActionHandler.Action {
                 rewards.addAll(loot.getRandomItems(context));
             }
             rewards.removeIf(ItemStack::isEmpty);
+            ItemStack mendingTool = mendingSlot < 0 ? ItemStack.EMPTY : worker.getInventoryCitizen().getStackInSlot(mendingSlot);
+            worker.setItemSlot(EquipmentSlot.OFFHAND, mendingTool);
             worker.getCitizenExperienceHandler().addExperience(ToolUtils.applyMending(worker, mob.getExperienceReward() * 2));
+            worker.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
             final ExpeditionLogModule expeditionLogModule = building.getModule(ExpeditionLogModule.class);
             if(expeditionLogModule != null) {
                 final ExpeditionLog expeditionLog = expeditionLogModule.getLog();
@@ -238,7 +247,15 @@ public class NetherWorkerCombatAction extends AdventureActionHandler.Action {
 
     private ItemStack findTool(@NotNull final EquipmentTypeEntry tool)
     {
-        return findItem(stack -> ItemStackUtils.hasEquipmentLevel(stack, tool, 0, building.getMaxEquipmentLevel()));
+        final Predicate<ItemStack> stackPredicate = stack -> ItemStackUtils.hasEquipmentLevel(stack, tool, 0, building.getMaxEquipmentLevel());
+        final IItemHandler workerInventory = worker.getItemHandlerCitizen();
+        if(stackPredicate.test(workerInventory.getStackInSlot(swordSlot))) {
+            return workerInventory.getStackInSlot(swordSlot);
+        }
+        if(stackPredicate.test(workerInventory.getStackInSlot(alterSwordSlot))) {
+            return workerInventory.getStackInSlot(alterSwordSlot);
+        }
+        return findItem(stackPredicate);
     }
 
     private LootParams getDropLoot() {

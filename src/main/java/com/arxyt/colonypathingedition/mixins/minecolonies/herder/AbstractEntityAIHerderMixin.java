@@ -357,8 +357,14 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
     {
         worker.swing(InteractionHand.MAIN_HAND); // visual only
         DamageSource ds = animal.level().damageSources().playerAttack(fakePlayer);
+        float animalHealth = animal.getHealth();
         if(animal.hurt(ds, PathingConfig.BUTCHER_INSTANT_KILL.get()? 999.0F : 3.0F * building.getBuildingLevel())) {
-            CitizenItemUtils.damageItemInHand(worker, InteractionHand.MAIN_HAND, 1);
+            if(animal.getHealth() < animalHealth) {
+                CitizenItemUtils.damageItemInHand(worker, InteractionHand.MAIN_HAND, 1);
+            }
+            else {
+                animal.hurt(animal.level().damageSources().genericKill(), 999.0F);
+            }
         }
     }
 

@@ -9,6 +9,7 @@ import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 import com.minecolonies.api.util.FoodUtils;
 import com.minecolonies.api.util.InventoryUtils;
 import com.minecolonies.api.util.MathUtils;
+import com.minecolonies.api.util.WorldUtil;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingMiner;
 import com.minecolonies.core.colony.jobs.JobQuarrier;
 import com.minecolonies.core.entity.ai.workers.AbstractEntityAIStructureWithWorkOrder;
@@ -17,10 +18,15 @@ import com.minecolonies.core.entity.pathfinding.navigation.MinecoloniesAdvancedP
 import com.minecolonies.core.entity.pathfinding.pathjobs.PathJobMoveCloseToXNearY;
 import com.minecolonies.core.entity.pathfinding.pathresults.PathResult;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.material.FluidState;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -28,14 +34,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
+import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.BUILDING_STEP;
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.START_BUILDING;
 import static com.minecolonies.api.research.util.ResearchConstants.BLOCK_PLACE_SPEED;
 import static com.minecolonies.api.util.constant.CitizenConstants.PROGRESS_MULTIPLIER;
 import static com.minecolonies.api.util.constant.CitizenConstants.STANDARD_WORKING_RANGE;
+import static com.minecolonies.core.colony.buildings.workerbuildings.BuildingMiner.FILL_BLOCK;
 
 
 @Mixin(value = EntityAIQuarrier.class, remap = false)
 public abstract class EntityAIQuarrierMixin extends AbstractEntityAIStructureWithWorkOrder<JobQuarrier, BuildingMiner> {
+
+    @Shadow(remap = false) protected abstract Block getMainFillBlock();
 
     @Unique private PathResult<?> gotoPath;
     @Unique private int repathCounter = 0;
@@ -45,13 +55,14 @@ public abstract class EntityAIQuarrierMixin extends AbstractEntityAIStructureWit
         super(job);
     }
 
+    // Bonus managers.
     @Override
     protected List<ItemStack> increaseBlockDrops(final List<ItemStack> drops)
     {
-        if(!PathingConfig.ENABLE_DROP_MULTIPLIER.get()) {
+        int multiplier = bonusTimes();
+        if(multiplier <= 1) {
             return drops;
         }
-        int multiplier = 1 + building.getBuildingLevel();
         for (ItemStack stack : drops) {
             if (!stack.isEmpty() && handleNormalRocks(stack)) {
                 stack.setCount(stack.getCount() * multiplier);
@@ -203,16 +214,73 @@ public abstract class EntityAIQuarrierMixin extends AbstractEntityAIStructureWit
     }
 
     /**
-     * Simply reset the repath count
+     * Simply reset the repath count, restore doMining().
      * @return original return value
      */
     @Override
     public IAIState doMining(){
-        IAIState returnState = super.doMining();
-        if (returnState != getState()){
+        if (blockToMine == null)
+        {
             repathCounter = 0;
+            return BUILDING_STEP;
         }
-        return returnState;
+
+        for (final Direction direction : Direction.values())
+        {
+            final BlockPos pos = blockToMine.relative(direction);
+            final FluidState fluid = world.getFluidState(pos);
+            if (!fluid.isEmpty())
+            {
+                setBlockFromInventory(pos, getMainFillBlock());
+            }
+        }
+
+        if (world.getBlockState(blockToMine).getBlock() instanceof AirBlock)
+        {
+            blockToMine = null;
+            repathCounter = 0;
+            return BUILDING_STEP;
+        }
+
+        if (!walkToConstructionSite(blockToMine))
+        {
+            return getState();
+        }
+
+        if (!mineBlock(blockToMine, getCurrentWorkingPosition()))
+        {
+            worker.swing(InteractionHand.MAIN_HAND);
+            return getState();
+        }
+
+        worker.decreaseSaturationForContinuousAction();
+        blockToMine = null;
+        repathCounter = 0;
+        return BUILDING_STEP;
+    }
+
+    /**
+     * Handles the placement and reduction of a block from the inventory.
+     *
+     * @param location the place to place the block at.
+     * @param block    the block.
+     */
+    private void setBlockFromInventory(@NotNull final BlockPos location, final Block block)
+    {
+        worker.swing(worker.getUsedItemHand());
+
+        final int slot = worker.getCitizenInventoryHandler().findFirstSlotInInventoryWith(block);
+        if (slot != -1)
+        {
+            getInventory().extractItem(slot, 1, false);
+            //Flag 1+2 is needed for updates
+            WorldUtil.setBlockState(world, location, block.defaultBlockState());
+        }
+    }
+
+    @Unique
+    private int bonusTimes() {
+        return PathingConfig.ENABLE_DROP_MULTIPLIER.get()? 1 + Math.min(building.getBuildingLevel(), (building.getBuildingLevel() + getPrimarySkillLevel() / 15) / 2) : 1;
     }
 
     /**

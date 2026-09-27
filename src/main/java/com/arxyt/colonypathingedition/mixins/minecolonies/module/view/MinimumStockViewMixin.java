@@ -1,7 +1,7 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.module.view;
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
-import com.arxyt.colonypathingedition.core.window.WindowPreciseMinimumStock;
+import com.arxyt.colonypathingedition.core.colony.window.WindowPreciseMinimumStock;
 import com.ldtteam.blockui.views.BOWindow;
 import com.minecolonies.api.colony.buildings.modules.AbstractBuildingModuleView;
 import com.minecolonies.core.colony.buildings.moduleviews.MinimumStockModuleView;

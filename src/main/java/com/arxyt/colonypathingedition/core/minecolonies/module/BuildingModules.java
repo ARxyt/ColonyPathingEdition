@@ -1,6 +1,9 @@
 package com.arxyt.colonypathingedition.core.minecolonies.module;
 
 import com.arxyt.colonypathingedition.core.colony.module.*;
+import com.arxyt.colonypathingedition.core.colony.view.FoodBlackListMenuModuleView;
+import com.arxyt.colonypathingedition.core.colony.view.TavernRecruitModuleView;
+import com.arxyt.colonypathingedition.core.colony.view.WarehouseMenuModuleView;
 import com.minecolonies.api.colony.buildings.registry.BuildingEntry;
 
 public class BuildingModules {
@@ -10,6 +13,9 @@ public class BuildingModules {
 
     public static final BuildingEntry.ModuleProducer<FoodBlackListMenuModule, FoodBlackListMenuModuleView> FOOD_BLACK_LIST =
             new BuildingEntry.ModuleProducer<>("food_black_list", FoodBlackListMenuModule::new, () -> FoodBlackListMenuModuleView::new);
+
+    public static final BuildingEntry.ModuleProducer<WarehouseMenuModule, WarehouseMenuModuleView> WAREHOUSE_MENU =
+            new BuildingEntry.ModuleProducer<>("warehouse_menu", WarehouseMenuModule::new, () -> WarehouseMenuModuleView::new);
 
     public static void init(){
 

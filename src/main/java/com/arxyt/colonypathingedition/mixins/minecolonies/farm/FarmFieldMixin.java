@@ -1,6 +1,8 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.farm;
 
 import com.arxyt.colonypathingedition.api.FarmFieldExtra;
+import com.arxyt.colonypathingedition.core.data.farmlandmap.SpecialSeedManager;
+import com.arxyt.colonypathingedition.core.data.tag.ModTag;
 import com.minecolonies.api.colony.buildingextensions.registry.BuildingExtensionRegistries;
 import com.minecolonies.core.colony.buildingextensions.AbstractBuildingExtensionModule;
 import com.minecolonies.core.colony.buildingextensions.FarmField;
@@ -118,6 +120,10 @@ public abstract class FarmFieldMixin extends AbstractBuildingExtensionModule imp
             }
             seasonLength = seasonDurations.getOrDefault(currentSeason, 0);
         }
+    }
+
+    public boolean isRotationWithWaterField() {
+        return seasonalSeeds.values().stream().anyMatch(stack -> stack.is(ModTag.SEEDS_UNDERWATER));
     }
 
     @OnlyIn(Dist.DEDICATED_SERVER)

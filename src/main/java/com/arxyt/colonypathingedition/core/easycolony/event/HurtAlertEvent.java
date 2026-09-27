@@ -14,6 +14,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -48,36 +49,42 @@ public class HurtAlertEvent {
                 (int) citizen.getX(),
                 (int) citizen.getY(),
                 (int) citizen.getZ()
-        );
-        message = message.withStyle(ChatFormatting.GOLD);
+        ).withStyle(ChatFormatting.GOLD);
         // 为攻击市民的生物加入荧光效果，高亮显示其位置
         livingEntity.addEffect(new MobEffectInstance(MobEffects.GLOWING, 20 * 15));
         IColony colony = citizen.getCitizenColonyHandler().getColonyOrRegister();
         if (colony == null) return;
         final IJob<?> job = citizen.getCitizenJobHandler().getColonyJob();
-        if (job != null) {
-            MessageUtils.format("[")
-                    .append(colony.getName())
-                    .append("] ")
-                    .append(job.getJobRegistryEntry().getTranslationKey())
-                    .append(Component.literal(" "))
-                    .append(citizen.getCustomName())
-                    .append(Component.literal(" ("))
-                    .append(Integer.toString((int) (citizen.getHealth() - event.getAmount())))
-                    .append(Component.literal(" ♥): "))
-                    .append(message)
-                    .sendTo(colony.getImportantMessageEntityPlayers());
-            return;
-        }
-        MessageUtils.format("[")
+        MessageUtils.MessageBuilder builder = MessageUtils.format("[")
                 .append(colony.getName())
-                .append("] ")
-                .append(citizen.getCustomName())
+                .append("] ");
+        if (job != null) {
+            builder.append(job.getJobRegistryEntry().getTranslationKey())
+                    .append(Component.literal(" "));
+
+        }
+        builder.append(citizen.getCustomName())
                 .append(Component.literal(" ("))
                 .append(Integer.toString((int) (citizen.getHealth() - event.getAmount())))
-                .append(Component.literal(" ♥): "))
-                .append(message)
-                .sendTo(colony.getImportantMessageEntityPlayers());
+                .append(Component.literal(" ♥): \n"))
+                .append(message);
+
+        for(Player player : colony.getImportantMessageEntityPlayers()) {
+            double distanceTo = Math.sqrt(player.blockPosition().distToCenterSqr(citizen.blockPosition().getCenter()));
+            double dX = citizen.getX() - player.getX();
+            double dZ = citizen.getZ() - player.getZ();
+            int xSign = Math.abs(dX) >= distanceTo / 10 ? 3 * (dX > 0 ? 1 : -1) : 0;
+            int zSign = Math.abs(dZ) >= distanceTo / 10 ? (dZ > 0 ? 1 : -1) : 0;
+            int sign = xSign + zSign + 4;
+            if(sign != 4) {
+                MutableComponent messageDirection = Component.translatable(
+                        AdditionalContants.HURT_DIRECTION + sign,
+                        (int)distanceTo
+                ).withStyle(ChatFormatting.GREEN);;
+                builder.append(messageDirection);
+            }
+            builder.sendTo(player);
+        }
         //MessageUtils.forCitizen(citizen, message).withPriority(MessageUtils.MessagePriority.IMPORTANT).sendTo(colony.getImportantMessageEntityPlayers());
     }
 

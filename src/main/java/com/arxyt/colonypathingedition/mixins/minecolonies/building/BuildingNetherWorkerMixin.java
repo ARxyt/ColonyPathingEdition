@@ -1,9 +1,12 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.building;
 
 import com.minecolonies.api.colony.IColony;
+import com.minecolonies.api.equipment.ModEquipmentTypes;
+import com.minecolonies.api.util.ItemStackUtils;
 import com.minecolonies.core.colony.buildings.AbstractBuilding;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingNetherWorker;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Tuple;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -12,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import static com.minecolonies.api.util.constant.EquipmentLevelConstants.TOOL_LEVEL_WOOD_OR_GOLD;
 import static com.minecolonies.core.colony.buildings.workerbuildings.BuildingNetherWorker.getMaxPerPeriod;
 import static net.minecraft.world.level.Level.TICKS_PER_DAY;
 
@@ -27,6 +31,15 @@ public abstract class BuildingNetherWorkerMixin extends AbstractBuilding {
     public BuildingNetherWorkerMixin(@NotNull IColony colony, BlockPos pos)
     {
         super(colony, pos);
+    }
+
+    @Inject(
+            method = "<init>",
+            at = @At("TAIL")
+    )
+    private void addHoeKeepX(CallbackInfo ci)
+    {
+        keepX.put(itemStack -> ItemStackUtils.hasEquipmentLevel(itemStack, ModEquipmentTypes.hoe.get(), TOOL_LEVEL_WOOD_OR_GOLD, getMaxEquipmentLevel()), new Tuple<>(1, true));
     }
 
     /**

@@ -4,6 +4,10 @@
       "minecraft:cobblestone",
       "minecraft:cobblestone_slab",
       "minecraft:cobbled_deepslate",
-      "minecraft:cobbled_deepslate_slab"
+      "minecraft:cobbled_deepslate_slab",
+      "minecraft:smooth_sandstone",
+      "minecraft:smooth_sandstone_slab",
+      "minecraft:smooth_red_sandstone",
+      "minecraft:smooth_red_sandstone_slab"
   ]
 }
