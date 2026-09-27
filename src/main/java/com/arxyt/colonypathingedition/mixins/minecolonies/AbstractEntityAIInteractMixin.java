@@ -77,7 +77,7 @@ public abstract class AbstractEntityAIInteractMixin <J extends AbstractJob<?, J>
      * @reason So weird, remastered.
      */
     @Inject(method = "getBlockMiningTime", at = @At("HEAD"), remap = false, cancellable = true)
-    public void getBlockMiningTime(BlockState state, BlockPos pos, CallbackInfoReturnable<Integer> cir)
+    public void newGetBlockMiningTime(BlockState state, BlockPos pos, CallbackInfoReturnable<Integer> cir)
     {
         if(MineColonies.getConfig().getServer().pvp_mode.get() && state.getBlock() instanceof AbstractColonyBlock<?>) {
             cir.setReturnValue(500);

@@ -46,6 +46,7 @@ import steve_gall.minecolonies_compatibility.core.common.building.module.Network
 import steve_gall.minecolonies_compatibility.core.common.init.ModBuildingModules;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.*;
 import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.WALKING_DELAY;
@@ -379,14 +380,19 @@ public class NewEntityAIWorkDeliveryman extends AbstractEntityAIInteract<NewJobD
     @Nullable
     private IWareHouse getDumpWareHouse()
     {
-        if(wareHouseIndex < 0) {
-            return job.findWareHouse();
+        IWareHouse myWareHouse = job.findWareHouse();
+        if(wareHouseIndex <= -1 || myWareHouse == null) {
+            return myWareHouse;
         }
-        List<IWareHouse> wareHouses = job.findWareHouses();
-        if(wareHouseIndex >= wareHouses.size()) {
-            return null;
+        List<IWareHouse> alterWareHouses = job.findWareHouses().stream()
+                .filter(wareHouse -> wareHouse != null && !wareHouse.equals(myWareHouse))
+                .sorted(Comparator.comparingDouble(wareHouse -> myWareHouse.getPosition().distManhattan(wareHouse.getPosition())))
+                .collect(Collectors.toCollection(LinkedList::new));
+        if(wareHouseIndex >= alterWareHouses.size()) {
+            wareHouseIndex = -1;
+            return myWareHouse;
         }
-        return wareHouses.get(wareHouseIndex);
+        return alterWareHouses.get(wareHouseIndex);
     }
 
     /**

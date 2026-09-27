@@ -2,7 +2,7 @@ package com.arxyt.colonypathingedition.mixins.minecolonies.citizen;
 
 import com.arxyt.colonypathingedition.api.JobNetherWorkerExtra;
 import com.arxyt.colonypathingedition.api.workersetting.BuildingHospitalExtra;
-import com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEatTask;
+import com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEat;
 import com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIFlee;
 import com.minecolonies.api.colony.interactionhandling.ChatPriority;
 import com.minecolonies.api.entity.ai.IStateAI;
@@ -19,6 +19,7 @@ import com.minecolonies.core.colony.jobs.JobNetherWorker;
 import com.minecolonies.core.colony.jobs.JobPupil;
 import com.minecolonies.core.entity.ai.minimal.EntityAICitizenAvoidEntity;
 import com.minecolonies.core.entity.ai.minimal.EntityAIEatTask;
+import com.minecolonies.core.entity.ai.minimal.EntityAISleep;
 import com.minecolonies.core.entity.ai.workers.AbstractEntityAIBasic;
 import com.minecolonies.core.entity.ai.workers.CitizenAI;
 import com.minecolonies.core.entity.citizen.EntityCitizen;
@@ -63,12 +64,15 @@ public class CitizenAIMixin {
     private void initResetAI(EntityCitizen citizen, CallbackInfo ci){
         if(EATING_AI_MODULE.get()) {
             minimalAI.removeIf(iStateAI -> iStateAI instanceof EntityAIEatTask);
-            minimalAI.add(new NewEntityAIEatTask(citizen));
+            minimalAI.add(new NewEntityAIEat(citizen));
         }
         if(FLEE_AI_MODULE.get()) {
             minimalAI.removeIf(iStateAI -> iStateAI instanceof EntityAICitizenAvoidEntity);
             minimalAI.add(new NewEntityAIFlee(citizen, Monster.class, INITIAL_RUN_SPEED_AVOID));
         }
+
+        minimalAI.removeIf(iStateAI -> iStateAI instanceof EntityAISleep);
+        minimalAI.add(new NewEntityAIFlee(citizen, Monster.class, INITIAL_RUN_SPEED_AVOID));
     }
 
     @Inject(

@@ -125,7 +125,7 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
             return RETRIEVING_END_PRODUCT_FROM_FURNACE;
         }
 
-        if (InventoryUtils.hasBuildingEnoughElseCount(building, isCorrectFuel(possibleFuels), 1) > 1 || InventoryUtils.hasItemInItemHandler(worker.getInventoryCitizen(), isCorrectFuel(possibleFuels)))
+        if (InventoryUtils.hasBuildingEnoughElseCount(building, isCorrectFuel(possibleFuels), 1) >= 1 || InventoryUtils.hasItemInItemHandler(worker.getInventoryCitizen(), isCorrectFuel(possibleFuels)))
         {
             furnacePos = getFurnaceWithoutFuel();
             if (furnacePos != null)

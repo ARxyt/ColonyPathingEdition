@@ -5,6 +5,7 @@ import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.MinecoloniesA
 import com.minecolonies.api.entity.pathfinding.IMinecoloniesNavigator;
 import com.minecolonies.api.util.BlockPosUtil;
 import com.minecolonies.api.util.Log;
+import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.entity.pathfinding.SurfaceType;
 import com.minecolonies.core.entity.pathfinding.navigation.PathingStuckHandler;
 import net.minecraft.core.BlockPos;
@@ -68,7 +69,7 @@ public abstract class UnstuckMixin<NAV extends PathNavigation & IMinecoloniesNav
 
         // 向前小距离传送
         boolean teleported = false;
-        if (hadPath)
+        if (hadPath && navigator.getOurEntity() instanceof EntityCitizen)
         {
             int index = Math.min(Objects.requireNonNull(navigator.getPath()).getNextNodeIndex() + 5, navigator.getPath().getNodeCount() - 1);
             final Node togo = navigator.getPath().getNode(index);

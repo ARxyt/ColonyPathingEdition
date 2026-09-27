@@ -1,6 +1,7 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.farm;
 
 import com.arxyt.colonypathingedition.api.FarmFieldExtra;
+import com.arxyt.colonypathingedition.core.data.tag.ModTag;
 import com.minecolonies.api.colony.buildingextensions.registry.BuildingExtensionRegistries;
 import com.minecolonies.api.util.Utils;
 import com.minecolonies.core.colony.buildingextensions.AbstractBuildingExtension;
@@ -89,6 +90,10 @@ public abstract class FarmFieldMixin extends AbstractBuildingExtension implement
 
     public @NotNull ItemStack getSeasonSeed(int season) {
         return seasonalSeeds.getOrDefault(season, ItemStack.EMPTY);
+    }
+
+    public boolean isRotationWithWaterField() {
+        return seasonalSeeds.values().stream().anyMatch(stack -> stack.is(ModTag.SEEDS_UNDERWATER));
     }
 
     public void updateAdvanceDay(int date, int day, int season){

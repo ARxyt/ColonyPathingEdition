@@ -1,7 +1,7 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.module.view;
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
-import com.arxyt.colonypathingedition.core.window.NewExpeditionModuleWindow;
+import com.arxyt.colonypathingedition.core.colony.window.NewExpeditionModuleWindow;
 import com.ldtteam.blockui.views.BOWindow;
 import com.minecolonies.core.colony.buildings.moduleviews.ExpeditionLogModuleView;
 import org.spongepowered.asm.mixin.Mixin;

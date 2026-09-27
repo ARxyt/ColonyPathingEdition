@@ -17,6 +17,7 @@ public class MinecoloniesMixin {
     @Inject(method = "onNetworkRegistry", at = @At("TAIL"))
     private static void onNetworkRegistry(RegisterPayloadHandlersEvent event, CallbackInfo ci, @Local final PayloadRegistrar registry){
         AlterBlackListMenuItemMessage.TYPE.register(registry);
+        AlterWareHouseMenuItemMessage.TYPE.register(registry);
         CompatibleBuildingHiringModeMessage.TYPE.register(registry);
         CompatibleHireFireMessage.TYPE.register(registry);
         CropRotationAdvanceDayMessage.TYPE.register(registry);

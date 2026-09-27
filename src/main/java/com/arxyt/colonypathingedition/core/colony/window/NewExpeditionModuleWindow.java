@@ -1,4 +1,4 @@
-package com.arxyt.colonypathingedition.core.window;
+package com.arxyt.colonypathingedition.core.colony.window;
 
 import com.ldtteam.blockui.controls.*;
 import com.ldtteam.blockui.views.View;

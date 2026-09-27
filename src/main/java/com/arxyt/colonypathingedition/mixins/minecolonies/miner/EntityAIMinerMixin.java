@@ -4,6 +4,8 @@ import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.arxyt.colonypathingedition.core.data.tag.ModTag;
 import com.arxyt.colonypathingedition.core.util.NewFoodUtils;
 import com.arxyt.colonypathingedition.core.util.DistanceUtils;
+import com.minecolonies.api.MinecoloniesAPIProxy;
+import com.minecolonies.api.colony.IColonyManager;
 import com.minecolonies.api.crafting.ItemStorage;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 import com.minecolonies.api.util.FoodUtils;
@@ -16,13 +18,23 @@ import com.minecolonies.core.entity.ai.workers.production.EntityAIStructureMiner
 import com.minecolonies.core.entity.pathfinding.navigation.MinecoloniesAdvancedPathNavigate;
 import com.minecolonies.core.entity.pathfinding.pathjobs.PathJobMoveCloseToXNearY;
 import com.minecolonies.core.entity.pathfinding.pathresults.PathResult;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +48,14 @@ import java.util.List;
 
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.*;
 import static com.minecolonies.api.research.util.ResearchConstants.BLOCK_PLACE_SPEED;
+import static com.minecolonies.api.research.util.ResearchConstants.MORE_ORES;
 import static com.minecolonies.api.util.constant.CitizenConstants.PROGRESS_MULTIPLIER;
 import static com.minecolonies.api.util.constant.CitizenConstants.STANDARD_WORKING_RANGE;
+import static com.minecolonies.api.util.constant.Constants.ONE_HUNDRED_PERCENT;
+import static com.minecolonies.api.util.constant.StatisticsConstants.BLOCKS_MINED;
+import static com.minecolonies.api.util.constant.StatisticsConstants.ORES_MINED;
+import static com.minecolonies.core.entity.ai.workers.production.EntityAIStructureMiner.LUCKY_ORE_LOOT_TABLE;
+import static com.minecolonies.core.entity.ai.workers.production.EntityAIStructureMiner.LUCKY_ORE_PARAM_SET;
 
 @Mixin(value = EntityAIStructureMiner.class, remap = false)
 public abstract class EntityAIMinerMixin extends AbstractEntityAIStructureWithWorkOrder<JobMiner, BuildingMiner> {
@@ -47,23 +65,6 @@ public abstract class EntityAIMinerMixin extends AbstractEntityAIStructureWithWo
     public EntityAIMinerMixin(@NotNull final JobMiner job)
     {
         super(job);
-    }
-
-
-
-    @Override
-    protected List<ItemStack> increaseBlockDrops(final List<ItemStack> drops)
-    {
-        if(!PathingConfig.ENABLE_DROP_MULTIPLIER.get()) {
-            return drops;
-        }
-        int multiplier = 1 + building.getBuildingLevel();
-        for (ItemStack stack : drops) {
-            if (!stack.isEmpty() && handleNormalRocks(stack)) {
-                stack.setCount(stack.getCount() * multiplier);
-            }
-        }
-        return drops;
     }
 
     private boolean handleNormalRocks(ItemStack itemStack) {
@@ -234,18 +235,119 @@ public abstract class EntityAIMinerMixin extends AbstractEntityAIStructureWithWo
     }
 
     /**
-     * 只是重置一下重新寻路次数
+     * 只是重置一下重新寻路次数，复用一下原版的流程，因为含有挖掘更多矿石的代码
      * @return 原本的返回值
      */
     @Override
-    public IAIState doMining(){
+    public IAIState doMining()
+    {
         setDelay(1);
-        IAIState returnState = super.doMining();
-        if (returnState != getState() && returnState != BUILDING_STEP){
-            repathCounter = 0;
+        if (blockToMine == null)
+        {
+            return BUILDING_STEP;
         }
-        return returnState;
+
+        final BlockState blockState = world.getBlockState(blockToMine);
+        if (!IColonyManager.getInstance().getCompatibilityManager().isOre(blockState))
+        {
+            blockToMine = getSurroundingOreOrDefault(blockToMine);
+        }
+
+        if (world.getBlockState(blockToMine).getBlock() instanceof AirBlock)
+        {
+            return BUILDING_STEP;
+        }
+
+        if (!mineBlock(blockToMine, getCurrentWorkingPosition()))
+        {
+            worker.swing(InteractionHand.MAIN_HAND);
+            return getState();
+        }
+
+        blockToMine = getSurroundingOreOrDefault(blockToMine);
+        if (IColonyManager.getInstance().getCompatibilityManager().isOre(world.getBlockState(blockToMine)))
+        {
+            return getState();
+        }
+
+        worker.decreaseSaturationForContinuousAction();
+        return BUILDING_STEP;
     }
+
+    private BlockPos getSurroundingOreOrDefault(final BlockPos pos)
+    {
+        for (Direction direction : Direction.values())
+        {
+            final BlockPos offset = pos.relative(direction);
+            if (IColonyManager.getInstance().getCompatibilityManager().isOre(world.getBlockState(offset)))
+            {
+                return offset;
+            }
+        }
+        return pos;
+    }
+
+    // Bonus managers.
+    @Override
+    protected List<ItemStack> increaseBlockDrops(final List<ItemStack> drops)
+    {
+        int multiplier = bonusTimes();
+        if(multiplier <= 1) {
+            return drops;
+        }
+        for (ItemStack stack : drops) {
+            if (!stack.isEmpty() && handleNormalRocks(stack)) {
+                stack.setCount(stack.getCount() * multiplier);
+            }
+        }
+        return drops;
+    }
+
+    @Override
+    protected void triggerMinedBlock(@NotNull final BlockPos position, @NotNull final BlockState blockToMine)
+    {
+        super.triggerMinedBlock(position, blockToMine);
+
+        if (IColonyManager.getInstance().getCompatibilityManager().isLuckyBlock(blockToMine.getBlock()))
+        {
+            final double chance = 1 + worker.getCitizenColonyHandler().getColonyOrRegister().getResearchManager().getResearchEffects().getEffectStrength(MORE_ORES);
+            final boolean canGetLuckyBlock =
+                    worker.getRandom().nextDouble() * ONE_HUNDRED_PERCENT <= MinecoloniesAPIProxy.getInstance().getConfig().getServer().luckyBlockChance.get() * chance;
+
+            if (canGetLuckyBlock)
+            {
+
+                final ResourceKey<LootTable> lootTableId = ResourceKey.create(Registries.LOOT_TABLE, LUCKY_ORE_LOOT_TABLE.withSuffix(String.valueOf(building.getBuildingLevel())));
+                final LootParams lootParams = new LootParams.Builder((ServerLevel) this.world)
+                        .withParameter(LootContextParams.ORIGIN, position.getCenter())
+                        .withParameter(LootContextParams.THIS_ENTITY, worker)
+                        .withParameter(LootContextParams.TOOL, worker.getMainHandItem())
+                        .create(LUCKY_ORE_PARAM_SET);
+
+
+                final LootTable lootTable = worker.level().getServer().reloadableRegistries().getLootTable(lootTableId);
+                final ObjectArrayList<ItemStack> randomItems = new ObjectArrayList<>();
+                for (int i = 0; i < bonusTimes(); i++) {
+                    randomItems.addAll(lootTable.getRandomItems(lootParams));
+                }
+                for (final ItemStack stack : randomItems) {
+                    InventoryUtils.transferItemStackIntoNextBestSlotInItemHandler(stack, worker.getInventoryCitizen());
+                }
+            }
+        }
+
+        if (IColonyManager.getInstance().getCompatibilityManager().isOre(blockToMine))
+        {
+            building.getColony().getStatisticsManager().increment(ORES_MINED, building.getColony().getDay());
+        }
+        building.getColony().getStatisticsManager().increment(BLOCKS_MINED, building.getColony().getDay());
+    }
+
+    @Unique
+    private int bonusTimes() {
+        return PathingConfig.ENABLE_DROP_MULTIPLIER.get()? 1 + Math.min(building.getBuildingLevel(), (building.getBuildingLevel() + getPrimarySkillLevel() / 15) / 2) : 1;
+    }
+
 
     /**
      * 如果工作方块内有食物，在临走前拿取一点食物

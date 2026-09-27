@@ -9,6 +9,7 @@ import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 import com.minecolonies.api.util.FoodUtils;
 import com.minecolonies.api.util.InventoryUtils;
 import com.minecolonies.api.util.MathUtils;
+import com.minecolonies.api.util.WorldUtil;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingMiner;
 import com.minecolonies.core.colony.jobs.JobQuarrier;
 import com.minecolonies.core.entity.ai.workers.AbstractEntityAIStructureWithWorkOrder;
@@ -17,10 +18,15 @@ import com.minecolonies.core.entity.pathfinding.navigation.MinecoloniesAdvancedP
 import com.minecolonies.core.entity.pathfinding.pathjobs.PathJobMoveCloseToXNearY;
 import com.minecolonies.core.entity.pathfinding.pathresults.PathResult;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.AirBlock;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.material.FluidState;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -36,27 +42,14 @@ import static com.minecolonies.api.util.constant.CitizenConstants.STANDARD_WORKI
 
 @Mixin(value = EntityAIQuarrier.class, remap = false)
 public abstract class EntityAIQuarrierMixin extends AbstractEntityAIStructureWithWorkOrder<JobQuarrier, BuildingMiner> {
+    @Shadow(remap = false) protected abstract Block getMainFillBlock();
+
     @Unique PathResult<?> gotoPath = null;
     @Unique private int repathCounter = 0;
 
     public EntityAIQuarrierMixin(@NotNull final JobQuarrier job)
     {
         super(job);
-    }
-
-    @Override
-    protected List<ItemStack> increaseBlockDrops(final List<ItemStack> drops)
-    {
-        if(!PathingConfig.ENABLE_DROP_MULTIPLIER.get()) {
-            return drops;
-        }
-        int multiplier = 1 + building.getBuildingLevel();
-        for (ItemStack stack : drops) {
-            if (!stack.isEmpty() && handleNormalRocks(stack)) {
-                stack.setCount(stack.getCount() * multiplier);
-            }
-        }
-        return drops;
     }
 
     private boolean handleNormalRocks(ItemStack itemStack) {
@@ -230,15 +223,79 @@ public abstract class EntityAIQuarrierMixin extends AbstractEntityAIStructureWit
      * 只是重置一下重新寻路次数
      * @return 原本的返回值
      */
-    @Override
-    public IAIState doMining(){
-        setDelay(1);
-        IAIState returnState = super.doMining();
-        if (returnState != getState() && returnState != BUILDING_STEP){
-            repathCounter = 0;
+    public IAIState doMining()
+    {
+        if (blockToMine == null)
+        {
+            return BUILDING_STEP;
         }
-        return returnState;
+
+        for (final Direction direction : Direction.values())
+        {
+            final BlockPos pos = blockToMine.relative(direction);
+            final FluidState fluid = world.getFluidState(pos);
+            if (!fluid.isEmpty())
+            {
+                setBlockFromInventory(pos, getMainFillBlock());
+            }
+        }
+
+        if (world.getBlockState(blockToMine).getBlock() instanceof AirBlock)
+        {
+            blockToMine = null;
+            return BUILDING_STEP;
+        }
+
+        if (!walkToConstructionSite(blockToMine))
+        {
+            return getState();
+        }
+
+        if (!mineBlock(blockToMine, getCurrentWorkingPosition()))
+        {
+            worker.swing(InteractionHand.MAIN_HAND);
+            return getState();
+        }
+
+        worker.decreaseSaturationForContinuousAction();
+        blockToMine = null;
+        return BUILDING_STEP;
     }
+
+    private void setBlockFromInventory(@NotNull final BlockPos location, final Block block)
+    {
+        worker.swing(worker.getUsedItemHand());
+
+        final int slot = worker.getCitizenInventoryHandler().findFirstSlotInInventoryWith(block);
+        if (slot != -1)
+        {
+            getInventory().extractItem(slot, 1, false);
+            //Flag 1+2 is needed for updates
+            WorldUtil.setBlockState(world, location, block.defaultBlockState());
+        }
+    }
+
+    // Bonus managers.
+    @Override
+    protected List<ItemStack> increaseBlockDrops(final List<ItemStack> drops)
+    {
+        int multiplier = bonusTimes();
+        if(multiplier <= 1) {
+            return drops;
+        }
+        for (ItemStack stack : drops) {
+            if (!stack.isEmpty() && handleNormalRocks(stack)) {
+                stack.setCount(stack.getCount() * multiplier);
+            }
+        }
+        return drops;
+    }
+
+    @Unique
+    private int bonusTimes() {
+        return PathingConfig.ENABLE_DROP_MULTIPLIER.get()? 1 + Math.min(building.getBuildingLevel(), (building.getBuildingLevel() + getPrimarySkillLevel() / 15) / 2) : 1;
+    }
+
 
     /**
      * 如果工作方块内有食物，在临走前拿取一点食物

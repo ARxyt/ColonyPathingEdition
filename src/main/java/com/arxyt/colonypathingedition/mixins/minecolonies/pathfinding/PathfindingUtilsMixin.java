@@ -42,23 +42,22 @@ public abstract class PathfindingUtilsMixin {
                 Mth.floor(entity.getY()),
                 Mth.floor(entity.getZ()));
         final Level level = entity.level();
-        BlockState bs = level.getBlockState(pos);
-        final Block b = bs.getBlock();
+        BlockState thisState = level.getBlockState(pos);
 
         // Check if the entity is standing ontop of another block with part of its bb
         final BlockPos.MutableBlockPos below = new BlockPos.MutableBlockPos(pos.getX(), pos.getY() - 1, pos.getZ());
         // Regen start pos at target block if there is a collision shape.
-        final double posHeight = ShapeUtil.max(bs.getCollisionShape(level, pos), Direction.Axis.Y);
+        final double posHeight = ShapeUtil.max(thisState.getCollisionShape(level, pos.above()), Direction.Axis.Y);
         if ( posHeight != 0 )
         {
             // Additional check
-            double posX = Math.min(ShapeUtil.max(bs.getCollisionShape(level, pos), Direction.Axis.X),1 - ShapeUtil.min(bs.getCollisionShape(level, pos), Direction.Axis.X));
-            double posZ = Math.min(ShapeUtil.max(bs.getCollisionShape(level, pos), Direction.Axis.Z),1 - ShapeUtil.min(bs.getCollisionShape(level, pos), Direction.Axis.Z));
+            double posX = Math.min(ShapeUtil.max(thisState.getCollisionShape(level, pos.above()), Direction.Axis.X), 1 - ShapeUtil.min(thisState.getCollisionShape(level, pos), Direction.Axis.X));
+            double posZ = Math.min(ShapeUtil.max(thisState.getCollisionShape(level, pos.above()), Direction.Axis.Z), 1 - ShapeUtil.min(thisState.getCollisionShape(level, pos), Direction.Axis.Z));
             boolean canStand = Math.min(posX,posZ) < 0.25;
             if(canStand) return pos.immutable();
         }
 
-        final BlockState belowState = level.getBlockState(below);
+        BlockState belowState = level.getBlockState(below);
         if (entity.onGround() && SurfaceType.getSurfaceType(level, belowState, below) != SurfaceType.WALKABLE)
         {
             int minX = Mth.floor(entity.getBoundingBox().minX);
@@ -86,9 +85,10 @@ public abstract class PathfindingUtilsMixin {
         }
 
         // 1 Up when we're standing within this collision shape
-        final VoxelShape collisionShape = bs.getCollisionShape(level, pos);
-        final boolean isFineToStandIn = callCanStandInSolidBlock(bs);
-        if (bs.blocksMotion() && !isFineToStandIn && collisionShape.max(Direction.Axis.Y) > 0)
+        thisState = level.getBlockState(pos);
+        final VoxelShape collisionShape = thisState.getCollisionShape(level, pos);
+        final boolean isFineToStandIn = callCanStandInSolidBlock(thisState);
+        if (thisState.blocksMotion() && !isFineToStandIn && collisionShape.max(Direction.Axis.Y) > 0)
         {
             final double relPosX = Math.abs(entity.getX() % 1);
             final double relPosZ = Math.abs(entity.getZ() % 1);
@@ -100,18 +100,18 @@ public abstract class PathfindingUtilsMixin {
                         && box.maxY > 0)
                 {
                     pos.set(pos.getX(), pos.getY() + 1, pos.getZ());
-                    bs = level.getBlockState(pos);
+                    thisState = level.getBlockState(pos);
                     break;
                 }
             }
         }
 
-        BlockState down = level.getBlockState(pos.below());
-        while (callCanStandInSolidBlock(bs) && callCanStandInSolidBlock(down) && !down.getBlock().isLadder(down, level, pos.below(), entity) && down.getFluidState().isEmpty())
+        belowState = level.getBlockState(pos.below());
+        while (callCanStandInSolidBlock(thisState) && callCanStandInSolidBlock(belowState) && !belowState.getBlock().isLadder(belowState, level, pos.below(), entity) && belowState.getFluidState().isEmpty())
         {
             pos.move(Direction.DOWN, 1);
-            bs = down;
-            down = level.getBlockState(pos.below());
+            thisState = belowState;
+            belowState = level.getBlockState(pos.below());
 
             if (pos.getY() < entity.getCommandSenderWorld().getMinBuildHeight())
             {
@@ -119,17 +119,18 @@ public abstract class PathfindingUtilsMixin {
             }
         }
 
+        Block thisBlock = thisState.getBlock();
         if (entity.isInWater() && !(entity instanceof AbstractDrownedEntityPirateRaider))
         {
-            while (!bs.getFluidState().isEmpty())
+            while (!belowState.getFluidState().isEmpty())
             {
                 pos.set(pos.getX(), pos.getY() + 1, pos.getZ());
-                bs = level.getBlockState(pos);
+                belowState = level.getBlockState(pos);
             }
         }
-        else if (b instanceof FenceBlock || b instanceof WallBlock || b instanceof AbstractBlockMinecoloniesDefault || (bs.blocksMotion() && !callCanStandInSolidBlock(bs)))
+        else if (thisBlock instanceof FenceBlock || thisBlock instanceof WallBlock || thisBlock instanceof AbstractBlockMinecoloniesDefault || (thisState.blocksMotion() && !callCanStandInSolidBlock(thisState)))
         {
-            final VoxelShape shape = bs.getCollisionShape(level, pos);
+            final VoxelShape shape = thisState.getCollisionShape(level, pos);
             if (shape.isEmpty())
             {
                 return pos.immutable();

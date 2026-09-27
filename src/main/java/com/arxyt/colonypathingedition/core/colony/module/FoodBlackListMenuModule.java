@@ -1,6 +1,7 @@
 package com.arxyt.colonypathingedition.core.colony.module;
 
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
+import com.arxyt.colonypathingedition.core.util.NewFoodUtils;
 import com.minecolonies.api.colony.buildings.modules.AbstractBuildingModule;
 import com.minecolonies.api.colony.buildings.modules.IAltersRequiredItems;
 import com.minecolonies.api.colony.buildings.modules.IPersistentModule;
@@ -36,7 +37,7 @@ public class FoodBlackListMenuModule extends AbstractBuildingModule implements I
      */
     public FoodBlackListMenuModule(){
         for (ItemStorage blackListStorage : PathingConfig.food_black_list) {
-            if(FoodUtils.EDIBLE.test(blackListStorage.getItemStack())) {
+            if(NewFoodUtils.EDIBLE.test(blackListStorage.getItemStack())) {
                 black_list.add(blackListStorage);
             }
         }
@@ -74,6 +75,7 @@ public class FoodBlackListMenuModule extends AbstractBuildingModule implements I
     public void removeBlackListItem(final ItemStack itemStack)
     {
         black_list.remove(new ItemStorage(itemStack));
+        markDirty();
     }
 
     @Override
@@ -86,7 +88,7 @@ public class FoodBlackListMenuModule extends AbstractBuildingModule implements I
         for (int i = 0; i < minimumStockTagList.size(); i++)
         {
             final ItemStack itemStack = ItemStack.parseOptional(provider, minimumStockTagList.getCompound(i));
-            if (FoodUtils.EDIBLE.test(itemStack))
+            if (NewFoodUtils.EDIBLE.test(itemStack))
             {
                 black_list.add(new ItemStorage(itemStack));
             }

@@ -7,10 +7,11 @@ import com.arxyt.colonypathingedition.core.ai.actions.netherworker.NetherWorkerC
 import com.arxyt.colonypathingedition.core.ai.actions.netherworker.NetherWorkerMiningAction;
 import com.arxyt.colonypathingedition.core.ai.actions.netherworker.NetherWorkerPickupAction;
 import com.arxyt.colonypathingedition.core.ai.actions.netherworker.NetherWorkerPiglinTradeAction;
-import com.arxyt.colonypathingedition.core.util.SwitchUtils;
-import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.RecipeStorageAccessor;
+import com.arxyt.colonypathingedition.core.util.ToolUtils;
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 import com.minecolonies.api.colony.IColonyManager;
+import com.minecolonies.api.colony.buildings.IBuilding;
 import com.minecolonies.api.colony.buildings.modules.ICraftingBuildingModule;
 import com.minecolonies.api.colony.requestsystem.request.IRequest;
 import com.minecolonies.api.colony.requestsystem.requestable.IDeliverable;
@@ -50,18 +51,23 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.portal.PortalShape;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.common.ItemAbilities;
 import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.*;
 import static com.arxyt.colonypathingedition.core.costants.states.NewAIWorkerState.NETHER_GATHER_REWARDS;
+import static com.arxyt.colonypathingedition.core.costants.states.NewAIWorkerState.NETHER_GATHER_TOOLS;
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.*;
 import static com.minecolonies.api.util.constant.CitizenConstants.*;
 import static com.minecolonies.api.util.constant.EquipmentLevelConstants.*;
@@ -89,6 +95,56 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
     private final AdventureActionHandler actionHandler = new AdventureActionHandler();
     private IAIState dumpReturnState = IDLE;
 
+    private IAIState pickupReturnState = START_WORKING;
+
+    public enum Tools {
+        SWORD(true, ModEquipmentTypes.sword.get()),
+        PICKAXE(true, ModEquipmentTypes.pickaxe.get()),
+        AXE(false, ModEquipmentTypes.axe.get()),
+        SHOVEL(false, ModEquipmentTypes.shovel.get()),
+        HOE(false, ModEquipmentTypes.hoe.get());
+
+        /**
+         * Is it demands.
+         */
+        private boolean required;
+
+        /**
+         * Its type.
+         */
+        private EquipmentTypeEntry type;
+
+        /**
+         * Create a new one.
+         *
+         * @param required if demands.
+         */
+        Tools(final boolean required, final EquipmentTypeEntry equipmentType)
+        {
+            this.required = required;
+            this.type = equipmentType;
+        }
+
+        /**
+         * Worker have to get one.
+         *
+         * @return true if so.
+         */
+        public boolean isRequired()
+        {
+            return required;
+        }
+
+        /**
+         * The type of tools we needed.
+         *
+         * @return type.
+         */
+        public EquipmentTypeEntry getType() {
+            return type;
+        }
+    }
+
     /**
      * Edibles that the worker will attempt to eat while in the nether (unfiltered)
      */
@@ -112,6 +168,7 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
                 new AITarget<IAIState>(NETHER_LEAVE, this::leaveForNether, TICK_DELAY),
                 new AITarget<IAIState>(NETHER_AWAY, this::stayInNether, 1),
                 new AITarget<IAIState>(NETHER_GATHER_REWARDS, this::gatherRewards, 1),
+                new AITarget<IAIState>(NETHER_GATHER_TOOLS, this::gatherTools, 1),
                 new AITarget<IAIState>(NETHER_RETURN, this::returnFromNether, TICK_DELAY),
                 new AITarget<IAIState>(NETHER_OPENPORTAL, this::openPortal, TICK_DELAY),
                 new AITarget<IAIState>(NETHER_CLOSEPORTAL, this::closePortal, TICK_DELAY)
@@ -203,7 +260,7 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
     @Override
     public IAIState getStateAfterPickUp()
     {
-        return START_WORKING;
+        return pickupReturnState;
     }
 
     @Override
@@ -215,10 +272,11 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
     @Override
     protected IAIState decide()
     {
+        JobNetherWorkerExtra jobExtra = (JobNetherWorkerExtra)job;
         //Check if we are traveling.
         if (!job.getCraftedResults().isEmpty())
         {
-            extraRound = ((JobNetherWorkerExtra)job).getExtraRounds();
+            extraRound = jobExtra.getExtraRounds();
             worker.setInvisible(true);
             setDelay(WAITING_DELAY);
             return NETHER_AWAY;
@@ -229,6 +287,8 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
         }
 
         job.setInNether(false);
+        worker.setInvisible(false);
+        pickupReturnState = START_WORKING;
 
         IAIState crafterState = super.decide();
 
@@ -285,34 +345,25 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
         {
             for (ItemStorage item : rs.getInput())
             {
-                if (!checkIfRequestForItemExistOrCreateAsync(new ItemStack(item.getItem(), 1), item.getAmount(), item.getAmount()))
+                if (!checkIfRequestForItemExistOrCreateAsync(new ItemStack(item.getItem(), 1), item.getAmount() * extraRoundsLimit(), item.getAmount()))
                 {
                     hasItemsAvailable = false;
                 }
             }
         }
 
-        // Optional
-        checkForToolOrWeapon(ModEquipmentTypes.axe.get());
-        checkForToolOrWeapon(ModEquipmentTypes.shovel.get());
-        checkForToolOrWeapon(ModEquipmentTypes.hoe.get());
-
-        // Demand
-        boolean missingPick = checkForToolOrWeapon(ModEquipmentTypes.pickaxe.get());
-        boolean missingSword = checkForToolOrWeapon(ModEquipmentTypes.sword.get());
+        boolean hasGotTools = checkForToolOrWeaponNotTooBroken();
         boolean missingLighter = checkForToolOrWeapon(ModEquipmentTypes.flint_and_steel.get());
-        if (!hasItemsAvailable || missingPick || missingSword || missingLighter)
+        if (!hasItemsAvailable || !hasGotTools || missingLighter)
         {
             worker.getCitizenData().setJobStatus(JobStatus.STUCK);
             setDelay(STUCK_DELAY);
-            return START_WORKING;
+            return getState();
         }
 
         if(!hasEaten && worker.getCitizenData().getSaturation() < FULL_SATURATION){
-            if(worker.getCitizenJobHandler().getColonyJob() instanceof JobNetherWorkerExtra jobExtra){
-                jobExtra.setShouldEat(true);
-                hasEaten = true;
-            }
+            jobExtra.setShouldEat(true);
+            hasEaten = true;
         }
 
         // We should wait for armor for extra 2 minutes if it's craftable.
@@ -327,10 +378,7 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
         {
             final ICraftingBuildingModule module = building.getFirstModuleOccurance(BuildingNetherWorker.CraftingModule.class);
             currentRecipeStorage = module.getFirstFulfillableRecipe(ItemStackUtils::isEmpty, 1, false);
-            if (building.isReadyForTrip())
-            {
-                worker.getCitizenData().setJobStatus(JobStatus.STUCK);
-            }
+            worker.getCitizenData().setJobStatus(JobStatus.STUCK);
 
             if (currentRecipeStorage == null && building.shallClosePortalOnReturn())
             {
@@ -411,6 +459,15 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
                     job.addCraftedResultsList(result);
                 }
 
+                JobNetherWorkerExtra jobExtra = (JobNetherWorkerExtra)job;
+                // Check for materials needed to go to the Nether
+                if (currentRecipeStorage != null && jobExtra.canExtraRounds(extraRoundsLimit()))
+                {
+                    for (ItemStorage item : currentRecipeStorage.getInput())
+                    {
+                        checkIfRequestForItemExistOrCreateAsync(new ItemStack(item.getItem(), 1), item.getAmount() * jobExtra.remainExtraRounds(extraRoundsLimit()), item.getAmount());
+                    }
+                }
                 worker.setInvisible(true);
                 worker.getCitizenData().setJobStatus(JobStatus.WORKING);
                 worker.playSound(SoundEvents.PORTAL_TRIGGER, worker.getRandom().nextFloat() * 0.5F + 0.25F, 0.25F);
@@ -429,6 +486,7 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
     {
         final ExpeditionLog expeditionLog = building.getFirstModuleOccurance(ExpeditionLogModule.class).getLog();
         equipArmor(true);
+        worker.setInvisible(true);
 
         // Action Loop
         if(actionHandler.canActionTick()) {
@@ -437,7 +495,8 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
                     actionHandler.onActionFinished();
                     job.getCraftedResults().remove(actionHandler.getCurrStack());
                     setDelay(WAITING_DELAY);
-                    return getState();
+                    worker.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
+                    return NETHER_AWAY;
                 }
                 case FAIL -> {
                     actionHandler.onActionFinished();
@@ -450,6 +509,7 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
                     actionHandler.onActionFinished();
                     onTravelFinished(expeditionLog, true);
                     StatsUtil.trackStat(building, "escaped", 1);
+                    worker.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
                     return NETHER_RETURN;
                 }
                 case SUCCESS -> {
@@ -459,14 +519,20 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
                     logAllEquipment(expeditionLog);
                     setDelay(actionHandler.actionDelay());
                     job.getCraftedResults().remove(actionHandler.getCurrStack());
+                    worker.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
                     return getState();
                 }
                 case IN_PROGRESS -> {
                     logAllEquipment(expeditionLog);
                     setDelay(actionHandler.actionDelay());
+                    worker.setItemSlot(EquipmentSlot.MAINHAND, ItemStack.EMPTY);
                     return getState();
                 }
             }
+        }
+
+        if(!requestToolOrWeaponNotTooBroken()) {
+            return NETHER_GATHER_TOOLS;
         }
 
         //This is the adventure loop.
@@ -475,19 +541,23 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
             ItemStack currStack = job.getCraftedResults().peek();
             if(currStack == null) {
                 job.getCraftedResults().poll();
-                return getState();
+                return NETHER_AWAY;
             }
             if (currStack.getItem() instanceof ItemAdventureToken)
             {
                 if(currStack.get(ModDataComponents.ADVENTURE_COMPONENT) instanceof AdventureData adventureData) {
-                    actionHandler.setAction(new NetherWorkerCombatAction(world, worker, job, adventureData, extraRound), currStack);
-                    return getState();
+                    actionHandler.setAction(new NetherWorkerCombatAction(world, worker, job, adventureData, extraRound,
+                            toolSlots.get(ModEquipmentTypes.sword.get()) != null ? toolSlots.get(ModEquipmentTypes.sword.get()) : -1,
+                            alterToolSlots.get(ModEquipmentTypes.sword.get()) != null ? alterToolSlots.get(ModEquipmentTypes.sword.get()) : -1,
+                            mendingToolSlot(ModEquipmentTypes.sword.get())
+                    ), currStack);
+                    return NETHER_AWAY;
                 }
                 if(currStack.get(DataComponents.CUSTOM_DATA) instanceof CustomData customData) {
                     CompoundTag tag = customData.copyTag();
                     if (tag.contains("tradeLoot")) {
                         actionHandler.setAction(new NetherWorkerPiglinTradeAction(world, worker, job, tag), currStack);
-                        return getState();
+                        return NETHER_AWAY;
                     }
                 }
             }
@@ -496,45 +566,68 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
                 if (currStack.getItem() instanceof BlockItem bi)
                 {
                     final Block block = bi.getBlock();
-                    actionHandler.setAction(new NetherWorkerMiningAction(world, worker, job, currStack, getMostEfficientTool(block.defaultBlockState(), worker.blockPosition())), currStack);
-                    // we got a may-not-reliable tool slot, so immediately reset.
-                    setDelay(0);
+                    final BlockState state = block.defaultBlockState();
+                    final BlockPos pos = worker.blockPosition();
+                    actionHandler.setAction(new NetherWorkerMiningAction(world, worker, job, currStack,
+                            getMostEfficientTool(state, pos),
+                            mendingToolSlot(WorkerUtil.getBestToolForBlock(state, state.getDestroySpeed(world, pos), building, world, pos))
+                    ), currStack);
                     return NETHER_AWAY;
                 }
                 else
                 {
                     actionHandler.setAction(new NetherWorkerPickupAction(currStack), currStack);
-                    return getState();
+                    return NETHER_AWAY;
                 }
             }
             job.getCraftedResults().poll();
-            return getState();
+            return NETHER_AWAY;
         }
 
         return onTravelFinished(expeditionLog, false);
     }
 
     private IAIState onTravelFinished(ExpeditionLog expeditionLog, Boolean escaped) {
+        JobNetherWorkerExtra jobExtra = (JobNetherWorkerExtra) job;
         job.getCraftedResults().clear();
         if(job.getProcessedResults().isEmpty()) {
-            extraRound = ((JobNetherWorkerExtra) job).setExtraRounds(false);
+            extraRound = jobExtra.setExtraRounds(false);
             expeditionLog.setStatus(ExpeditionLog.Status.RETURNING_HOME);
             return NETHER_RETURN;
         }
 
-        if (!escaped && ((JobNetherWorkerExtra) job).canExtraRounds(extraRoundsLimit()) && worker.getHealth() >= worker.getMaxHealth() && InventoryUtils.getItemCountInItemHandler(worker.getInventoryCitizen(), stack -> building.getModule(NETHERMINER_MENU).getMenu().contains(new ItemStorage(stack))) >= 10) {
-            if (currentRecipeStorage instanceof RecipeStorage recipeStorage) {
-                List<ItemStack> result = ((RecipeStorageAccessor)recipeStorage).invokeInsertCraftedItems(ImmutableList.of(worker.getItemHandlerCitizen()), recipeStorage.getPrimaryOutput(), getLootContext(),false);
+        if (!escaped && jobExtra.canExtraRounds(extraRoundsLimit()) && worker.getHealth() >= worker.getMaxHealth() && InventoryUtils.getItemCountInItemHandler(worker.getInventoryCitizen(), stack -> building.getModule(NETHERMINER_MENU).getMenu().contains(new ItemStorage(stack))) >= 10) {
+            if (currentRecipeStorage instanceof RecipeStorage) {
+                List<ItemStack> result = currentRecipeStorage.fullfillRecipeAndCopy(getLootContext(), ImmutableList.of(worker.getItemHandlerCitizen()), false);
                 if (result != null) {
                     // by default all the adventure tokens are at the end (due to loot tables); space them better
                     result = new ArrayList<>(result);
                     Collections.shuffle(result, worker.getCitizenData().getRandom());
                     job.addCraftedResultsList(result);
                     worker.getCitizenData().setJobStatus(JobStatus.WORKING);
-                    extraRound = ((JobNetherWorkerExtra) job).setExtraRounds(true);
+                    extraRound = jobExtra.setExtraRounds(true);
                     StatsUtil.trackStat(building, "extraRounds", 1);
+                    if (currentRecipeStorage != null && jobExtra.canExtraRounds(extraRoundsLimit()))
+                    {
+                        for (ItemStorage item : currentRecipeStorage.getInput())
+                        {
+                            checkIfRequestForItemExistOrCreateAsync(new ItemStack(item.getItem(), 1), item.getAmount() * jobExtra.remainExtraRounds(extraRoundsLimit()), item.getAmount());
+                        }
+                    }
+                    if(!checkForToolOrWeaponNotTooBroken()) {
+                        setDelay(STUCK_DELAY);
+                        return NETHER_GATHER_TOOLS;
+                    }
                     setDelay(WAITING_DELAY);
                     return getState();
+                }
+                final IRecipeStorage recipeStorage = currentRecipeStorage;
+                IAIState checkResult = checkForItems(currentRecipeStorage);
+                currentRecipeStorage = recipeStorage;
+                if(checkResult == GATHERING_REQUIRED_MATERIALS) {
+                    pickupReturnState = NETHER_GATHER_TOOLS;
+                    setDelay(STUCK_DELAY);
+                    return checkResult;
                 }
             }
         }
@@ -548,8 +641,28 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
         return getSecondarySkillLevel() / 16;
     }
 
+    protected IAIState gatherTools() {
+        worker.setInvisible(false);
+        if (!walkToBuilding())
+        {
+            return NETHER_GATHER_TOOLS;
+        }
+        pickupReturnState = NETHER_GATHER_TOOLS;
+        final IRecipeStorage recipeStorage = currentRecipeStorage;
+        IAIState checkResult = checkForItems(currentRecipeStorage);
+        currentRecipeStorage = recipeStorage;
+        if(checkResult == GATHERING_REQUIRED_MATERIALS) {
+            return checkResult;
+        }
+        setDelay(WAITING_DELAY);
+        return checkForToolOrWeaponNotTooBroken() ? NETHER_AWAY : NETHER_GATHER_TOOLS;
+    }
+
     protected IAIState gatherRewards() {
         final BlockPos portal = building.getPortalLocation();
+        if(worker.isInvisible()) {
+            worker.teleportTo(portal.getX(), portal.getY() + 0.5D, portal.getZ());
+        }
         worker.setInvisible(false);
         if (!walkToWorkPos(portal))
         {
@@ -718,23 +831,48 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
             return bestSlot;
         }
 
+        final int maxToolLevel = worker.getCitizenColonyHandler().getWorkBuilding() == null ?
+                building.getMaxEquipmentLevel() : worker.getCitizenColonyHandler().getWorkBuilding().getMaxEquipmentLevel();
+        final Predicate<ItemStack> suffcientPredicate = stack -> {
+            final int miningLevel = toolType.getMiningLevel(stack);
+            return miningLevel >= Math.max(0, required) && miningLevel + ItemStackUtils.getMaxEnchantmentLevel(stack) <= maxToolLevel;
+        };
+
+        // get form cached tool;
+        int slot = getCachedMostEfficientTool(toolType, suffcientPredicate);
+        if (slot > 0) return slot;
+        if (!target.requiresCorrectToolForDrops()) return NO_TOOL;
+
         int bestSlot = -1;
-        int bestLevel = Integer.MAX_VALUE;
-        final int maxToolLevel = worker.getCitizenColonyHandler().getWorkBuilding().getMaxEquipmentLevel();
+        int bestLevel = Integer.MIN_VALUE;
 
-        for (int i = 0; i < worker.getInventoryCitizen().getSlots(); i++)
+        for (int i = 0; i < inventory.getSlots(); i++)
         {
-            final ItemStack item = inventory.getStackInSlot(i);
-            final int level = toolType.getMiningLevel(item);
+            final ItemStack itemStack = inventory.getStackInSlot(i);
+            final int miningLevel = toolType.getMiningLevel(itemStack);
+            final int trueLevel = miningLevel + ItemStackUtils.getMaxEnchantmentLevel(itemStack);
 
-            if (level > -1 && level >= required && level < bestLevel && ItemStackUtils.verifyEquipmentLevel(item, level, required, maxToolLevel))
+            if (miningLevel > -1 && miningLevel >= required && trueLevel > bestLevel && trueLevel <= maxToolLevel)
             {
                 bestSlot = i;
-                bestLevel = level;
+                bestLevel = trueLevel;
+            }
+
+            if(bestLevel == maxToolLevel) {
+                break;
             }
         }
 
-        return (!target.requiresCorrectToolForDrops() && bestSlot == -1) ? NO_TOOL : bestSlot;
+        if(bestSlot != -1) {
+            if(!toolSlots.containsKey(toolType)) {
+                toolSlots.put(toolType, bestSlot);
+            }
+            else{
+                alterToolSlots.put(toolType, bestSlot);
+            }
+        }
+
+        return bestSlot;
     }
 
     /**
@@ -924,5 +1062,282 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
             return GATHERING_REQUIRED_MATERIALS;
         }
         return getState();
+    }
+
+
+    // TODO: Move these functions to abstract AI class.
+    private Map<EquipmentTypeEntry, Integer> toolSlots = new HashMap<>();
+    private Map<EquipmentTypeEntry, Integer> alterToolSlots = new HashMap<>();
+    private Map<EquipmentTypeEntry, Tuple<BlockPos, Integer>> hutToolCache = new HashMap<>();
+
+    private static final Predicate<ItemStack> IS_MENDING_DAMAGED_TOOL =
+            ToolUtils::isMendingDamagedTool;
+
+    public boolean checkForToolOrWeaponNotTooBroken()
+    {
+        final boolean needTool = checkForToolOrWeaponNotTooBroken(TOOL_LEVEL_WOOD_OR_GOLD, true);
+        worker.getCitizenData().setJobStatus(needTool? JobStatus.STUCK : JobStatus.WORKING);
+        return needTool;
+    }
+
+    public boolean requestToolOrWeaponNotTooBroken()
+    {
+        final boolean needTool = checkForToolOrWeaponNotTooBroken(TOOL_LEVEL_WOOD_OR_GOLD, false);
+        worker.getCitizenData().setJobStatus(needTool? JobStatus.STUCK : JobStatus.WORKING);
+        return needTool;
+    }
+
+    protected boolean checkForToolOrWeaponNotTooBroken(final int minimalLevel, boolean shouldPickup)
+    {
+        // Got what type of equipment we still need.
+        final Set<EquipmentTypeEntry> typeNeedCheck = checkForNeededToolsNotTooBroken(
+                Arrays.stream(Tools.values()).map(Tools::getType).collect(Collectors.toList()),
+                minimalLevel);
+
+        final Set<EquipmentTypeEntry> hasOrdered = ((JobNetherWorkerExtra) job).getHasOrdered();
+        if (shouldPickup) {
+            hasOrdered.clear();
+        }
+        else{
+            typeNeedCheck.removeAll(hasOrdered);
+        }
+
+        // We fulfilled our requirements.
+        if (typeNeedCheck.isEmpty())
+        {
+            hutToolCache.clear();
+            return shouldPickup || toolSlots.size() >= Tools.values().length;
+        }
+
+        // We delete what we find in our hut, they're no need to check again for almost they will stay there.
+        typeNeedCheck.removeAll(hutToolCache.keySet());
+
+        // We directly calculate which tool we have requested and delete it as requests are not completed.
+        final Set<EquipmentTypeEntry> toolWeRequested = new HashSet<>();
+
+        for (IRequest<? extends Tool> r : building.getOpenRequestsOfTypeFiltered(
+                worker.getCitizenData(), TypeToken.of(Tool.class),
+                req -> req.getRequest().getMinLevel() >= minimalLevel && typeNeedCheck.contains(req.getRequest().getEquipmentType())))
+        {
+            toolWeRequested.add(r.getRequest().getEquipmentType());
+        }
+        for (IRequest<? extends Tool> r : building.getCompletedRequestsOfTypeFiltered(
+                worker.getCitizenData(), TypeToken.of(Tool.class),
+                req -> req.getRequest().getMinLevel() >= minimalLevel && typeNeedCheck.contains(req.getRequest().getEquipmentType())))
+        {
+            toolWeRequested.add(r.getRequest().getEquipmentType());
+        }
+
+        typeNeedCheck.removeAll(toolWeRequested);
+        if (!shouldPickup) {
+            hasOrdered.addAll(toolWeRequested);
+        }
+
+        // We find tools in our hut once the request finish, here we check all the slots and cache them in hutToolCache.
+        Map<EquipmentTypeEntry, Tuple<BlockPos, Integer>> toolFindInHut = findToolsInHut(typeNeedCheck, minimalLevel);
+        hutToolCache.putAll(toolFindInHut);
+        typeNeedCheck.removeAll(toolFindInHut.keySet());
+
+        // We got the address, so just walk to workspace and pick up.
+        if (shouldPickup && !hutToolCache.isEmpty() && walkToBuilding())
+        {
+            Set<EquipmentTypeEntry> failedTools = retrieveToolInHut(minimalLevel);
+            // we should not request these invalid-cached tools at this time, check it out in the inventory.
+            toolWeRequested.addAll(failedTools);
+        }
+
+        // Nothing found, so we request.
+        for (EquipmentTypeEntry type : typeNeedCheck)
+        {
+            final Tool request = new Tool(type, minimalLevel, Math.max(building.getMaxEquipmentLevel(), minimalLevel));
+            if(shouldPickup) {
+                worker.getCitizenData().createRequest(request);
+            }
+            else{
+                worker.getCitizenData().createRequestAsync(request);
+            }
+        }
+
+        // shouldPickup -> we get everything well-prepared in worker's inventory.
+        // !shouldPickup -> we have every tool we need in slot cache.
+        return shouldPickup ? typeNeedCheck.isEmpty() && toolWeRequested.isEmpty() : toolSlots.size() < Tools.values().length;
+    }
+
+    private Set<EquipmentTypeEntry> checkForNeededToolsNotTooBroken(
+            @NotNull final List<EquipmentTypeEntry> toolTypes, final int minimalLevel)
+    {
+        final IBuilding workingBuilding = worker.getCitizenColonyHandler().getWorkBuilding();
+        final int maxToolLevel = workingBuilding != null
+                ? workingBuilding.getMaxEquipmentLevel()
+                : building.getMaxEquipmentLevel();
+
+        final InventoryCitizen inventory = worker.getInventoryCitizen();
+        final int inventorySlots = inventory.getSlots();
+
+        // validation check.
+        final List<EquipmentTypeEntry> requiredTools = new ArrayList<>();
+        final List<EquipmentTypeEntry> requireAlterTools = new ArrayList<>();
+        final Set<EquipmentTypeEntry> typeNeedCheck = new HashSet<>();
+        for (EquipmentTypeEntry tool : toolTypes)
+        {
+            boolean haveTool = false;
+
+            final Integer mainSlot = toolSlots.get(tool);
+            if (mainSlot != null && mainSlot >= 0 && mainSlot < inventorySlots)
+            {
+                final ItemStack thisTool = inventory.getStackInSlot(mainSlot);
+                if (tool.checkIsEquipment(thisTool))
+                {
+                    haveTool = true;
+                    if (thisTool.getDamageValue() <= thisTool.getMaxDamage() * 0.75)
+                    {
+                        alterToolSlots.remove(tool);
+                        continue;
+                    }
+                }
+            }
+            if (!haveTool)
+            {
+                toolSlots.remove(tool);
+            }
+
+            final Integer alterSlot = alterToolSlots.get(tool);
+            if (alterSlot != null && alterSlot >= 0 && alterSlot < inventorySlots)
+            {
+                final ItemStack thisTool = inventory.getStackInSlot(alterSlot);
+                if (tool.checkIsEquipment(thisTool))
+                {
+                    if (haveTool)
+                    {
+                        continue;
+                    }
+                    alterToolSlots.remove(tool);
+                    toolSlots.put(tool, alterSlot);
+                    if (thisTool.getDamageValue() <= thisTool.getMaxDamage() * 0.75)
+                    {
+                        continue;
+                    }
+                    haveTool = true;
+                }
+            }
+            alterToolSlots.remove(tool);
+
+            if (haveTool)
+            {
+                requireAlterTools.add(tool);
+            }
+            else
+            {
+                requiredTools.add(tool);
+            }
+            typeNeedCheck.add(tool);
+        }
+
+        // further check on main tools.
+        Map<EquipmentTypeEntry, Integer> furtherCheck = ToolUtils.findEquipments(inventory, requiredTools, minimalLevel, maxToolLevel);
+        toolSlots.putAll(furtherCheck);
+        furtherCheck.forEach((tool, slot) -> {
+            ItemStack thisTool = inventory.getStackInSlot(slot);
+            if (thisTool.getDamageValue() <= thisTool.getMaxDamage() * 0.75) {
+                typeNeedCheck.remove(tool);
+            } else {
+                requireAlterTools.add(tool);
+            }
+        });
+
+        // further check on alter tools.
+        alterToolSlots.putAll(ToolUtils.findEquipmentsWithExceptSlots(
+                inventory, requireAlterTools, minimalLevel, maxToolLevel, toolSlots));
+        typeNeedCheck.removeAll(alterToolSlots.keySet());
+
+        return typeNeedCheck;
+    }
+
+    public Map<EquipmentTypeEntry, Tuple<BlockPos, Integer>> findToolsInHut(final Set<EquipmentTypeEntry> typeNeedCheck, final int minimalLevel)
+    {
+        final Map<EquipmentTypeEntry, Tuple<BlockPos, Integer>> toCache = new HashMap<>();
+        if (building != null) {
+            for(BlockPos pos : building.getContainers()) {
+                final BiFunction<ItemStack, EquipmentTypeEntry, Boolean> toolPredicate =
+                        (ItemStack stack, EquipmentTypeEntry equipmentType) ->
+                                ItemStackUtils.hasEquipmentLevel(stack, equipmentType, minimalLevel, building.getMaxEquipmentLevel());
+                final BlockEntity entity = world.getBlockEntity(pos);
+                if (entity != null)
+                {
+                    IItemHandler rack = Capabilities.ItemHandler.BLOCK.getCapability(world, pos, entity.getBlockState(), entity, null);
+                    if(rack == null) continue;
+                    Map<EquipmentTypeEntry, Integer> foundCache = ToolUtils.checkEquipmentsInItemHandler(rack, typeNeedCheck, toolPredicate);
+                    foundCache.forEach((tool, slot) -> toCache.put(tool, new Tuple<>(pos, slot)));
+                }
+            }
+        }
+        return toCache;
+    }
+
+    public Set<EquipmentTypeEntry> retrieveToolInHut(final int minimalLevel) {
+        final Set<EquipmentTypeEntry> failTools = new HashSet<>();
+        if (building != null) {
+            final Set<EquipmentTypeEntry> toRemove = new HashSet<>();
+            for (EquipmentTypeEntry toolType : hutToolCache.keySet()) {
+                final Tuple<BlockPos, Integer> cache = hutToolCache.get(toolType);
+                final BlockPos rackCache = cache.getA();
+                if (rackCache == null || !building.getContainers().contains(rackCache) || cache.getB() == null) {
+                    toRemove.add(toolType);
+                    failTools.add(toolType);
+                    continue;
+                }
+                final int rackSlot = cache.getB();
+                final Predicate<ItemStack> toolPredicate = stack -> ItemStackUtils.hasEquipmentLevel(stack, toolType, minimalLevel, building.getMaxEquipmentLevel());
+                final BlockEntity entity = world.getBlockEntity(rackCache);
+                if (entity != null) {
+                    IItemHandler rack = Capabilities.ItemHandler.BLOCK.getCapability(world, rackCache, entity.getBlockState(), entity, null);
+                    if(rack == null) continue;
+                    int citizenSlot = ToolUtils.transferItemStackOfExactSlotIntoEmptySlotInNextItemHandler(rack, rackSlot, toolPredicate, worker.getInventoryCitizen());
+                    if (citizenSlot > 0) {
+                        if (toolSlots.containsKey(toolType)) {
+                            alterToolSlots.put(toolType, citizenSlot);
+                        } else {
+                            toolSlots.put(toolType, citizenSlot);
+                        }
+                    } else {
+                        failTools.add(toolType);
+                    }
+                    if (citizenSlot != ToolUtils.INVENTORY_FULL) {
+                        toRemove.add(toolType);
+                    }
+                }
+            }
+            for (EquipmentTypeEntry toolType : toRemove) {
+                hutToolCache.remove(toolType);
+            }
+        }
+        return failTools;
+    }
+
+    protected int mendingToolSlot(EquipmentTypeEntry toolType) {
+        Set<Integer> slotToCheck = Stream.concat(
+                        alterToolSlots.entrySet().stream(),
+                        toolSlots.entrySet().stream())
+                .filter(e -> !e.getKey().equals(toolType))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toSet());
+        final IItemHandler workerInventory = worker.getItemHandlerCitizen();
+        Optional<Integer> firstSlot = slotToCheck.stream()
+                .filter(i -> IS_MENDING_DAMAGED_TOOL.test(workerInventory.getStackInSlot(i)))
+                .findFirst();
+        return firstSlot.orElse(-1);
+    }
+
+    protected int getCachedMostEfficientTool(@NotNull final EquipmentTypeEntry toolType, final Predicate<ItemStack> suffcientPredicate) {
+        final IItemHandler workerInventory = worker.getItemHandlerCitizen();
+        final int slot = toolSlots.get(toolType);
+        if(suffcientPredicate.test(workerInventory.getStackInSlot(slot))) {
+            return slot;
+        }
+        final int alterSlot = alterToolSlots.get(toolType);
+        if(suffcientPredicate.test(workerInventory.getStackInSlot(alterSlot))) {
+            return alterSlot;
+        }
+        return -1;
     }
 }

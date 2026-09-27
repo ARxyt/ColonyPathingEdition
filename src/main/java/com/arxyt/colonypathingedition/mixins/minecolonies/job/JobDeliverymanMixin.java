@@ -19,7 +19,7 @@ public abstract class JobDeliverymanMixin implements JobWithAdditionalHireCheck,
 
     @Override
     public boolean IsHiredByAdditionalWorkPlace() {
-        return findWareHouse() == null;
+        return findWareHouse() != null;
     }
 
     @Override

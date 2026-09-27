@@ -25,7 +25,6 @@ import com.minecolonies.core.colony.buildings.modules.expedition.ExpeditionLog;
 import com.minecolonies.core.colony.jobs.AbstractJob;
 import com.mojang.authlib.GameProfile;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
@@ -44,6 +43,7 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
+import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -58,8 +58,6 @@ import static com.arxyt.colonypathingedition.core.ai.actions.handler.AdventureAc
 import static com.minecolonies.api.util.constant.CitizenConstants.AVERAGE_SATURATION;
 import static com.minecolonies.api.util.constant.CitizenConstants.LOW_SATURATION;
 import static com.minecolonies.api.util.constant.GuardConstants.BASE_PHYSICAL_DAMAGE;
-import static com.minecolonies.api.util.constant.NbtTagConstants.TAG_DAMAGE;
-import static com.minecolonies.api.util.constant.NbtTagConstants.TAG_ENTITY_TYPE;
 import static com.minecolonies.api.util.constant.StatisticsConstants.MINER_DEATHS;
 import static com.minecolonies.core.colony.buildings.modules.BuildingModules.NETHERMINER_MENU;
 
@@ -73,17 +71,22 @@ public class NetherWorkerCombatAction extends AdventureActionHandler.Action {
     private final DamageSource damageSource;
     private final IBuilding building;
     private final List<ItemStack> netherEdible;
+    private final int swordSlot;
+    private final int alterSwordSlot;
+    private final int mendingSlot;
 
     private final LivingEntity mob;
     private float mobDamage = 5.0F;
     private float mobHealth;
     private EntityType<?> mobType = EntityType.ZOMBIE;
 
-    public NetherWorkerCombatAction(Level world, AbstractEntityCitizen worker, AbstractJob<?, ?> job, AdventureData adventureData, boolean extraRound) {
+    public NetherWorkerCombatAction(Level world, AbstractEntityCitizen worker, AbstractJob<?, ?> job, AdventureData adventureData, boolean extraRound, int swordSlot, int alterSwordSlot, int mendingSlot) {
         super(COMBAT);
         this.world = world;
         this.extraRound = extraRound;
-
+        this.swordSlot = swordSlot;
+        this.alterSwordSlot = alterSwordSlot;
+        this.mendingSlot = mendingSlot;
         this.worker = worker;
         this.primarySkillLevel = worker.getCitizenData().getCitizenSkillHandler().getLevel(((WorkerBuildingModule) job.getWorkModule()).getPrimarySkill());
         this.secondarySkillLevel = worker.getCitizenData().getCitizenSkillHandler().getLevel(((WorkerBuildingModule) job.getWorkModule()).getSecondarySkill());
@@ -134,7 +137,10 @@ public class NetherWorkerCombatAction extends AdventureActionHandler.Action {
                 rewards.addAll(loot.getRandomItems(context));
             }
             rewards.removeIf(ItemStack::isEmpty);
-            worker.getCitizenExperienceHandler().addExperience(ToolUtils.applyMending(worker, mob.getExperienceReward((ServerLevel) world, worker) * 2));
+            ItemStack mendingTool = mendingSlot < 0 ? ItemStack.EMPTY : worker.getInventoryCitizen().getStackInSlot(mendingSlot);
+            worker.setItemSlot(EquipmentSlot.OFFHAND, mendingTool);
+            worker.getCitizenExperienceHandler().addExperience(ToolUtils.applyMending(worker, mob.getExperienceReward((ServerLevel) world, getFakePlayer()) * 2));
+            worker.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
             final ExpeditionLogModule expeditionLogModule = building.getModule(ExpeditionLogModule.class);
             if(expeditionLogModule != null) {
                 final ExpeditionLog expeditionLog = expeditionLogModule.getLog();
@@ -235,7 +241,15 @@ public class NetherWorkerCombatAction extends AdventureActionHandler.Action {
 
     private ItemStack findTool(@NotNull final EquipmentTypeEntry tool)
     {
-        return findItem(stack -> ItemStackUtils.hasEquipmentLevel(stack, tool, 0, building.getMaxEquipmentLevel()));
+        final Predicate<ItemStack> stackPredicate = stack -> ItemStackUtils.hasEquipmentLevel(stack, tool, 0, building.getMaxEquipmentLevel());
+        final IItemHandler workerInventory = worker.getItemHandlerCitizen();
+        if(stackPredicate.test(workerInventory.getStackInSlot(swordSlot))) {
+            return workerInventory.getStackInSlot(swordSlot);
+        }
+        if(stackPredicate.test(workerInventory.getStackInSlot(alterSwordSlot))) {
+            return workerInventory.getStackInSlot(alterSwordSlot);
+        }
+        return findItem(stackPredicate);
     }
 
     private LootParams getDropLoot() {

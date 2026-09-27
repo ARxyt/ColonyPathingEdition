@@ -54,8 +54,9 @@ public class NetherWorkerMiningAction extends AdventureActionHandler.Action{
     private final IBuilding building;
     private final ItemStack currStack;
     private final int toolSlot;
+    private final int mendingSlot;
 
-    public NetherWorkerMiningAction(Level world, AbstractEntityCitizen worker, AbstractJob<?, ?> job, ItemStack currStack, int toolSlot){
+    public NetherWorkerMiningAction(Level world, AbstractEntityCitizen worker, AbstractJob<?, ?> job, ItemStack currStack, int toolSlot, int mendingSlot){
         super(MINING);
         this.world = world;
         this.worker = worker;
@@ -64,6 +65,7 @@ public class NetherWorkerMiningAction extends AdventureActionHandler.Action{
         this.building = job.getWorkBuilding();
         this.currStack = currStack;
         this.toolSlot = toolSlot;
+        this.mendingSlot = mendingSlot;
     }
 
     @Override
@@ -90,8 +92,15 @@ public class NetherWorkerMiningAction extends AdventureActionHandler.Action{
                     rewards.addAll(loot.getRandomItems(context));
                     xpGain = block.getExpDrop(state, world, worker.blockPosition(), null, null, tool);
                 }
+
+                // Tool broke too fast, we slow down it.
+                tool.hurtAndBreak(1 + currStack.getCount() / 3, worker, EquipmentSlot.MAINHAND);
+
                 rewards.removeIf(ItemStack::isEmpty);
+                ItemStack mendingTool = mendingSlot < 0 ? ItemStack.EMPTY : worker.getInventoryCitizen().getStackInSlot(mendingSlot);
+                worker.setItemSlot(EquipmentSlot.OFFHAND, mendingTool);
                 worker.getCitizenExperienceHandler().addExperience(ToolUtils.applyMending(worker, xpGain));
+                worker.setItemSlot(EquipmentSlot.OFFHAND, ItemStack.EMPTY);
                 actionDelay = ADVENTURE_DELAY + getBlockMiningTime(state) * currStack.getCount();
                 return SUCCESS;
             }

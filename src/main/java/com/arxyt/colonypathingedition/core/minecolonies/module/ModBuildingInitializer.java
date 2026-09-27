@@ -4,8 +4,7 @@ import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.minecolonies.api.colony.buildings.ModBuildings;
 import com.minecolonies.api.colony.buildings.registry.BuildingEntry;
 
-import static com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModules.FOOD_BLACK_LIST;
-import static com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModules.TAVERN_RECRUIT;
+import static com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModules.*;
 import static com.minecolonies.core.colony.buildings.modules.BuildingModules.*;
 
 public class ModBuildingInitializer {
@@ -42,8 +41,10 @@ public class ModBuildingInitializer {
             insertBefore(ModBuildings.swineHerder.get(), STATS_MODULE, FOOD_BLACK_LIST);
             insertBefore(ModBuildings.chickenHerder.get(), STATS_MODULE, FOOD_BLACK_LIST);
             insertBefore(ModBuildings.beekeeper.get(), STATS_MODULE, FOOD_BLACK_LIST);
-            insertBefore(ModBuildings.wareHouse.get(), MIN_STOCK, FOOD_BLACK_LIST);
             insertBefore(ModBuildings.lumberjack.get(), MIN_STOCK, FOOD_BLACK_LIST);
+        }
+        if(PathingConfig.EATING_AI_MODULE.get()){
+            insertBefore(ModBuildings.wareHouse.get(), MIN_STOCK, WAREHOUSE_MENU);
         }
     }
 

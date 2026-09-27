@@ -1,7 +1,7 @@
-package com.arxyt.colonypathingedition.core.window;
+package com.arxyt.colonypathingedition.core.colony.window;
 
 import com.arxyt.colonypathingedition.ColonyPathingEdition;
-import com.arxyt.colonypathingedition.core.colony.module.FoodBlackListMenuModuleView;
+import com.arxyt.colonypathingedition.core.colony.view.FoodBlackListMenuModuleView;
 import com.arxyt.colonypathingedition.core.manager.LinkageManager;
 import com.arxyt.colonypathingedition.core.message.AlterBlackListMenuItemMessage;
 import com.arxyt.colonypathingedition.core.message.SyncBlackListMenuItemMessage;

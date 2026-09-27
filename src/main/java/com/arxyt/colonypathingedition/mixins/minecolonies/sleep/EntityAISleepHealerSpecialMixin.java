@@ -1,8 +1,12 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.sleep;
 
 import com.arxyt.colonypathingedition.api.workersetting.BuildingHospitalExtra;
+import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.minecolonies.api.entity.ai.statemachine.states.CitizenAIState;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
+import com.minecolonies.api.entity.ai.statemachine.tickratestatemachine.ITickRateStateMachine;
+import com.minecolonies.api.entity.ai.statemachine.tickratestatemachine.ITickingTransition;
+import com.minecolonies.api.entity.ai.statemachine.transitions.IStateMachineTransition;
 import com.minecolonies.api.entity.citizen.VisibleCitizenStatus;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingHospital;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingMiner;
@@ -17,6 +21,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.START_WORKING;
@@ -29,6 +34,21 @@ public class EntityAISleepHealerSpecialMixin {
 
     @Unique private boolean onDuty = false;
     @Unique private BlockPos workPos = null;
+
+    // To prevent disturbing the new AI system.
+    @Redirect(
+            method = "<init>",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/minecolonies/api/entity/ai/statemachine/tickratestatemachine/ITickRateStateMachine;addTransition(Lcom/minecolonies/api/entity/ai/statemachine/transitions/IStateMachineTransition;)V"
+            ),
+            remap = false
+    )
+    private void preventTransitions(ITickRateStateMachine<IState> instance, IStateMachineTransition<IState> iStateMachineTransition) {
+        if(!PathingConfig.EATING_AI_MODULE.get()){
+            instance.addTransition((ITickingTransition<IState>) iStateMachineTransition);
+        }
+    }
 
     @Inject(method = "checkSleep", at=@At("HEAD"), remap = false, cancellable = true)
     private void specialCheckSleep(CallbackInfoReturnable<IState> cir)
