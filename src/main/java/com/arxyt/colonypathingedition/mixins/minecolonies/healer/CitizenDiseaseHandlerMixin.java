@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.healer;
 
-import com.arxyt.colonypathingedition.api.ICitizenDiseaseHandlerExtra;
+import com.arxyt.colonypathingedition.api.extras.ICitizenDiseaseHandlerExtra;
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;

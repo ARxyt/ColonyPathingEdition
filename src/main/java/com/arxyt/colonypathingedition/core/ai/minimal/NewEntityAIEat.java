@@ -46,8 +46,7 @@ import java.util.stream.Collectors;
 
 import static com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEat.NewEatingState.*;
 import static com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEat.EatingCheckState.*;
-import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.JOBS_EAT_IMMEDIATELY;
-import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.JOBS_FORCE_EAT_AT_HUT;
+import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.*;
 import static com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModules.WAREHOUSE_MENU;
 import static com.arxyt.colonypathingedition.core.util.NewFoodUtils.getShouldEatAtHut;
 import static com.minecolonies.api.util.constant.CitizenConstants.FULL_SATURATION;
@@ -373,7 +372,6 @@ public class NewEntityAIEat implements IStateAI {
     {
         final ICitizenData citizenData = citizen.getCitizenData();
         final IColony colony = citizenData.getColony();
-        restaurantPos = colony.getServerBuildingManager().getBestBuilding(citizen, BuildingCook.class);
 
         if (restaurantPos == null)
         {
@@ -381,7 +379,9 @@ public class NewEntityAIEat implements IStateAI {
             return GO_TO_RESTAURANT;
         }
 
-        restaurant = colony.getServerBuildingManager().getBuilding(restaurantPos);
+        if(restaurant == null) {
+            restaurant = colony.getServerBuildingManager().getBuilding(restaurantPos);
+        }
         eatPos = findPlaceToEat();
         if (restaurant != null)
         {
@@ -394,72 +394,6 @@ public class NewEntityAIEat implements IStateAI {
             return EAT;
         }
 
-        citizen.getCitizenAI().setCurrentDelay(WALKING_DELAY);
-        return WAIT_FOR_FOOD;
-    }
-
-    private NewEatingState getFoodYourself()
-    {
-        if (restaurantPos == null)
-        {
-            citizen.getCitizenAI().setCurrentDelay(STUCK_DELAY);
-            return GO_TO_RESTAURANT;
-        }
-
-        final IColony colony = citizen.getCitizenColonyHandler().getColonyOrRegister();
-        assert colony != null;
-        final IBuilding cookBuilding = colony.getServerBuildingManager().getBuilding(restaurantPos);
-        if (cookBuilding instanceof BuildingCook buildingCook)
-        {
-            if(hasFood(false)) {
-                waitingTicks = 0;
-                timeOutWalking = 0;
-                ((BuildingCookExtra)buildingCook).deleteCustomer(citizen.getCivilianID());
-                return EAT;
-            }
-
-            if (!EntityNavigationUtils.walkToBuilding(citizen, cookBuilding))
-            {
-                citizen.getCitizenAI().setCurrentDelay(WALKING_DELAY);
-                return GET_FOOD_YOURSELF;
-            }
-
-            final ItemStorage storageToGet = NewFoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, cookBuilding);
-            if (storageToGet != null)
-            {
-                int qty = ((int) ((FULL_SATURATION - citizen.getCitizenData().getSaturation()) / NewFoodUtils.getFoodValue(storageToGet.getItemStack(), citizen))) + 1;
-                if(!InventoryUtils.transferItemStackIntoNextBestSlotInItemHandler(cookBuilding, storageToGet, qty, citizen.getInventoryCitizen())){
-                    // This caused by a fulfilled inventory, which means citizens can't eat by themselves, so reset to seek an assist.
-                    BuildingCookExtra restaurantExtra = ((BuildingCookExtra)restaurant);
-                    restaurantExtra.tryRegisterCustomer(citizen.getCivilianID());
-                    timeOutWalking = 0;
-                    waitingTicks = -2400; // Wait for one more minute.
-                    citizen.getCitizenAI().setCurrentDelay(STUCK_DELAY);
-                    return WAIT_FOR_FOOD;
-                }
-                return EAT;
-            }
-            else{
-                final ICitizenData citizenData = citizen.getCitizenData();
-                if (citizenData.getJob() instanceof JobCook jobCook && jobCook.getBuildingPos().equals(restaurantPos))
-                {
-                    reset();
-                    return DONE;
-                }
-                if(timesFindingFood ++ >= 4) {
-                    return FIND_FOOD_TO_EAT;
-                }
-                checkState = CHECK_HUT;
-                checkFood();
-                if(buildingToGo != null) {
-                    return GO_TO_HUT;
-                }
-                else {
-                    citizen.getCitizenAI().setCurrentDelay(STUCK_DELAY);
-                    return GO_TO_RESTAURANT;
-                }
-            }
-        }
         citizen.getCitizenAI().setCurrentDelay(STUCK_DELAY);
         return GO_TO_RESTAURANT;
     }
@@ -514,6 +448,68 @@ public class NewEntityAIEat implements IStateAI {
         timeOutWalking ++;
         citizen.getCitizenAI().setCurrentDelay(WALKING_DELAY);
         return GO_TO_EAT_POS;
+    }
+
+    private NewEatingState getFoodYourself()
+    {
+        if (restaurantPos == null)
+        {
+            citizen.getCitizenAI().setCurrentDelay(STUCK_DELAY);
+            return GO_TO_RESTAURANT;
+        }
+
+        final IColony colony = citizen.getCitizenColonyHandler().getColonyOrRegister();
+        assert colony != null;
+        final IBuilding cookBuilding = colony.getServerBuildingManager().getBuilding(restaurantPos);
+        if (cookBuilding instanceof BuildingCook buildingCook)
+        {
+            if(hasFood(false)) {
+                waitingTicks = 0;
+                timeOutWalking = 0;
+                ((BuildingCookExtra)buildingCook).deleteCustomer(citizen.getCivilianID());
+                return EAT;
+            }
+
+            if (!EntityNavigationUtils.walkToBuilding(citizen, cookBuilding))
+            {
+                citizen.getCitizenAI().setCurrentDelay(WALKING_DELAY);
+                return GET_FOOD_YOURSELF;
+            }
+
+            final ItemStorage storageToGet = NewFoodUtils.checkForFoodInBuilding(citizen.getCitizenData(), null, cookBuilding);
+            if (storageToGet != null)
+            {
+                int qty = ((int) ((FULL_SATURATION - citizen.getCitizenData().getSaturation()) / NewFoodUtils.getFoodValue(storageToGet.getItemStack(), citizen))) + 1;
+                if(!InventoryUtils.transferItemStackIntoNextBestSlotInItemHandler(cookBuilding, storageToGet, qty, citizen.getInventoryCitizen())){
+                    // This caused by a fulfilled inventory, which means citizens can't eat by themselves, so reset to seek an assist.
+                    BuildingCookExtra restaurantExtra = ((BuildingCookExtra)restaurant);
+                    restaurantExtra.tryRegisterCustomer(citizen.getCivilianID());
+                    timeOutWalking = 0;
+                    waitingTicks = -2400; // Wait for one more minute.
+                    citizen.getCitizenAI().setCurrentDelay(STUCK_DELAY);
+                    return WAIT_FOR_FOOD;
+                }
+                return EAT;
+            }
+            else{
+                final ICitizenData citizenData = citizen.getCitizenData();
+                if ((citizenData.getJob() instanceof JobCook jobCook && jobCook.getBuildingPos().equals(restaurantPos)) || timesFindingFood ++ >= 4)
+                {
+                    return FIND_FOOD_TO_EAT;
+                }
+                checkState = CHECK_HUT;
+                checkFood();
+                if(buildingToGo != null) {
+                    return GO_TO_HUT;
+                }
+                else {
+                    citizen.getCitizenAI().setCurrentDelay(STUCK_DELAY);
+                    return GO_TO_RESTAURANT;
+                }
+            }
+        }
+        citizen.getCitizenAI().setCurrentDelay(STUCK_DELAY);
+        return GO_TO_RESTAURANT;
     }
 
     private IState findFoodToEat(){

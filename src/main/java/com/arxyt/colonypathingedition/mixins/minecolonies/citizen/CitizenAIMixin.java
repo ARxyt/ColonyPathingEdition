@@ -1,9 +1,10 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.citizen;
 
-import com.arxyt.colonypathingedition.api.JobNetherWorkerExtra;
+import com.arxyt.colonypathingedition.api.extras.JobNetherWorkerExtra;
 import com.arxyt.colonypathingedition.api.workersetting.BuildingHospitalExtra;
 import com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEat;
 import com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIFlee;
+import com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAISleep;
 import com.minecolonies.api.colony.interactionhandling.ChatPriority;
 import com.minecolonies.api.entity.ai.IStateAI;
 import com.minecolonies.api.entity.ai.statemachine.states.IState;
@@ -72,7 +73,7 @@ public class CitizenAIMixin {
         }
 
         minimalAI.removeIf(iStateAI -> iStateAI instanceof EntityAISleep);
-        minimalAI.add(new NewEntityAIFlee(citizen, Monster.class, INITIAL_RUN_SPEED_AVOID));
+        minimalAI.add(new NewEntityAISleep(citizen));
     }
 
     @Inject(

@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies;
 
-import com.arxyt.colonypathingedition.api.AbstractEntityAIBasicExtra;
+import com.arxyt.colonypathingedition.api.extras.AbstractEntityAIBasicExtra;
 import com.arxyt.colonypathingedition.api.workersetting.BuildingPickupExtra;
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.AbstractAISkeletonAccessor;
@@ -16,7 +16,6 @@ import com.minecolonies.api.colony.requestsystem.request.IRequest;
 import com.minecolonies.api.colony.requestsystem.resolver.player.IPlayerRequestResolver;
 import com.minecolonies.api.colony.requestsystem.token.IToken;
 import com.minecolonies.api.entity.ai.JobStatus;
-import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.equipment.ModEquipmentTypes;
 import com.minecolonies.api.equipment.registry.EquipmentTypeEntry;
@@ -43,6 +42,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Predicate;
 
@@ -217,7 +217,14 @@ public abstract class AbstractEntityAIBasicMixin<B extends AbstractBuilding,J ex
                 }
                 return false;
             } catch (Exception | Error e) {
-                // nothing happens
+                try {
+                    Method createPickupRequest = building.getClass().getMethod("createPickupRequest", int.class, boolean.class);
+                    createPickupRequest.invoke(building, 64, true);
+                    return false;
+                }
+                catch (Exception e2){
+                    // nothing happens
+                }
             }
         }
         return original;

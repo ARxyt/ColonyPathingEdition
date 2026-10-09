@@ -1,7 +1,7 @@
-package com.arxyt.colonypathingedition.api;
+package com.arxyt.colonypathingedition.api.extras;
 
 
-public interface PatientExtras {
+public interface PatientExtra {
     /**
      * @return 已经在处理中
      */

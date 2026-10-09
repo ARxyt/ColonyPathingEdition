@@ -1,8 +1,8 @@
-package com.arxyt.colonypathingedition.api;
+package com.arxyt.colonypathingedition.api.extras;
 
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 
-public interface FurnaceBlockEntityExtras{
+public interface FurnaceBlockEntityExtra {
     /**
      * An adder on target furnace's Progress
      * @return remain adder.

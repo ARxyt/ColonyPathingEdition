@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecraft;
 
-import com.arxyt.colonypathingedition.api.FurnaceBlockEntityExtras;
+import com.arxyt.colonypathingedition.api.extras.FurnaceBlockEntityExtra;
 import com.minecolonies.api.util.constant.Constants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AbstractFurnaceBlockEntity.class)
-public abstract class FurnaceBlockEntityMixin implements FurnaceBlockEntityExtras {
+public abstract class FurnaceBlockEntityMixin implements FurnaceBlockEntityExtra {
     @Shadow int litTime;
     @Shadow int cookingProgress;
     @Shadow int cookingTotalTime;
@@ -151,11 +151,11 @@ public abstract class FurnaceBlockEntityMixin implements FurnaceBlockEntityExtra
 
     @Inject(method = "serverTick", at = @At("RETURN"))
     private static void afterServerTick(Level pLevel, BlockPos pPos, BlockState pState, AbstractFurnaceBlockEntity pBlockEntity, CallbackInfo ci){
-        ((FurnaceBlockEntityExtras)pBlockEntity).pathFindEdition$tickProtect();
+        ((FurnaceBlockEntityExtra)pBlockEntity).pathFindEdition$tickProtect();
     }
 
     @Inject(method = "serverTick", at = @At("HEAD"))
     private static void beforeServerTick(Level pLevel, BlockPos pPos, BlockState pState, AbstractFurnaceBlockEntity pBlockEntity, CallbackInfo ci){
-        ((FurnaceBlockEntityExtras)pBlockEntity).pathFindEdition$setPickup(pBlockEntity);
+        ((FurnaceBlockEntityExtra)pBlockEntity).pathFindEdition$setPickup(pBlockEntity);
     }
 }

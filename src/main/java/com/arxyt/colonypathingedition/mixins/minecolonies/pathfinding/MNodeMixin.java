@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding;
 
-import com.arxyt.colonypathingedition.api.IMNodeExtras;
+import com.arxyt.colonypathingedition.api.extras.IMNodeExtra;
 import com.minecolonies.core.entity.pathfinding.MNode;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.Interface;
  * 并用 @Unique 字段保存状态。
  */
 @Mixin(value = MNode.class, remap = false)
-@Implements(@Interface(iface = IMNodeExtras.class, prefix = "extra$"))
+@Implements(@Interface(iface = IMNodeExtra.class, prefix = "extra$"))
 public abstract class MNodeMixin
 {
     @Unique private boolean onFarmland;

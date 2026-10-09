@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.farm;
 
-import com.arxyt.colonypathingedition.api.FarmFieldExtra;
+import com.arxyt.colonypathingedition.api.extras.FarmFieldExtra;
 import com.arxyt.colonypathingedition.core.data.tag.ModTag;
 import com.minecolonies.api.colony.buildingextensions.registry.BuildingExtensionRegistries;
 import com.minecolonies.api.util.Utils;

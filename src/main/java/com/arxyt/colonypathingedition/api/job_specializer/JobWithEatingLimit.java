@@ -1,4 +1,4 @@
-package com.arxyt.colonypathingedition.api;
+package com.arxyt.colonypathingedition.api.job_specializer;
 
 import net.minecraft.world.item.ItemStack;
 

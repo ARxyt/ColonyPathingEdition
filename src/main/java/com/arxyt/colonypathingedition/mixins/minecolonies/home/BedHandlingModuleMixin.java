@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.home;
 
-import com.arxyt.colonypathingedition.api.BedHandlingModuleExtra;
+import com.arxyt.colonypathingedition.api.extras.BedHandlingModuleExtra;
 import com.minecolonies.core.colony.buildings.modules.BedHandlingModule;
 import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.NotNull;

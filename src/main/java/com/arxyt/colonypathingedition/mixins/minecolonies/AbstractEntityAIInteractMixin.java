@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies;
 
-import com.arxyt.colonypathingedition.api.AbstractEntityAIInteractExtra;
+import com.arxyt.colonypathingedition.api.extras.AbstractEntityAIInteractExtra;
 import com.minecolonies.api.blocks.AbstractColonyBlock;
 import com.minecolonies.core.MineColonies;
 import com.minecolonies.core.colony.buildings.AbstractBuilding;
@@ -9,13 +9,11 @@ import com.minecolonies.core.entity.ai.workers.AbstractEntityAIInteract;
 import com.minecolonies.core.entity.ai.workers.AbstractEntityAISkill;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;

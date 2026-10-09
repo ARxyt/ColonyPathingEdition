@@ -1,15 +1,12 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.healer;
 
 import com.arxyt.colonypathingedition.api.workersetting.BuildingHospitalExtra;
-import com.arxyt.colonypathingedition.api.PatientExtras;
-import com.arxyt.colonypathingedition.mixins.minecolonies.AbstractEntityAIBasicMixin;
-import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.AbstractEntityAIBasicAccessor;
+import com.arxyt.colonypathingedition.api.extras.PatientExtra;
 import com.arxyt.colonypathingedition.core.util.DistanceUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.interactionhandling.ChatPriority;
-import com.minecolonies.api.colony.jobs.IJob;
 import com.minecolonies.api.colony.requestsystem.request.IRequest;
 import com.minecolonies.api.colony.requestsystem.requestable.Stack;
 import com.minecolonies.api.crafting.ItemStorage;
@@ -122,7 +119,7 @@ public abstract class EntityAIWorkHealerMixin extends AbstractEntityAIInteract<J
                 continue;
             }
 
-            PatientExtras patientExtras = (PatientExtras)patient;
+            PatientExtra patientExtras = (PatientExtra)patient;
             int doctorID = patientExtras.getEmployed();
             if ( doctorID != worker.getCivilianID()){
                 ICitizenData thisCitizen = hospital.getColony().getCitizenManager().getCivilian(doctorID);
@@ -263,7 +260,7 @@ public abstract class EntityAIWorkHealerMixin extends AbstractEntityAIInteract<J
         {
             return DECIDE;
         }
-        PatientExtras patientExtras = (PatientExtras) currentPatient;
+        PatientExtra patientExtras = (PatientExtra) currentPatient;
         final ICitizenData data = building.getColony().getCitizenManager().getCivilian(currentPatient.getId());
         if (data == null || data.getEntity().isEmpty() || !(data.getEntity().get().getCitizenData().getCitizenDiseaseHandler().isSick() || notFullHealth(data.getEntity().get())))
         {
@@ -346,7 +343,7 @@ public abstract class EntityAIWorkHealerMixin extends AbstractEntityAIInteract<J
         {
             return DECIDE;
         }
-        PatientExtras patientExtras = (PatientExtras) currentPatient;
+        PatientExtra patientExtras = (PatientExtra) currentPatient;
         final ICitizenData data = building.getColony().getCitizenManager().getCivilian(currentPatient.getId());
         if (data == null || data.getEntity().isEmpty() || !(data.getEntity().get().getCitizenData().getCitizenDiseaseHandler().isSick() || notFullHealth(data.getEntity().get())))
         {

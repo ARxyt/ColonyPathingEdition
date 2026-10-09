@@ -39,7 +39,7 @@ public class HurtAlertEvent {
             return;
 
         // 发出通告，说自己被锤了
-        MutableComponent message = Component.translatable(
+        final MutableComponent message = Component.translatable(
                 AdditionalContants.HURT_ALERT,
                 src.getDisplayName(),
                 (int) citizen.getX(),
@@ -48,10 +48,10 @@ public class HurtAlertEvent {
         ).withStyle(ChatFormatting.GOLD);
         // 为攻击市民的生物加入荧光效果，高亮显示其位置
         livingEntity.addEffect(new MobEffectInstance(MobEffects.GLOWING, 20 * 15));
-        IColony colony = citizen.getCitizenColonyHandler().getColonyOrRegister();
+        final IColony colony = citizen.getCitizenColonyHandler().getColonyOrRegister();
         if (colony == null) return;
         final IJob<?> job = citizen.getCitizenJobHandler().getColonyJob();
-        MessageUtils.MessageBuilder builder = MessageUtils.format("[")
+        final MessageUtils.MessageBuilder builder = MessageUtils.format("[")
                 .append(colony.getName())
                 .append("] ");
         if (job != null) {
@@ -65,7 +65,9 @@ public class HurtAlertEvent {
                 .append(Component.literal(" ♥): \n"))
                 .append(message);
 
+        final MutableComponent totalMessage = builder.create();
         for(Player player : colony.getImportantMessageEntityPlayers()) {
+            final MessageUtils.MessageBuilder builderToPlayer = MessageUtils.format(totalMessage);
             double distanceTo = Math.sqrt(player.blockPosition().distToCenterSqr(citizen.blockPosition().getCenter()));
             double dX = citizen.getX() - player.getX();
             double dZ = citizen.getZ() - player.getZ();
@@ -76,11 +78,11 @@ public class HurtAlertEvent {
                 MutableComponent messageDirection = Component.translatable(
                         AdditionalContants.HURT_DIRECTION + sign,
                         (int)distanceTo
-                ).withStyle(ChatFormatting.GREEN);;
-                builder.append("\n")
+                ).withStyle(ChatFormatting.GREEN);
+                builderToPlayer.append("\n")
                         .append(messageDirection);
             }
-            builder.sendTo(player);
+            builderToPlayer.sendTo(player);
         }
         //MessageUtils.forCitizen(citizen, message).withPriority(MessageUtils.MessagePriority.IMPORTANT).sendTo(colony.getImportantMessageEntityPlayers());
     }

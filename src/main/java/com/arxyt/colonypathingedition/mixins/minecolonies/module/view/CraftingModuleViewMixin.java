@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.module.view;
 
-import com.arxyt.colonypathingedition.api.CraftingModuleViewExtra;
+import com.arxyt.colonypathingedition.api.extras.CraftingModuleViewExtra;
 import com.minecolonies.api.MinecoloniesAPIProxy;
 import com.minecolonies.api.colony.buildings.modules.AbstractBuildingModuleView;
 import com.minecolonies.api.colony.jobs.registry.JobEntry;
@@ -8,7 +8,6 @@ import com.minecolonies.api.colony.requestsystem.StandardFactoryController;
 import com.minecolonies.api.crafting.IRecipeStorage;
 import com.minecolonies.api.crafting.registry.CraftingType;
 import com.minecolonies.core.colony.buildings.moduleviews.CraftingModuleView;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;

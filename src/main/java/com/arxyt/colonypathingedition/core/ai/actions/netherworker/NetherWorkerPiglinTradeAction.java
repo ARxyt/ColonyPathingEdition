@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.core.ai.actions.netherworker;
 
-import com.arxyt.colonypathingedition.api.ExpeditionLogExtra;
+import com.arxyt.colonypathingedition.api.extras.ExpeditionLogExtra;
 import com.arxyt.colonypathingedition.core.ai.actions.handler.AdventureActionHandler;
 import com.minecolonies.api.colony.buildings.IBuilding;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;

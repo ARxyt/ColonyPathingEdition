@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.entity;
 
-import com.arxyt.colonypathingedition.api.AbstractMinecartAccessor;
+import com.arxyt.colonypathingedition.api.accessor.AbstractMinecartAccessor;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.entity.citizen.Skill;
 import com.minecolonies.api.entity.other.MinecoloniesMinecart;

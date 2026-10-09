@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.lumberjack;
 
-import com.arxyt.colonypathingedition.api.AbstractEntityAIInteractExtra;
+import com.arxyt.colonypathingedition.api.extras.AbstractEntityAIInteractExtra;
 import com.arxyt.colonypathingedition.api.workersetting.BuildingLumberjackExtra;
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.arxyt.colonypathingedition.core.util.DistanceUtils;

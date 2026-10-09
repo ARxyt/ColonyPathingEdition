@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.module.main;
 
-import com.arxyt.colonypathingedition.api.JobWithAdditionalHireCheck;
+import com.arxyt.colonypathingedition.api.job_specializer.JobWithAdditionalHireCheck;
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.IColony;

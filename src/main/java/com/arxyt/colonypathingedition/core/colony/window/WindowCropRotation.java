@@ -1,7 +1,7 @@
 package com.arxyt.colonypathingedition.core.colony.window;
 
 import com.arxyt.colonypathingedition.ColonyPathingEdition;
-import com.arxyt.colonypathingedition.api.FarmFieldExtra;
+import com.arxyt.colonypathingedition.api.extras.FarmFieldExtra;
 import com.arxyt.colonypathingedition.core.data.farmlandmap.SpecialSeedManager;
 import com.arxyt.colonypathingedition.core.data.tag.ModTag;
 import com.arxyt.colonypathingedition.core.message.*;

@@ -148,6 +148,7 @@
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.NETHER_OPENPORTAL": "NETHER_OPENPORTAL",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.NETHER_CLOSEPORTAL": "NETHER_CLOSEPORTAL",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.NETHER_GATHER_REWARDS": "NETHER_GATHER_REWARDS",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.NETHER_GATHER_TOOLS": "NETHER_GATHER_TOOLS",
 
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FLORIST_HARVEST": "FLORIST_HARVEST",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FLORIST_COMPOST": "FLORIST_COMPOST",

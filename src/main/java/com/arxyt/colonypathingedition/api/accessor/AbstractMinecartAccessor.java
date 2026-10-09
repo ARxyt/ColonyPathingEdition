@@ -1,4 +1,4 @@
-package com.arxyt.colonypathingedition.api;
+package com.arxyt.colonypathingedition.api.accessor;
 
 public interface AbstractMinecartAccessor {
     int getLSteps();

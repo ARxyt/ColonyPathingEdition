@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies;
 
-import com.arxyt.colonypathingedition.api.ExpeditionLogExtra;
+import com.arxyt.colonypathingedition.api.extras.ExpeditionLogExtra;
 import com.minecolonies.api.crafting.ItemStorage;
 import com.minecolonies.core.colony.buildings.modules.expedition.ExpeditionLog;
 import net.minecraft.world.item.ItemStack;

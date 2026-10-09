@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding.heuristic;
 
-import com.arxyt.colonypathingedition.api.IMNodeExtras;
+import com.arxyt.colonypathingedition.api.extras.IMNodeExtra;
 import com.arxyt.colonypathingedition.core.util.DistanceUtils;
 import com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding.AbstractPathJobMixin;
 import com.minecolonies.core.entity.pathfinding.MNode;
@@ -40,7 +40,7 @@ public abstract class PathJobMoveTowardsMixin extends AbstractPathJobMixin{
             return heuristic;
         }
         double newHeuristic;
-        IMNodeExtras extras = (IMNodeExtras) node;
+        IMNodeExtra extras = (IMNodeExtra) node;
         if (onRails){
             heuristic *= onRailPreference * 0.8;
         }

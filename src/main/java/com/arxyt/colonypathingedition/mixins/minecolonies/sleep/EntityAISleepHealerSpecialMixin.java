@@ -45,9 +45,7 @@ public class EntityAISleepHealerSpecialMixin {
             remap = false
     )
     private void preventTransitions(ITickRateStateMachine<IState> instance, IStateMachineTransition<IState> iStateMachineTransition) {
-        if(!PathingConfig.EATING_AI_MODULE.get()){
-            instance.addTransition((ITickingTransition<IState>) iStateMachineTransition);
-        }
+
     }
 
     @Inject(method = "checkSleep", at=@At("HEAD"), remap = false, cancellable = true)

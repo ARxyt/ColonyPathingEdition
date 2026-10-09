@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.smelt;
 
-import com.arxyt.colonypathingedition.api.FurnaceBlockEntityExtras;
+import com.arxyt.colonypathingedition.api.extras.FurnaceBlockEntityExtra;
 import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.AbstractAISkeletonAccessor;
 import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.AbstractEntityAIBasicAccessor;
 import com.minecolonies.api.colony.jobs.IJob;
@@ -99,7 +99,7 @@ public abstract class AbstractEntityAIUsesFurnaceMixin implements AbstractAISkel
                 final BlockEntity entity = world.getBlockEntity(pos);
                 if (entity instanceof final FurnaceBlockEntity furnace && furnace.getBlockState().getValue(BlockStateProperties.LIT))
                 {
-                    FurnaceBlockEntityExtras extrasFurnace = (FurnaceBlockEntityExtras) furnace;
+                    FurnaceBlockEntityExtra extrasFurnace = (FurnaceBlockEntityExtra) furnace;
                     extrasFurnace.pathFindEdition$addLitTime(getWorker().getCitizenData().getCitizenSkillHandler().getLevel(invokeGetModuleForJob().getSecondarySkill()) / 15);
                     if (!(furnace.getItem(SMELTABLE_SLOT).isEmpty()))
                     {

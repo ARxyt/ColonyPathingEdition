@@ -3,11 +3,14 @@ package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding.navigator
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.arxyt.colonypathingedition.core.util.DistanceUtils;
 import com.ldtteam.domumornamentum.block.decorative.PanelBlock;
+import com.minecolonies.api.entity.ModEntities;
 import com.minecolonies.api.entity.other.MinecoloniesMinecart;
 import com.minecolonies.api.entity.pathfinding.IStuckHandler;
+import com.minecolonies.api.util.BlockPosUtil;
 import com.minecolonies.api.util.ShapeUtil;
 import com.minecolonies.api.util.Vec3Mutable;
 import com.minecolonies.api.util.WorldUtil;
+import com.minecolonies.core.entity.other.SittingEntity;
 import com.minecolonies.core.entity.other.cavalry.CavalryHorseEntity;
 import com.minecolonies.core.entity.pathfinding.PathFindingStatus;
 import com.minecolonies.core.entity.pathfinding.PathPointExtended;
@@ -69,6 +72,7 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
     @Shadow(remap = false) private long finishTime;
     @Shadow(remap = false) private int pauseTickBackupAmount;
     @Shadow(remap = false) private IStuckHandler<MinecoloniesAdvancedPathNavigate> stuckHandler;
+    @Shadow(remap = false) private BlockPos spawnedPos;
 
     @Unique private int randomTimer = 15 + level.random.nextInt(5);
 
@@ -91,67 +95,6 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
     private double modifyMaxDistanceSqr(double original)
     {
         return PathingConfig.MAX_PATHING_DISTANCE.get() * PathingConfig.MAX_PATHING_DISTANCE.get();
-    }
-
-    @Inject(method = "handleRails",at = @At("RETURN"),remap = false)
-    private void getOffRailsAndTpToNextNode(CallbackInfoReturnable<Boolean> cir) {
-        if (ourEntity.getVehicle() == null) {
-            return;
-        }
-
-        final Entity entity = ourEntity.getVehicle();
-        if(!(entity instanceof MinecoloniesMinecart minecoloniesMinecart)){
-            return;
-        }
-        if ( this.getPath() == null || this.getPath().isDone() ){
-            ourEntity.stopRiding();
-            entity.remove(Entity.RemovalReason.DISCARDED);
-            return;
-        }
-        //路径修正，市民下车后一定会tp到下一个路径点处，阻止因下车随机性导致路径重算
-        int nodeIndex = this.getPath().getNextNodeIndex() + 1;
-        if(nodeIndex < this.getPath().getNodeCount()) {
-            final PathPointExtended pEx = (PathPointExtended) (this.getPath().getNode(nodeIndex));
-            if (!pEx.isOnRails()) {
-                ourEntity.stopRiding();
-                entity.remove(Entity.RemovalReason.DISCARDED);
-                ourEntity.teleportTo(pEx.x + 0.5, pEx.y, pEx.z + 0.5);
-                return;
-            }
-        }
-        //增加脱轨补偿，一旦拐弯处脱轨将会tp到更远的位置，取决于当前车速
-        if(!minecoloniesMinecart.isOnRails()) {
-            Vec3 movement = minecoloniesMinecart.getDeltaMovement();
-            double speed = movement.length();
-            nodeIndex = Math.min(this.getPath().getNodeCount() - 1, this.getPath().getNextNodeIndex() + (int)Math.ceil(speed / 0.4F));
-            @NotNull final PathPointExtended tpPlace = (PathPointExtended) (Objects.requireNonNull(this.getPath())).getNode(nodeIndex);
-            if(!tpPlace.isOnRails()){
-                ourEntity.stopRiding();
-                entity.remove(Entity.RemovalReason.DISCARDED);
-                ourEntity.teleportTo(tpPlace.x + 0.5, tpPlace.y, tpPlace.z + 0.5);
-                return;
-            }
-            BlockPos tpPos = tpPlace.asBlockPos();
-            if (entity.level().getBlockState(tpPos.below()).is(BlockTags.RAILS)) {
-                tpPos = tpPos.below();
-            }
-            BlockState blockstate = entity.level().getBlockState(tpPos);
-            double yOffset = 0.0D;
-            RailShape railshape = blockstate.getBlock() instanceof BaseRailBlock
-                    ? ((BaseRailBlock) blockstate.getBlock()).getRailDirection(blockstate, level, tpPos, null)
-                    : RailShape.NORTH_SOUTH;
-            if (railshape.isAscending()) {
-                yOffset = 0.5D;
-            }
-            final double x = tpPlace.x + 0.5D;
-            final double y = tpPlace.y + 0.625D + yOffset;
-            final double z = tpPlace.z + 0.5D;
-            minecoloniesMinecart.setPos(x, y, z);
-            minecoloniesMinecart.xo = x;
-            minecoloniesMinecart.yo = y;
-            minecoloniesMinecart.zo = z;
-            mob.startRiding(minecoloniesMinecart, true);
-        }
     }
 
     /**
@@ -360,7 +303,7 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         }
 
         this.ourEntity.setYya(0);
-        if (handleLadders())
+        if (newHandleLadders())
         {
             followThePath();
             return;
@@ -386,10 +329,7 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
             mob.setShiftKeyDown(false);
         }
 
-        if (handleRails())
-        {
-            return;
-        }
+        newHandleRails();
 
         ++this.tick;
         if (this.hasDelayedRecomputation)
@@ -457,7 +397,164 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         }
     }
 
-    private boolean handleLadders()
+    // Handle rails
+    private void newHandleRails()
+    {
+        if (this.path != null && !this.path.isDone())
+        {
+
+            final PathPointExtended pEx = (PathPointExtended) this.path.getNextNode();
+            PathPointExtended pExNext = getNextNodeI();
+
+            if (pEx.isOnRails())
+            {
+                handlePathOnRails(pEx, pExNext);
+            }
+            handleExitRails(pEx, pExNext);
+        }
+        else {
+            if (ourEntity.getVehicle() == null) {
+                return;
+            }
+
+            final Entity entity = ourEntity.getVehicle();
+            if(entity instanceof SittingEntity){
+                return;
+            }
+
+            if ( this.getPath() == null || this.getPath().isDone() ){
+                ourEntity.stopRiding();
+                entity.remove(Entity.RemovalReason.DISCARDED);
+            }
+        }
+    }
+
+    private void handlePathOnRails(final PathPointExtended pEx, final PathPointExtended pExNext)
+    {
+        if (pEx.isRailsEntry())
+        {
+            tempPos.set(pEx.x, pEx.y, pEx.z);
+            if (!spawnedPos.equals(tempPos))
+            {
+                final BlockState blockstate = level.getBlockState(tempPos);
+                RailShape railshape = blockstate.getBlock() instanceof BaseRailBlock
+                        ? ((BaseRailBlock) blockstate.getBlock()).getRailDirection(blockstate, level, tempPos, null)
+                        : RailShape.NORTH_SOUTH;
+                double yOffset = 0.0D;
+                if (railshape.isAscending())
+                {
+                    yOffset = 0.5D;
+                }
+
+                if (mob.getVehicle() instanceof MinecoloniesMinecart minecart)
+                {
+                    minecart.setHurtDir(1);
+                }
+                else
+                {
+                    MinecoloniesMinecart minecart = ModEntities.MINECART.create(level);
+                    final double x = pEx.x + 0.5D;
+                    final double y = pEx.y + 0.625D + yOffset;
+                    final double z = pEx.z + 0.5D;
+                    minecart.setPos(x, y, z);
+                    minecart.setDeltaMovement(Vec3.ZERO);
+                    minecart.xo = x;
+                    minecart.yo = y;
+                    minecart.zo = z;
+
+
+                    level.addFreshEntity(minecart);
+                    minecart.setHurtDir(1);
+                    mob.startRiding(minecart, true);
+                }
+                spawnedPos = tempPos.immutable();
+            }
+        }
+        else
+        {
+            spawnedPos = BlockPos.ZERO;
+        }
+
+        if (mob.getVehicle() instanceof MinecoloniesMinecart minecart && pExNext != null)
+        {
+            final Vec3 motion = minecart.getDeltaMovement();
+            double forward;
+            switch (BlockPosUtil.directionFromDelta(pExNext.x - pEx.x, 0, pExNext.z - pEx.z).getOpposite())
+            {
+                case EAST:
+                    forward = Math.min(Math.max(motion.x() - 1 * 0.01D, -1), 0);
+                    minecart.setDeltaMovement(motion.add(forward == -1 ? -1 : -0.01D, 0.0D, 0.0D));
+                    break;
+                case WEST:
+                    forward = Math.max(Math.min(motion.x() + 0.01D, 1), 0);
+                    minecart.setDeltaMovement(motion.add(forward == 1 ? 1 : 0.01D, 0.0D, 0.0D));
+                    break;
+                case NORTH:
+                    forward = Math.max(Math.min(motion.z() + 0.01D, 1), 0);
+                    minecart.setDeltaMovement(motion.add(0.0D, 0.0D, forward == 1 ? 1 : 0.01D));
+                    break;
+                case SOUTH:
+                    forward = Math.min(Math.max(motion.z() - 1 * 0.01D, -1), 0);
+                    minecart.setDeltaMovement(motion.add(0.0D, 0.0D, forward == -1 ? -1 : -0.01D));
+                    break;
+
+                case DOWN:
+                case UP:
+                    // unreachable
+                    break;
+            }
+        }
+    }
+
+    private void handleExitRails(final PathPointExtended pEx, final PathPointExtended pExNext) {
+        assert path != null;
+        final Entity entity = ourEntity.getVehicle();
+        if (entity == null || entity instanceof SittingEntity) return;
+
+        // Path correction: after dismounting, citizens will always teleport to the next path point, preventing path recalculation caused by random dismount positions.
+        if(pExNext != null && !pEx.isOnRails()) {
+            ourEntity.stopRiding();
+            entity.remove(Entity.RemovalReason.DISCARDED);
+            ourEntity.teleportTo(pEx.x + 0.5, pEx.y, pEx.z + 0.5);
+            return;
+        }
+
+        // Added derailment compensation: if derailed at a turn, they will teleport farther ahead, depending on the current speed.
+        if(entity instanceof MinecoloniesMinecart minecoloniesMinecart && !minecoloniesMinecart.isOnRails()) {
+            Vec3 movement = minecoloniesMinecart.getDeltaMovement();
+            double speed = movement.length();
+            int nodeIndex = Math.min(this.path.getNodeCount() - 1, this.path.getNextNodeIndex() + (int)Math.ceil(speed / 0.4F));
+            @NotNull final PathPointExtended tpPlace = (PathPointExtended) this.path.getNode(nodeIndex);
+            if(!tpPlace.isOnRails()){
+                ourEntity.stopRiding();
+                entity.remove(Entity.RemovalReason.DISCARDED);
+                ourEntity.teleportTo(tpPlace.x + 0.5, tpPlace.y, tpPlace.z + 0.5);
+                return;
+            }
+            BlockPos tpPos = tpPlace.asBlockPos();
+            if (entity.level().getBlockState(tpPos.below()).is(BlockTags.RAILS)) {
+                tpPos = tpPos.below();
+            }
+            BlockState blockstate = entity.level().getBlockState(tpPos);
+            double yOffset = 0.0D;
+            RailShape railshape = blockstate.getBlock() instanceof BaseRailBlock
+                    ? ((BaseRailBlock) blockstate.getBlock()).getRailDirection(blockstate, level, tpPos, null)
+                    : RailShape.NORTH_SOUTH;
+            if (railshape.isAscending()) {
+                yOffset = 0.5D;
+            }
+            final double x = tpPlace.x + 0.5D;
+            final double y = tpPlace.y + 0.625D + yOffset;
+            final double z = tpPlace.z + 0.5D;
+            minecoloniesMinecart.setPos(x, y, z);
+            minecoloniesMinecart.xo = x;
+            minecoloniesMinecart.yo = y;
+            minecoloniesMinecart.zo = z;
+            mob.startRiding(minecoloniesMinecart, true);
+        }
+    }
+
+    private boolean newHandleLadders()
     {
         // we have tested !this.path.isDone();
         assert this.path != null;

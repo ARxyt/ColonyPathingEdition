@@ -1,7 +1,7 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.job;
 
-import com.arxyt.colonypathingedition.api.JobWithAdditionalHireCheck;
-import com.arxyt.colonypathingedition.api.JobWithEatingLimit;
+import com.arxyt.colonypathingedition.api.job_specializer.JobWithAdditionalHireCheck;
+import com.arxyt.colonypathingedition.api.job_specializer.JobWithEatingLimit;
 import com.minecolonies.api.colony.buildings.workerbuildings.IWareHouse;
 import com.minecolonies.api.colony.requestsystem.request.IRequest;
 import com.minecolonies.api.colony.requestsystem.requestable.IRequestable;

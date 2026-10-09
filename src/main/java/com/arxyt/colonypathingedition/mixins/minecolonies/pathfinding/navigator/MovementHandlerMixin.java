@@ -99,7 +99,6 @@ public abstract class MovementHandlerMixin extends MoveControl {
             {
                 if (yDif != 0.0D)
                 {
-
                     this.mob.setDeltaMovement(this.mob.getDeltaMovement().add(0, (double) this.mob.getSpeed() * ((yDif + 0.3) / d3) * 0.1D, 0));
                 }
 
@@ -145,7 +144,7 @@ public abstract class MovementHandlerMixin extends MoveControl {
         {
             this.mob.setSpeed((float) (this.speedModifier * speedValue));
 
-            // Avoid beeing stuck in jumping while in liquids
+            // Avoid being stuck in jumping while in liquids
             final BlockPos blockpos = this.mob.blockPosition();
             final BlockState blockstate = this.mob.level().getBlockState(blockpos);
             if (this.mob.onGround() || blockstate.liquid())

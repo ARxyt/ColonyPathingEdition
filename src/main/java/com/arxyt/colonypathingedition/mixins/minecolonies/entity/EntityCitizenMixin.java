@@ -170,4 +170,12 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
             }
         }
     }
+
+    @Override
+    protected void playHurtSound(@NotNull DamageSource pSource) {
+        if(getCitizenJobHandler() != null && getCitizenJobHandler().getColonyJob() instanceof JobNetherWorker netherWorker && netherWorker.isInNether()) {
+            return;
+        }
+        super.playHurtSound(pSource);
+    }
 }

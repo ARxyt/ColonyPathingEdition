@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.core.ai.worker;
 
-import com.arxyt.colonypathingedition.api.FarmFieldExtra;
+import com.arxyt.colonypathingedition.api.extras.FarmFieldExtra;
 import com.arxyt.colonypathingedition.core.data.farmlandmap.SpecialSeedManager;
 import com.arxyt.colonypathingedition.core.data.tag.ModTag;
 import com.google.common.reflect.TypeToken;
@@ -12,7 +12,6 @@ import com.minecolonies.api.entity.ai.JobStatus;
 import com.minecolonies.api.entity.ai.statemachine.AITarget;
 import com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
-import com.minecolonies.api.entity.ai.statemachine.states.IState;
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.entity.citizen.VisibleCitizenStatus;
 import com.minecolonies.api.equipment.ModEquipmentTypes;

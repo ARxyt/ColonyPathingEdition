@@ -1,8 +1,8 @@
 package com.arxyt.colonypathingedition.core.job;
 
-import com.arxyt.colonypathingedition.api.JobWithAdditionalHireCheck;
-import com.arxyt.colonypathingedition.api.JobWithEatingLimit;
-import com.arxyt.colonypathingedition.api.JobWithWaitingQueue;
+import com.arxyt.colonypathingedition.api.job_specializer.JobWithAdditionalHireCheck;
+import com.arxyt.colonypathingedition.api.job_specializer.JobWithEatingLimit;
+import com.arxyt.colonypathingedition.api.job_specializer.JobWithWaitingQueue;
 import com.arxyt.colonypathingedition.core.ai.worker.NewEntityAIWorkDeliveryman;
 import com.google.common.collect.ImmutableList;
 import com.minecolonies.api.client.render.modeltype.ModModelTypes;
@@ -44,7 +44,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.minecolonies.api.util.constant.BuildingConstants.TAG_ONGOING;
-import static com.minecolonies.api.util.constant.CitizenConstants.SKILL_BONUS_ADD;
 import static com.minecolonies.api.util.constant.CitizenConstants.SKILL_BONUS_ADD_NAME;
 import static com.minecolonies.api.util.constant.Suppression.UNCHECKED;
 
