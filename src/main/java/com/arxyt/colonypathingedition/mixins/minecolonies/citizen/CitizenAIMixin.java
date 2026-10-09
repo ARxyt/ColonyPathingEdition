@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.citizen;
 
-import com.arxyt.colonypathingedition.api.JobNetherWorkerExtra;
+import com.arxyt.colonypathingedition.api.extras.JobNetherWorkerExtra;
 import com.arxyt.colonypathingedition.api.workersetting.BuildingHospitalExtra;
 import com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEat;
 import com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIFlee;

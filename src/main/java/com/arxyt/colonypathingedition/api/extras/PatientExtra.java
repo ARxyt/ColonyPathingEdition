@@ -1,7 +1,7 @@
-package com.arxyt.colonypathingedition.api;
+package com.arxyt.colonypathingedition.api.extras;
 
 
-public interface PatientExtras {
+public interface PatientExtra {
     /**
      * If the patient are treating by healer
      * @return healer Civilian ID

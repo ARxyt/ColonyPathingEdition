@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.home;
 
-import com.arxyt.colonypathingedition.api.BedHandlingModuleExtra;
+import com.arxyt.colonypathingedition.api.extras.BedHandlingModuleExtra;
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.minecolonies.api.colony.buildings.modules.IAssignsCitizen;
 import com.minecolonies.api.colony.buildings.modules.IBuildingEventsModule;

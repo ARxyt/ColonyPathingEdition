@@ -9,10 +9,7 @@ import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 import com.minecolonies.api.entity.citizen.VisibleCitizenStatus;
 import com.minecolonies.api.equipment.ModEquipmentTypes;
 import com.minecolonies.api.equipment.registry.EquipmentTypeEntry;
-import com.minecolonies.api.util.BlockPosUtil;
-import com.minecolonies.api.util.InventoryUtils;
-import com.minecolonies.api.util.ItemStackUtils;
-import com.minecolonies.api.util.StatsUtil;
+import com.minecolonies.api.util.*;
 import com.minecolonies.api.util.constant.ColonyConstants;
 import com.minecolonies.core.colony.buildings.AbstractBuilding;
 import com.minecolonies.core.colony.buildings.modules.AnimalHerdingModule;
@@ -321,35 +318,26 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
         if (animal != null && !walkingToAnimal(animal) && !ItemStackUtils.isEmpty(worker.getMainHandItem()))
         {
             boolean looting = worker.getCitizenColonyHandler().getColonyOrRegister().getResearchManager().getResearchEffects().getEffectStrength(LOOTING) > 0;
-
+            final FakePlayer fp = getFakePlayer();
+            ItemStack workerWeapon = worker.getMainHandItem();
             if (looting)
             {
-                final FakePlayer fp = getFakePlayer();
-                if (fp == null) return;
-
-                // Ensure the worker’s weapon has Looting I
-                ItemStack workerWeapon = worker.getMainHandItem();
-
                 // Temporarily mirror the weapon onto the fake player
-                ItemStack prev = fp.getMainHandItem();
                 ItemStack temp = workerWeapon.copy();
+                // Ensure the worker’s weapon has Looting I
                 ensureLootingI(temp);
                 fp.setItemInHand(InteractionHand.MAIN_HAND, temp);
-
                 try
                 {
                     newButcherSwing(fp, animal);
+                    return;
                 }
-                finally
-                {
-                    // Restore whatever the fake player had (usually empty) to avoid dupes/leaks
-                    fp.setItemInHand(InteractionHand.MAIN_HAND, prev);
+                finally {
+                    Log.getLogger().warn("Butcher can't apply looting on tools! Please check or report to the author of pathfinding edition!");
                 }
             }
-            else
-            {
-                newButcherSwing(getFakePlayer(), animal);
-            }
+            fp.setItemInHand(InteractionHand.MAIN_HAND, workerWeapon);
+            newButcherSwing(fp, animal);
         }
     }
 

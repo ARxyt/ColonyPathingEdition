@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding;
 
-import com.arxyt.colonypathingedition.api.IMNodeExtras;
+import com.arxyt.colonypathingedition.api.extras.IMNodeExtras;
 import com.minecolonies.core.entity.pathfinding.MNode;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;

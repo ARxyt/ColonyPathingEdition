@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.module.view;
 
-import com.arxyt.colonypathingedition.api.CraftingModuleViewExtra;
+import com.arxyt.colonypathingedition.api.extras.CraftingModuleViewExtra;
 import com.minecolonies.api.MinecoloniesAPIProxy;
 import com.minecolonies.api.colony.buildings.modules.AbstractBuildingModuleView;
 import com.minecolonies.api.colony.jobs.registry.JobEntry;

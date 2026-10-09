@@ -1,31 +1,53 @@
-package com.arxyt.colonypathingedition.core.ai.pathfinding;
+package com.arxyt.colonypathingedition.core.ai.pathfinding.structure;
 
+import com.minecolonies.core.entity.pathfinding.MNode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.pathfinder.Node;
 import org.jetbrains.annotations.NotNull;
 
+// These nodes contain information for navigator.
 public class SpecialInfoNode extends Node {
+
+    public double offsetX = 0D;
+    public double offsetY = 0D;
+    public double offsetZ = 0D;
+
+    public long hashLong;
+
+    public short visitTimes;
+
+    public enum NodeState {
+
+    }
 
     /**
      * Ladder params.
      */
-    private boolean onLadder = false;
-    private boolean ladderEntry = false;
-    private boolean ladderExit = false;
-    private Direction ladderFacing = null;
-    private Direction ladderNext = null;
+    public boolean onLadder = false;
+    public boolean ladderEntrance = false;
+    public boolean ladderExit = false;
+    public Direction ladderFacing = null;
+    public Direction ladderNext = null;
+
     /**
      * Rails params.
      */
-    private boolean onRails;
-    private boolean railsEntry;
-    private boolean railsExit;
+    public boolean onRails;
+    public boolean railsEntrance;
+    public boolean railsExit;
 
     /**
      * Water params.
      */
-    private boolean waterEntry;
+    public boolean waterEntrance;
+    public boolean swimming;
+    public boolean diving;
+
+    /**
+     * Danger params.
+     */
+    public boolean inDanger;
 
     /**
      * Instantiates the pathPoint with a position.
@@ -35,6 +57,11 @@ public class SpecialInfoNode extends Node {
     public SpecialInfoNode(@NotNull final BlockPos pos)
     {
         super(pos.getX(), pos.getY(), pos.getZ());
+        hashLong = pos.asLong();
+    }
+
+    public long hashCodeLong() {
+        return this.hashLong;
     }
 
     /**
@@ -50,15 +77,15 @@ public class SpecialInfoNode extends Node {
     }
 
     /**
-     * Set the ladder entry.
+     * Set the ladder entrance.
      */
-    public void setLadderEntry()
+    public void setLadderEntrance()
     {
-        this.ladderEntry = true;
+        this.ladderEntrance = true;
     }
-    public boolean isLadderEntry()
+    public boolean isLadderEntrance()
     {
-        return ladderEntry;
+        return ladderEntrance;
     }
 
     /**
@@ -112,15 +139,15 @@ public class SpecialInfoNode extends Node {
     }
 
     /**
-     * Set the rail's entry.
+     * Set the rail's entrance.
      */
-    public void setRailsEntry()
+    public void setRailsEntrance()
     {
-        this.railsEntry = true;
+        this.railsEntrance = true;
     }
-    public boolean isRailsEntry()
+    public boolean isRailsEntrance()
     {
-        return railsEntry;
+        return railsEntrance;
     }
 
     /**
@@ -136,14 +163,18 @@ public class SpecialInfoNode extends Node {
     }
 
     /**
-     * Set the water entry.
+     * Set the water entrance.
      */
-    public void setWaterEntry()
+    public void setWaterEntrance()
     {
-        this.waterEntry = true;
+        this.waterEntrance = true;
     }
-    public boolean isWaterEntry()
+    public boolean isWaterEntrance()
     {
-        return waterEntry;
+        return waterEntrance;
+    }
+
+    public boolean isSwimming() {
+        return swimming || diving;
     }
 }

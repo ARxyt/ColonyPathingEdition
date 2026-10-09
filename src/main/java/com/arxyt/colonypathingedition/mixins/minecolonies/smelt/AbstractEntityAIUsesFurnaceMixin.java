@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.smelt;
 
-import com.arxyt.colonypathingedition.api.FurnaceBlockEntityExtras;
+import com.arxyt.colonypathingedition.api.extras.FurnaceBlockEntityExtra;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 import com.minecolonies.api.util.ItemStackUtils;
 import com.minecolonies.api.util.WorldUtil;
@@ -100,7 +100,7 @@ public abstract class AbstractEntityAIUsesFurnaceMixin <J extends AbstractJob<?,
                 final BlockEntity entity = world.getBlockEntity(pos);
                 if (entity instanceof final FurnaceBlockEntity furnace && furnace.getBlockState().getValue(BlockStateProperties.LIT))
                 {
-                    FurnaceBlockEntityExtras extrasFurnace = (FurnaceBlockEntityExtras) furnace;
+                    FurnaceBlockEntityExtra extrasFurnace = (FurnaceBlockEntityExtra) furnace;
                     extrasFurnace.colonyPathingEdition$addLitTime(worker.getCitizenData().getCitizenSkillHandler().getLevel(getModuleForJob().getSecondarySkill()) / 15);
                     if (!(furnace.getItem(SMELTABLE_SLOT).isEmpty()))
                     {

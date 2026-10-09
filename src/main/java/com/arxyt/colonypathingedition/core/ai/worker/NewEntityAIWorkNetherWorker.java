@@ -1,7 +1,7 @@
 package com.arxyt.colonypathingedition.core.ai.worker;
 
-import com.arxyt.colonypathingedition.api.AbstractEntityAIBasicExtra;
-import com.arxyt.colonypathingedition.api.JobNetherWorkerExtra;
+import com.arxyt.colonypathingedition.api.extras.AbstractEntityAIBasicExtra;
+import com.arxyt.colonypathingedition.api.extras.JobNetherWorkerExtra;
 import com.arxyt.colonypathingedition.core.ai.actions.handler.AdventureActionHandler;
 import com.arxyt.colonypathingedition.core.ai.actions.netherworker.NetherWorkerCombatAction;
 import com.arxyt.colonypathingedition.core.ai.actions.netherworker.NetherWorkerMiningAction;
@@ -340,7 +340,7 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
         {
             for (ItemStorage item : rs.getInput())
             {
-                if (!checkIfRequestForItemExistOrCreateAsync(new ItemStack(item.getItem(), 1), item.getAmount() * extraRoundsLimit(), item.getAmount()))
+                if (!checkIfRequestForItemExistOrCreateAsync(new ItemStack(item.getItem(), 1), item.getAmount() * (1 + extraRoundsLimit()), item.getAmount()))
                 {
                     hasItemsAvailable = false;
                 }
@@ -1324,11 +1324,11 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
 
     protected int getCachedMostEfficientTool(@NotNull final EquipmentTypeEntry toolType, final Predicate<ItemStack> suffcientPredicate) {
         final IItemHandler workerInventory = worker.getItemHandlerCitizen();
-        final int slot = toolSlots.get(toolType);
+        final int slot = toolSlots.get(toolType) == null ? -1 : toolSlots.get(toolType);
         if(suffcientPredicate.test(workerInventory.getStackInSlot(slot))) {
             return slot;
         }
-        final int alterSlot = alterToolSlots.get(toolType);
+        final int alterSlot = alterToolSlots.get(toolType) == null ? -1 : alterToolSlots.get(toolType);
         if(suffcientPredicate.test(workerInventory.getStackInSlot(alterSlot))) {
             return alterSlot;
         }

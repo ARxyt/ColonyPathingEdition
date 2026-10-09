@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding.heuristic;
 
-import com.arxyt.colonypathingedition.api.IMNodeExtras;
+import com.arxyt.colonypathingedition.api.extras.IMNodeExtras;
 import com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding.AbstractPathJobMixin;
 import com.arxyt.colonypathingedition.core.util.DistanceUtils;
 import com.minecolonies.core.entity.pathfinding.MNode;

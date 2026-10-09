@@ -1,4 +1,4 @@
-package com.arxyt.colonypathingedition.api;
+package com.arxyt.colonypathingedition.api.extras;
 
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;

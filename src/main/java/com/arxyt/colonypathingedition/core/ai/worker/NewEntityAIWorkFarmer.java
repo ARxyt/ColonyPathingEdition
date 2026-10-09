@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.core.ai.worker;
 
-import com.arxyt.colonypathingedition.api.FarmFieldExtra;
+import com.arxyt.colonypathingedition.api.extras.FarmFieldExtra;
 import com.arxyt.colonypathingedition.core.data.farmlandmap.SpecialSeedManager;
 import com.arxyt.colonypathingedition.core.data.tag.ModTag;
 import com.google.common.reflect.TypeToken;

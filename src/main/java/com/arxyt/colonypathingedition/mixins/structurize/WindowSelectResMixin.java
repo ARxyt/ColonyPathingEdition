@@ -1,28 +1,14 @@
 package com.arxyt.colonypathingedition.mixins.structurize;
 
-import com.arxyt.colonypathingedition.api.FarmFieldExtra;
 import com.arxyt.colonypathingedition.core.easycolony.manager.LinkageManager;
-import com.arxyt.colonypathingedition.core.message.CropRotationSeasonCountMessage;
 import com.ldtteam.blockui.controls.TextField;
-import com.ldtteam.blockui.views.BOWindow;
-import com.ldtteam.structurize.api.util.Log;
 import com.ldtteam.structurize.client.gui.AbstractWindowSkeleton;
 import com.ldtteam.structurize.client.gui.WindowSelectRes;
 import com.ldtteam.structurize.client.gui.util.InputFilters;
-import com.minecolonies.api.colony.IColonyView;
-import com.minecolonies.core.Network;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.stringtemplate.v4.ST;
-
-import java.util.List;
-import java.util.function.BiConsumer;
 
 import static com.ldtteam.structurize.client.gui.WindowSelectRes.COUNT;
 

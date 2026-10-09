@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.module.window;
 
-import com.arxyt.colonypathingedition.api.CraftingModuleViewExtra;
+import com.arxyt.colonypathingedition.api.extras.CraftingModuleViewExtra;
 import com.ldtteam.blockui.Pane;
 import com.ldtteam.blockui.PaneBuilders;
 import com.ldtteam.blockui.controls.Button;

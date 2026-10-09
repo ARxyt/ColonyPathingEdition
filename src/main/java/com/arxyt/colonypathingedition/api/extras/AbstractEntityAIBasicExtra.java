@@ -1,4 +1,4 @@
-package com.arxyt.colonypathingedition.api;
+package com.arxyt.colonypathingedition.api.extras;
 
 import com.google.common.collect.ImmutableList;
 import com.minecolonies.api.colony.requestsystem.request.IRequest;

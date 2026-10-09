@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.healer;
 
-import com.arxyt.colonypathingedition.api.PatientExtras;
+import com.arxyt.colonypathingedition.api.extras.PatientExtra;
 import com.minecolonies.core.entity.ai.workers.util.Patient;
 import org.spongepowered.asm.mixin.Implements;
 import org.spongepowered.asm.mixin.Interface;
@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.Unique;
 
 
 @Mixin(value = Patient.class, remap = false)
-@Implements(@Interface(iface = PatientExtras.class, prefix = "extra$"))
+@Implements(@Interface(iface = PatientExtra.class, prefix = "extra$"))
 public abstract class PatientMixin {
     @Unique int employed = -1;
 

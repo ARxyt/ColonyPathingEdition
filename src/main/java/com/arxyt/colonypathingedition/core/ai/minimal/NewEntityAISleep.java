@@ -1,6 +1,7 @@
 package com.arxyt.colonypathingedition.core.ai.minimal;
 
 import com.arxyt.colonypathingedition.api.workersetting.BuildingHospitalExtra;
+import com.arxyt.colonypathingedition.core.util.DistanceUtils;
 import com.ldtteam.domumornamentum.block.decorative.PanelBlock;
 import com.minecolonies.api.colony.IColony;
 import com.minecolonies.api.colony.buildings.IBuilding;
@@ -128,7 +129,7 @@ public class NewEntityAISleep implements IStateAI
             }
         }
         else if(citizen.getCitizenData().getWorkBuilding() instanceof BuildingMiner miner){
-            if(homeBuilding != null && !homeBuilding.isInBuilding(miner.getPosition()) && !EntityNavigationUtils.walkToBuilding(citizen, miner)){
+            if(homeBuilding != null && DistanceUtils.distHeavyY(miner.getPosition(), homeBuilding.getPosition()) < 40 && !EntityNavigationUtils.walkToBuilding(citizen, miner)){
                 return CitizenAIState.SLEEP;
             }
         }

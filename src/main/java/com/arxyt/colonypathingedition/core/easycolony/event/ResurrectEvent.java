@@ -71,6 +71,7 @@ public class ResurrectEvent {
             IColony colony = IColonyManager.getInstance().getIColony(level, pos);
             IGraveData graveData = ((IGraveDataExtension) grave).getGraveData();
             resurrect(colony, level, pos, event.getEntity(), graveData);
+            if(graveData == null) return;
             GraveyardManagementModule module = getGraveyardManagementModule(colony, graveData.getCitizenName());
             if (module != null) {
                 ((GraveyardManagementModuleAccessor) module).getRestingCitizen().remove(graveData.getCitizenName());

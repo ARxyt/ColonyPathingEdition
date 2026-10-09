@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.core.util;
 
-import com.arxyt.colonypathingedition.api.JobWithEatingLimit;
+import com.arxyt.colonypathingedition.api.job_specializer.JobWithEatingLimit;
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.minecolonies.api.advancements.AdvancementTriggers;
 import com.minecolonies.api.colony.ICitizenData;

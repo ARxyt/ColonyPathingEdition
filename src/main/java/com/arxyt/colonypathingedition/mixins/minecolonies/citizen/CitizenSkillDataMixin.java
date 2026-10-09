@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.citizen;
 
-import com.arxyt.colonypathingedition.api.SkillDataExtra;
+import com.arxyt.colonypathingedition.api.extras.SkillDataExtra;
 import com.minecolonies.core.entity.citizen.citizenhandlers.CitizenSkillHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

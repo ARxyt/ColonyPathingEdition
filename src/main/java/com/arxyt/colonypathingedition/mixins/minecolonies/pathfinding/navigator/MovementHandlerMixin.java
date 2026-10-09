@@ -110,11 +110,21 @@ public abstract class MovementHandlerMixin extends MoveControl {
                     double d3 = Math.sqrt(xDif * xDif + yDif * yDif + zDif * zDif);
                     this.mob.setDeltaMovement(this.mob.getDeltaMovement().add(0, (double) this.mob.getSpeed() * ((yDif + 0.3) / d3) * 0.1D, 0));
                 }
-
+                if (yDif > 0.0D)
+                {
+                    this.mob.getJumpControl().jump();
+                }
                 return;
             }
 
             if (mob.getVehicle() == null) {
+                // handle water and ladder, that's definitely a better handler to not use jumpCoolDown at these cases.
+                if (yDif > 0 && (mob.isInWater() || !mob.onGround())) {
+                    this.mob.getJumpControl().jump();
+                    this.operation = net.minecraft.world.entity.ai.control.MoveControl.Operation.JUMPING;
+                    jumpCoolDown = 0;
+                    return;
+                }
                 final Block block = blockstate.getBlock();
                 final VoxelShape voxelshape = blockstate.getCollisionShape(this.mob.level(), blockpos);
                 if (yDif > (double) stepHeight) {

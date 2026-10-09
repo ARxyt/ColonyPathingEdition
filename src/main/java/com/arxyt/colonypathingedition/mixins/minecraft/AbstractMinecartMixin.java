@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecraft;
 
-import com.arxyt.colonypathingedition.api.AbstractMinecartAccessor;
+import com.arxyt.colonypathingedition.api.accessor.AbstractMinecartAccessor;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

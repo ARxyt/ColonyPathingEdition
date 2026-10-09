@@ -35,6 +35,7 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -120,7 +121,7 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
             if (attackerColony != null && citizenColonyHandler.getColonyOrRegister() != null)
             {
                 final IPermissions permission = attackerColony.getPermissions();
-                citizenColonyHandler.getColonyOrRegister().getPermissions().addPlayer(permission.getOwner(), permission.getOwnerName(), permission.getRank(permission.HOSTILE_RANK_ID));
+                citizenColonyHandler.getColonyOrRegister().getPermissions().addPlayer(permission.getOwner(), permission.getOwnerName(), permission.getRank(IPermissions.HOSTILE_RANK_ID));
             }
         }
 
@@ -180,5 +181,13 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
                         .sendTo(player);
             }
         }
+    }
+
+    @Override
+    protected void playHurtSound(@NotNull DamageSource pSource) {
+        if(getCitizenJobHandler() != null && getCitizenJobHandler().getColonyJob() instanceof JobNetherWorker netherWorker && netherWorker.isInNether()) {
+            return;
+        }
+        super.playHurtSound(pSource);
     }
 }

@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.job;
 
-import com.arxyt.colonypathingedition.api.JobNetherWorkerExtra;
+import com.arxyt.colonypathingedition.api.extras.JobNetherWorkerExtra;
 import com.arxyt.colonypathingedition.core.ai.worker.NewEntityAIWorkNetherWorker;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.equipment.registry.EquipmentTypeEntry;

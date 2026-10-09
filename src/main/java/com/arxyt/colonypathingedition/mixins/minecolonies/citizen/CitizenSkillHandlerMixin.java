@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.citizen;
 
-import com.arxyt.colonypathingedition.api.SkillDataExtra;
+import com.arxyt.colonypathingedition.api.extras.SkillDataExtra;
 import com.arxyt.colonypathingedition.mixins.minecolonies.accessor.CitizenSkillDataCreator;
 import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.IColony;

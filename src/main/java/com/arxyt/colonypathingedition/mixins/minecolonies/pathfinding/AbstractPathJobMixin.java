@@ -1,6 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding;
 
-import com.arxyt.colonypathingedition.api.IMNodeExtras;
+import com.arxyt.colonypathingedition.api.extras.IMNodeExtras;
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.ldtteam.domumornamentum.block.decorative.*;
 import com.ldtteam.structurize.blockentities.interfaces.IBlueprintDataProviderBE;

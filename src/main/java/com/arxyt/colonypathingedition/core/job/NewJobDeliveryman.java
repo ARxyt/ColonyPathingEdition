@@ -1,8 +1,8 @@
 package com.arxyt.colonypathingedition.core.job;
 
-import com.arxyt.colonypathingedition.api.JobWithAdditionalHireCheck;
-import com.arxyt.colonypathingedition.api.JobWithEatingLimit;
-import com.arxyt.colonypathingedition.api.JobWithWaitingQueue;
+import com.arxyt.colonypathingedition.api.job_specializer.JobWithAdditionalHireCheck;
+import com.arxyt.colonypathingedition.api.job_specializer.JobWithEatingLimit;
+import com.arxyt.colonypathingedition.api.job_specializer.JobWithWaitingQueue;
 import com.arxyt.colonypathingedition.core.ai.worker.NewEntityAIWorkDeliveryman;
 import com.google.common.collect.ImmutableList;
 import com.minecolonies.api.client.render.modeltype.ModModelTypes;
@@ -28,7 +28,6 @@ import com.minecolonies.core.colony.buildings.modules.CourierAssignmentModule;
 import com.minecolonies.core.colony.buildings.modules.WarehouseRequestQueueModule;
 import com.minecolonies.core.colony.jobs.AbstractJob;
 import com.minecolonies.core.colony.requestsystem.requests.StandardRequests;
-import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.util.AttributeModifierUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
