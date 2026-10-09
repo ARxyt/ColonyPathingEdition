@@ -122,10 +122,10 @@ public abstract class PathfindingUtilsMixin {
         Block thisBlock = thisState.getBlock();
         if (entity.isInWater() && !(entity instanceof AbstractDrownedEntityPirateRaider))
         {
-            while (!belowState.getFluidState().isEmpty())
+            while (!thisState.getFluidState().isEmpty())
             {
                 pos.set(pos.getX(), pos.getY() + 1, pos.getZ());
-                belowState = level.getBlockState(pos);
+                thisState = level.getBlockState(pos);
             }
         }
         else if (thisBlock instanceof FenceBlock || thisBlock instanceof WallBlock || thisBlock instanceof AbstractBlockMinecoloniesDefault || (thisState.blocksMotion() && !callCanStandInSolidBlock(thisState)))

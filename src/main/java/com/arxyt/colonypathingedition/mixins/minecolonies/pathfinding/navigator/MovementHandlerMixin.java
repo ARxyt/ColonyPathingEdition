@@ -101,6 +101,10 @@ public abstract class MovementHandlerMixin extends MoveControl {
                 {
                     this.mob.setDeltaMovement(this.mob.getDeltaMovement().add(0, (double) this.mob.getSpeed() * ((yDif + 0.3) / d3) * 0.1D, 0));
                 }
+                if (yDif > 0.0D)
+                {
+                    this.mob.getJumpControl().jump();
+                }
 
                 return;
             }
@@ -108,7 +112,7 @@ public abstract class MovementHandlerMixin extends MoveControl {
             if (mob.getVehicle() == null) {
                 final Block block = blockstate.getBlock();
                 final VoxelShape voxelshape = blockstate.getCollisionShape(this.mob.level(), blockpos);
-                if (yDif > (double) stepHeight) {
+                if (yDif > (double) stepHeight || (yDif > 0 && (mob.isInWater() || !mob.onGround()))) {
                     if (xDif * xDif + zDif * zDif < (double) Math.max(1.0F, this.mob.getBbWidth()) || jumpCoolDown > FORCE_JUMP_LIMIT) {
                         this.mob.getJumpControl().jump();
                         this.operation = net.minecraft.world.entity.ai.control.MoveControl.Operation.JUMPING;
