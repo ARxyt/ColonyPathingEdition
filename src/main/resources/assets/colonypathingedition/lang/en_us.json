@@ -190,7 +190,10 @@
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.WAIT_FOR_FOOD": "WAIT_FOR_FOOD",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GET_FOOD_YOURSELF": "GET_FOOD_YOURSELF",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GO_TO_EAT_POS": "GO_TO_EAT_POS",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FIND_FOOD_TO_EAT": "FIND_FOOD_TO_EAT",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GO_TO_PLACE_WITH_FOOD": "GO_TO_PLACE_WITH_FOOD",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.EAT": "EAT",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FORCE_EATING": "FORCE_EATING",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.DONE": "DONE",
 
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.CHECK_ENTITIES": "CHECK_ENTITIES",

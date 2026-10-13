@@ -73,6 +73,9 @@ public abstract class AbstractWarehouseRequestResolverMixin extends AbstractRequ
             }
             wareHouses.add(parentPos);
         }
+        else {
+            wareHouses.clear();
+        }
 
         return isRequestChainValid(manager, colony, parentRequest, visited, wareHouses);
     }

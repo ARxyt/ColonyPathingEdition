@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Crafts dye related things.
  */
-public class NewEntityAIWorkDyer extends AbstractEntityAIRequestSmelter<JobDyer, BuildingDyer>
+public class NewEntityAIWorkDyer extends NewAbstractEntityRequestSmelter<JobDyer, BuildingDyer>
 {
     /**
      * Initialize the dyer.

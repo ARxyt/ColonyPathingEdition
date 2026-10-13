@@ -643,11 +643,13 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
             return NETHER_GATHER_TOOLS;
         }
         pickupReturnState = NETHER_GATHER_TOOLS;
-        final IRecipeStorage recipeStorage = currentRecipeStorage;
-        IAIState checkResult = checkForItems(currentRecipeStorage);
-        currentRecipeStorage = recipeStorage;
-        if(checkResult == GATHERING_REQUIRED_MATERIALS) {
-            return checkResult;
+        if(currentRecipeStorage != null) {
+            final IRecipeStorage recipeStorage = currentRecipeStorage;
+            IAIState checkResult = checkForItems(currentRecipeStorage);
+            currentRecipeStorage = recipeStorage;
+            if (checkResult == GATHERING_REQUIRED_MATERIALS) {
+                return checkResult;
+            }
         }
         setDelay(WAITING_DELAY);
         return checkForToolOrWeaponNotTooBroken() ? NETHER_AWAY : NETHER_GATHER_TOOLS;

@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Crafts glass relates things, crafts and smelts.
  */
-public class NewEntityAIWorkGlassblower extends AbstractEntityAIRequestSmelter<JobGlassblower, BuildingGlassblower>
+public class NewEntityAIWorkGlassblower extends NewAbstractEntityRequestSmelter<JobGlassblower, BuildingGlassblower>
 {
     /**
      * Initialize the glassblower AI.

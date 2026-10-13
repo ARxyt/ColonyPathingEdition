@@ -331,8 +331,7 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
                 {
                     newButcherSwing(fp, animal);
                     return;
-                }
-                finally {
+                } catch (Exception | Error e) {
                     Log.getLogger().warn("Butcher can't apply looting on tools! Please check or report to the author of pathfinding edition!");
                 }
             }

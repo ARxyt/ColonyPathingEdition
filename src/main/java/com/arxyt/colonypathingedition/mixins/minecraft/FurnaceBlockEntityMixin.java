@@ -2,17 +2,26 @@ package com.arxyt.colonypathingedition.mixins.minecraft;
 
 import com.arxyt.colonypathingedition.api.extras.FurnaceBlockEntityExtra;
 import com.minecolonies.api.util.constant.Constants;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.List;
 
 @Mixin(AbstractFurnaceBlockEntity.class)
 public abstract class FurnaceBlockEntityMixin implements FurnaceBlockEntityExtra {
@@ -21,6 +30,12 @@ public abstract class FurnaceBlockEntityMixin implements FurnaceBlockEntityExtra
     @Shadow int cookingTotalTime;
     @Shadow int litDuration;
 
+    @Shadow
+    public abstract List<Recipe<?>> getRecipesToAwardAndPopExperience(ServerLevel pLevel, Vec3 pPopVec);
+
+    @Shadow
+    @Final
+    private Object2IntOpenHashMap<ResourceLocation> recipesUsed;
     @Unique private int colonyPathingEdition$workerID = -1;
     @Unique private int colonyPathingEdition$pickerID = -1;
     @Unique private int colonyPathingEdition$fuelerID = -1;
@@ -124,6 +139,13 @@ public abstract class FurnaceBlockEntityMixin implements FurnaceBlockEntityExtra
     @Unique
     public boolean colonyPathingEdition$atProtectTime() {
         return colonyPathingEdition$protectTime > 0;
+    }
+
+    @Unique
+    public void colonyPathingEdition$clearUsedRecipesAndPopExperience(Level world, Entity worker) {
+        if(world == null) return;
+        this.getRecipesToAwardAndPopExperience((ServerLevel)world, worker.position());
+        this.recipesUsed.clear();
     }
 
     @Inject(method = "saveAdditional", at = @At("RETURN"))

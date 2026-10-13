@@ -112,10 +112,10 @@ public abstract class EntityAIMinerMixin extends AbstractEntityAIStructureWithWo
             return repathCounter >= 3;
         }
         BlockPos workerPos = worker.blockPosition();
-        if (!walkToSafePos(workFrom) && DistanceUtils.dist(workerPos, workFrom) >= 10 ){
+        if (!walkToSafePos(workFrom) && DistanceUtils.distLightY(workerPos, workFrom) >= 10 ){
             return repathCounter >= 3;
         }
-        if(DistanceUtils.dist(workPos, workFrom) >= 10){
+        if(DistanceUtils.distLightY(workPos, workFrom) >= 10){
             if(++repathCounter >= 3) {
                 return true;
             }

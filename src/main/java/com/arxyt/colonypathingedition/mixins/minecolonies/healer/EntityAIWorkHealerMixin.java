@@ -447,7 +447,7 @@ public abstract class EntityAIWorkHealerMixin extends AbstractEntityAIInteract<J
             return START_WORKING;
         }
         BlockPos nowPlace = remotePatient.getEntity().get().blockPosition();
-        if (!walkToUnSafePos(nowPlace) && DistanceUtils.dist(nowPlace,worker.blockPosition()) > 5)
+        if (!walkToUnSafePos(nowPlace) && DistanceUtils.distLightY(nowPlace,worker.blockPosition()) > 5)
         {
             return getState();
         }

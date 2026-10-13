@@ -163,7 +163,7 @@ public abstract class MovementHandlerMixin extends MoveControl {
         {
             this.mob.setSpeed((float) (this.speedModifier * speedValue));
 
-            // Avoid beeing stuck in jumping while in liquids
+            // Avoid being stuck in jumping while in liquids
             final BlockPos blockpos = this.mob.blockPosition();
             final BlockState blockstate = this.mob.level().getBlockState(blockpos);
             if (this.mob.onGround() || blockstate.liquid())
