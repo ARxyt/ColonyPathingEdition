@@ -301,7 +301,7 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
     @Unique
     protected void butcherAnimalCopy(@Nullable final Animal animal)
     {
-        if (animal != null && !walkingToAnimal(animal) && !ItemStackUtils.isEmpty(worker.getMainHandItem()))
+        if (animal != null && !ItemStackUtils.isEmpty(worker.getMainHandItem()))
         {
             boolean looting = worker.getCitizenColonyHandler().getColonyOrRegister().getResearchManager().getResearchEffects().getEffectStrength(LOOTING) > 0;
 
@@ -314,12 +314,10 @@ public abstract class AbstractEntityAIHerderMixin<J extends AbstractJob<?, J>, B
                 // Ensure the worker’s weapon has Looting I
                 ensureLootingI(temp);
                 fp.setItemInHand(InteractionHand.MAIN_HAND, temp);
-                try
-                {
+                try {
                     newButcherSwing(fp, animal);
                     return;
-                }
-                finally {
+                } catch (Exception | Error e) {
                     Log.getLogger().warn("Butcher can't apply looting on tools! Please check or report to the author of pathfinding edition!");
                 }
             }

@@ -392,7 +392,7 @@ public abstract class AbstractPathJobMixin{
                     }
 
                     // we already at best score, return.
-                    if(bestNodeEndScore <= 1) break;
+                    if(bestNodeEndScore <= 1.25) break;
 
                     // no need to count, directly visit.
                     if (node.isVisited())
@@ -469,7 +469,7 @@ public abstract class AbstractPathJobMixin{
             return handleInLiquid(x, y, z, below, isSwimming);
         }
 
-        if (PathfindingUtils.isLadder(below, pathingOptions, x, y - 1, z, cachedBlockLookup))
+        if (PathfindingUtils.isLadder(below, pathingOptions, x, y - 1, z, cachedBlockLookup) || below.getBlock() instanceof ScaffoldingBlock)
         {
             return y;
         }
@@ -645,7 +645,9 @@ public abstract class AbstractPathJobMixin{
                 case UP -> {
                     if (node.isLadder() || node.isVisited()) {
                         exploreInDirection(node, 0, 1, 0);
-                    } else if (node.parent != null && !node.parent.isLadder() && cachedBlockLookup.getBlockState(node.x, node.y + 1, node.z).getBlock() instanceof LadderBlock) {
+                    } else if ( !cachedBlockLookup.getBlockState(node.x, node.y, node.z).getFluidState().isEmpty() ||
+                            (node.parent != null && !node.parent.isLadder() && cachedBlockLookup.getBlockState(node.x, node.y + 1, node.z).getBlock() instanceof LadderBlock))
+                    {
                         exploreInDirection(node, 0, 1, 0);
                     }
                 }

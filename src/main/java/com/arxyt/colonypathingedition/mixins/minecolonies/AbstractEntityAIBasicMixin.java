@@ -211,23 +211,23 @@ public abstract class AbstractEntityAIBasicMixin<B extends AbstractBuilding,J ex
             int newPriority = pickupExtra.shouldPickup(building.getPickUpPriority(), dumpedItems);
             dumpedItems = 0;
             // they reworked pickup structure, so if pickup request generate could fail, if that happens, we use original codes to generate.
-            try{
-                if(newPriority > 0) {
-                    pickupExtra.newCreatePickupRequest(newPriority);
-                }
-                return false;
-            } catch (Exception | Error e) {
+            if (newPriority > 0) {
                 try {
-                    Method createPickupRequest = building.getClass().getMethod("createPickupRequest", int.class, boolean.class);
-                    createPickupRequest.invoke(building, 64, true);
+                    pickupExtra.newCreatePickupRequest(newPriority);
                     return false;
+                } catch (Exception | Error e) {
+                    try {
+                        Method createPickupRequest = building.getClass().getMethod("createPickupRequest", int.class, boolean.class);
+                        createPickupRequest.invoke(building, 64, true);
+                        return false;
+                    } catch (Exception e2) {
+                        // nothing happens
+                    }
                 }
-                catch (Exception e2){
-                    // nothing happens
-                }
+                return true;
             }
         }
-        return original;
+        return false;
     }
 
     @Redirect(

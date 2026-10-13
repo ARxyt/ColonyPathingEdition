@@ -2,12 +2,20 @@ package com.arxyt.colonypathingedition.mixins.minecraft;
 
 import com.arxyt.colonypathingedition.api.extras.FurnaceBlockEntityExtra;
 import com.minecolonies.api.util.constant.Constants;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -15,12 +23,17 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.List;
+
 @Mixin(AbstractFurnaceBlockEntity.class)
 public abstract class FurnaceBlockEntityMixin implements FurnaceBlockEntityExtra {
+    @Final @Shadow private Object2IntOpenHashMap<ResourceLocation> recipesUsed;
     @Shadow int litTime;
     @Shadow int cookingProgress;
     @Shadow int cookingTotalTime;
     @Shadow int litDuration;
+
+    @Shadow public abstract List<RecipeHolder<?>> getRecipesToAwardAndPopExperience(ServerLevel level, Vec3 popVec);
 
     @Unique private int pathFindEdition$workerID = -1;
     @Unique private int pathFindEdition$pickerID = -1;
@@ -125,6 +138,13 @@ public abstract class FurnaceBlockEntityMixin implements FurnaceBlockEntityExtra
     @Unique
     public boolean pathFindEdition$atProtectTime() {
         return pathFindEdition$protectTime > 0;
+    }
+
+    @Unique
+    public void pathFindEdition$clearUsedRecipesAndPopExperience(ServerLevel world, Entity worker) {
+        if(world == null) return;
+        this.getRecipesToAwardAndPopExperience(world, worker.position());
+        this.recipesUsed.clear();
     }
 
     @Inject(method = "saveAdditional", at = @At("RETURN"))

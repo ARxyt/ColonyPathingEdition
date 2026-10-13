@@ -25,7 +25,6 @@
   "com.arxyt.colonypathingedition.core.easycolony.colony.hurt.direction7": "我在您的正东方 %d m处！",
   "com.arxyt.colonypathingedition.core.easycolony.colony.hurt.direction8": "我在您的东南方 %d m处！",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.message": "市民当前状态为:",
-
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.IDLE": "空闲",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.INIT": "初始化",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.INVENTORY_FULL": "正在清理背包",
@@ -157,7 +156,10 @@
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.WAIT_FOR_FOOD": "等待食物中",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GET_FOOD_YOURSELF": "自行取食中",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GO_TO_EAT_POS": "正在前往进食位置",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FIND_FOOD_TO_EAT": "寻找食物中",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.GO_TO_PLACE_WITH_FOOD": "正在前往可能有食物的位置",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.EAT": "进食中",
+  "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.FORCE_EATING": "强制进食中",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.DONE": "进食完毕",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.CHECK_ENTITIES": "正在检查威胁实体",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.RUNNING": "正在逃跑",
@@ -188,7 +190,6 @@
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.WORK": "工作",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.WORKING": "正在工作",
   "com.arxyt.colonypathingedition.core.easycolony.colony.read_mind.state.INACTIVE": "未激活",
-
   "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.no_grave_data": "这个墓碑似乎没有寄宿着亡魂...",
   "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.no_colony": "这个亡魂似乎迷失了方向...",
   "com.arxyt.colonypathingedition.core.easycolony.colony.resurrect.not_available": "你的殖民地已经没有地方承接这个游荡的灵魂了...",

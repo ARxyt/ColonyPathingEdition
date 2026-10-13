@@ -298,7 +298,7 @@ public abstract class EntityAIWorkLumberjackMixin extends AbstractEntityAICrafti
 
     @Inject(method = "prepareForWoodcutting", at = @At("RETURN"), remap = false, cancellable = true)
     private void remasterPrepareOrderForWoodcutting(CallbackInfoReturnable<IAIState> cir){
-        if(cir.getReturnValue() == LUMBERJACK_SEARCHING_TREE && (building.shouldRestrict() || lastTree == null || !(DistanceUtils.dist(building.getPosition(),lastTree) > 50))){
+        if(cir.getReturnValue() == LUMBERJACK_SEARCHING_TREE && (building.shouldRestrict() || lastTree == null || !(DistanceUtils.distLightY(building.getPosition(),lastTree) > 50))){
             cir.setReturnValue(LUMBERJACK_GATHERING);
         }
     }

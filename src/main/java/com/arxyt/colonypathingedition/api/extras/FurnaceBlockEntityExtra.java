@@ -1,5 +1,8 @@
 package com.arxyt.colonypathingedition.api.extras;
 
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 
 public interface FurnaceBlockEntityExtra {
@@ -64,4 +67,10 @@ public interface FurnaceBlockEntityExtra {
      * @param pBlockEntity: furnace's BlockEntity
      */
     void pathFindEdition$setPickup(AbstractFurnaceBlockEntity pBlockEntity);
+
+    /**
+     * Pop experience in furnace, no need to record.
+     * @param worker: the entity trigger experience drop.
+     */
+    void pathFindEdition$clearUsedRecipesAndPopExperience(ServerLevel world, Entity worker);
 }

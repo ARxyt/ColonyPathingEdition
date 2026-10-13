@@ -42,50 +42,28 @@ public abstract class PathfindingUtilsMixin {
                 Mth.floor(entity.getY()),
                 Mth.floor(entity.getZ()));
         final Level level = entity.level();
+
+        final BlockPos eyePos = new BlockPos(Mth.floor(entity.getX()), Mth.floor(entity.getEyeY()), Mth.floor(entity.getZ()));
+        BlockState eyeState = level.getBlockState(eyePos);
         BlockState thisState = level.getBlockState(pos);
-
-        // Check if the entity is standing ontop of another block with part of its bb
-        final BlockPos.MutableBlockPos below = new BlockPos.MutableBlockPos(pos.getX(), pos.getY() - 1, pos.getZ());
-        // Regen start pos at target block if there is a collision shape.
-        final double posHeight = ShapeUtil.max(thisState.getCollisionShape(level, pos.above()), Direction.Axis.Y);
-        if ( posHeight != 0 )
-        {
-            // Additional check
-            double posX = Math.min(ShapeUtil.max(thisState.getCollisionShape(level, pos.above()), Direction.Axis.X), 1 - ShapeUtil.min(thisState.getCollisionShape(level, pos), Direction.Axis.X));
-            double posZ = Math.min(ShapeUtil.max(thisState.getCollisionShape(level, pos.above()), Direction.Axis.Z), 1 - ShapeUtil.min(thisState.getCollisionShape(level, pos), Direction.Axis.Z));
-            boolean canStand = Math.min(posX,posZ) < 0.25;
-            if(canStand) return pos.immutable();
-        }
-
-        BlockState belowState = level.getBlockState(below);
-        if (entity.onGround() && SurfaceType.getSurfaceType(level, belowState, below) != SurfaceType.WALKABLE)
-        {
-            int minX = Mth.floor(entity.getBoundingBox().minX);
-            int minZ = Mth.floor(entity.getBoundingBox().minZ);
-            int maxX = Mth.floor(entity.getBoundingBox().maxX);
-            int maxZ = Mth.floor(entity.getBoundingBox().maxZ);
-
-            for (int x = minX; x <= maxX; x++)
+        // Check pather's eye-sight, we are not suffocating, we assume that's safe.
+        if(!eyeState.isSuffocating(level, eyePos) && thisState.getFluidState().isEmpty()){
+            // Check for pathing condition.
+            final double posHeight = ShapeUtil.max(thisState.getCollisionShape(level, pos), Direction.Axis.Y);
+            if ( posHeight >= 0.2 )
             {
-                for (int z = minZ; z <= maxZ; z++)
-                {
-                    final BlockPos toCheck = new BlockPos(x, below.getY(), z);
-                    // Only check other positions than the current
-                    if ((x != pos.getX() || z != pos.getZ())
-                            && SurfaceType.getSurfaceType(level, level.getBlockState(toCheck), toCheck) == SurfaceType.WALKABLE
-                            && Math.abs(ShapeUtil.max(level.getBlockState(toCheck).getCollisionShape(level, toCheck), Direction.Axis.Y) + toCheck.getY() - entity.getY()) < 0.1)
-                    {
-                        pos.setX(x);
-                        pos.setZ(z);
-                        below.setX(x);
-                        below.setZ(z);
-                    }
-                }
+                // Additional check
+                double posX = Math.min(ShapeUtil.max(thisState.getCollisionShape(level, pos), Direction.Axis.X), 1 - ShapeUtil.min(thisState.getCollisionShape(level, pos), Direction.Axis.X));
+                double posZ = Math.min(ShapeUtil.max(thisState.getCollisionShape(level, pos), Direction.Axis.Z), 1 - ShapeUtil.min(thisState.getCollisionShape(level, pos), Direction.Axis.Z));
+                boolean canStand = Math.min(posX,posZ) < 0.25;
+                if(canStand) return pos.immutable();
+            }
+            else{
+                return pos.immutable();
             }
         }
 
         // 1 Up when we're standing within this collision shape
-        thisState = level.getBlockState(pos);
         final VoxelShape collisionShape = thisState.getCollisionShape(level, pos);
         final boolean isFineToStandIn = callCanStandInSolidBlock(thisState);
         if (thisState.blocksMotion() && !isFineToStandIn && collisionShape.max(Direction.Axis.Y) > 0)
@@ -106,7 +84,7 @@ public abstract class PathfindingUtilsMixin {
             }
         }
 
-        belowState = level.getBlockState(pos.below());
+        BlockState belowState = level.getBlockState(pos.below());
         while (callCanStandInSolidBlock(thisState) && callCanStandInSolidBlock(belowState) && !belowState.getBlock().isLadder(belowState, level, pos.below(), entity) && belowState.getFluidState().isEmpty())
         {
             pos.move(Direction.DOWN, 1);
@@ -122,10 +100,10 @@ public abstract class PathfindingUtilsMixin {
         Block thisBlock = thisState.getBlock();
         if (entity.isInWater() && !(entity instanceof AbstractDrownedEntityPirateRaider))
         {
-            while (!belowState.getFluidState().isEmpty())
+            while (!thisState.getFluidState().isEmpty())
             {
                 pos.set(pos.getX(), pos.getY() + 1, pos.getZ());
-                belowState = level.getBlockState(pos);
+                thisState = level.getBlockState(pos);
             }
         }
         else if (thisBlock instanceof FenceBlock || thisBlock instanceof WallBlock || thisBlock instanceof AbstractBlockMinecoloniesDefault || (thisState.blocksMotion() && !callCanStandInSolidBlock(thisState)))

@@ -39,16 +39,30 @@ public class DistanceUtils {
     /**
      * 欧氏距离 (L2)
      */
-    public static double dist(int x, int y, int z, BlockPos pos) {
+    public static double distLightY(double x, double y, double z, BlockPos pos) {
         double dx = x - pos.getX();
-        double dy = (y - pos.getY())/5.0;
+        double dy = (y - pos.getY()) / 5.0;
+        double dz = z - pos.getZ();
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    public static double distLightY(BlockPos pos1, BlockPos pos2) {
+        double dx = pos1.getX() - pos2.getX();
+        double dy = (pos1.getY() - pos2.getY()) / 5.0;
+        double dz = pos1.getZ() - pos2.getZ();
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    public static double dist(double x, double y, double z, BlockPos pos) {
+        double dx = x - pos.getX();
+        double dy = y - pos.getY();
         double dz = z - pos.getZ();
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
     public static double dist(BlockPos pos1, BlockPos pos2) {
         double dx = pos1.getX() - pos2.getX();
-        double dy = (pos1.getY() - pos2.getY())/5.0;
+        double dy = pos1.getY() - pos2.getY();
         double dz = pos1.getZ() - pos2.getZ();
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }

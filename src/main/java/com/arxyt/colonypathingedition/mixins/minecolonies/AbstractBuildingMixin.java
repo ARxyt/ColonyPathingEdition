@@ -81,7 +81,7 @@ public abstract class AbstractBuildingMixin extends AbstractBuildingContainer im
             minDayPickup = compound.getInt("pick_up_day");
         }
         if(compound.contains("cumulated_items")) {
-            minDayPickup = compound.getInt("cumulated_items");
+            cumulatedItems = compound.getInt("cumulated_items");
         }
     }
 
@@ -95,7 +95,7 @@ public abstract class AbstractBuildingMixin extends AbstractBuildingContainer im
 
     @Unique
     public int shouldPickup (final int pickUpPriority, final int qty) {
-        if(getOpenRequestsByRequestableType().getOrDefault(TypeConstants.PICKUP, Collections.emptyList()) != null) {
+        if(!getOpenRequestsByRequestableType().getOrDefault(TypeConstants.PICKUP, Collections.emptyList()).isEmpty()) {
             return 15;
         }
         cumulatedItems += qty;
@@ -103,10 +103,10 @@ public abstract class AbstractBuildingMixin extends AbstractBuildingContainer im
 
         if(cumulatedItems >= 256 + 64 * daysToPickup ) {
             cumulatedItems = 0;
-            minDayPickup = -1;
+            minDayPickup = colony.getDay() + daysToPickup;
             return 15;
         }
-        if(minDayPickup == -1){
+        if(minDayPickup < 0){
             minDayPickup = colony.getDay() + daysToPickup;
         }
         else if (minDayPickup > colony.getDay() + daysToPickup)
@@ -119,7 +119,7 @@ public abstract class AbstractBuildingMixin extends AbstractBuildingContainer im
             return 0;
         }
         cumulatedItems = 0;
-        minDayPickup = -1;
+        minDayPickup = colony.getDay() + daysToPickup;
         return pickUpPriority;
     }
 

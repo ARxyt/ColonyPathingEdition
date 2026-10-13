@@ -57,7 +57,6 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
     @Shadow(remap = false) protected abstract Path convertPath(Path path);
     @Shadow(remap = false) protected abstract void onPathFinish();
     @Shadow(remap = false) protected abstract void processCompletedCalculationResult();
-    @Shadow(remap = false) protected abstract boolean handleRails();
     @Shadow(remap = false) protected abstract BlockPos findBlockUnderEntity(@NotNull Entity parEntity);
 
     @Final @Shadow(remap = false) public static double MIN_Y_DISTANCE;
@@ -75,6 +74,7 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
     @Shadow(remap = false) private BlockPos spawnedPos;
 
     @Unique private int randomTimer = 15 + level.random.nextInt(5);
+    @Unique private double lastDistanceToNextNodeOnRail = 0;
 
     @Unique private MinecoloniesAdvancedPathNavigate asNavigator() {
         return (MinecoloniesAdvancedPathNavigate)(Object)this;
@@ -119,8 +119,14 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
             final PathPointExtended pExNext = (PathPointExtended) path.getNode(curNodeNext);
             final PathPointExtended pExPre = getPreviousNodeI();
 
-            //  If current node is bottom of a ladder, then stay on this node until
-            //  the ourEntity reaches the bottom, otherwise they will try to head out early
+            // We should press shift as we're on scaffolding.
+            final boolean isOnScaffold = this.level.getBlockState(pEx.asBlockPos()).getBlock() instanceof ScaffoldingBlock;
+            final boolean guessGoingDown = pExPre != null && pExPre.y > pEx.y;
+            if (isOnScaffold) {
+                ourEntity.setShiftKeyDown(guessGoingDown);
+            }
+
+            // An exact exit movement handle going down, official code works fine.
             if (pEx.isOnLadder() && !pExNext.isOnLadder() && pEx.getLadderFacing() == Direction.DOWN)
             {
                 final Vec3 vec3 = getTempMobPos();
@@ -130,6 +136,7 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
                 return;
             }
 
+            // An exact exit movement handle going up, to handle jump on ladders.
             if (pExPre != null && pExPre.isOnLadder() && !pEx.isOnLadder() && pExNext.y > pEx.y) {
                 final Vec3 vec3 = getTempMobPos();
                 if (((double) pEx.y - vec3.y) <= 0 && readyForJump(pEx.asBlockPos().getCenter(), vec3)) {
@@ -161,9 +168,8 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
             return;
         }
 
-        // Look at multiple points, in case we're too fast
         final int thisIndex = this.path.getNextNodeIndex();
-        final Node thisNode = path.getNode(thisIndex);
+        final Node thisNode = this.path.getNode(thisIndex);
         final Vec3 thisPos = thisNode.asBlockPos().getCenter();
         double minDist = DistanceUtils.manhattanDistanceVWithYWeight(ourEntity.getX(), ourEntity.getY() + 0.5D, ourEntity.getZ(), thisPos, 0.5);
         boolean skipOnce = false;
@@ -303,7 +309,7 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         }
 
         this.ourEntity.setYya(0);
-        if (newHandleLadders())
+        if (handleLadderLikePathing())
         {
             followThePath();
             return;
@@ -410,7 +416,7 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
             {
                 handlePathOnRails(pEx, pExNext);
             }
-            handleExitRails(pEx, pExNext);
+            handleExitRails(pEx);
         }
         else {
             if (ourEntity.getVehicle() == null) {
@@ -506,26 +512,34 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         }
     }
 
-    private void handleExitRails(final PathPointExtended pEx, final PathPointExtended pExNext) {
+    private void handleExitRails(final PathPointExtended pEx) {
         assert path != null;
         final Entity entity = ourEntity.getVehicle();
-        if (entity == null || entity instanceof SittingEntity) return;
+        if (!(entity instanceof MinecoloniesMinecart minecoloniesMinecart)) return;
 
         // Path correction: after dismounting, citizens will always teleport to the next path point, preventing path recalculation caused by random dismount positions.
-        if(pExNext != null && !pEx.isOnRails()) {
+        if(!pEx.isOnRails()) {
             ourEntity.stopRiding();
             entity.remove(Entity.RemovalReason.DISCARDED);
             ourEntity.teleportTo(pEx.x + 0.5, pEx.y, pEx.z + 0.5);
             return;
         }
 
+        // Cache distance, to handle miss exit or wrongly railway selection.
+        boolean shouldTeleport = false;
+        final double nowDistance = DistanceUtils.dist(pEx.asBlockPos(), entity.blockPosition());
+        if (lastDistanceToNextNodeOnRail > 5 && nowDistance > lastDistanceToNextNodeOnRail) {
+            shouldTeleport = true;
+        }
+        lastDistanceToNextNodeOnRail = nowDistance;
+
         // Added derailment compensation: if derailed at a turn, they will teleport farther ahead, depending on the current speed.
-        if(entity instanceof MinecoloniesMinecart minecoloniesMinecart && !minecoloniesMinecart.isOnRails()) {
+        if (shouldTeleport || !minecoloniesMinecart.isOnRails()){
             Vec3 movement = minecoloniesMinecart.getDeltaMovement();
             double speed = movement.length();
-            int nodeIndex = Math.min(this.path.getNodeCount() - 1, this.path.getNextNodeIndex() + (int)Math.ceil(speed / 0.4F));
+            int nodeIndex = Math.min(this.path.getNodeCount() - 1, this.path.getNextNodeIndex() + (int) Math.ceil(speed / 0.4F));
             @NotNull final PathPointExtended tpPlace = (PathPointExtended) this.path.getNode(nodeIndex);
-            if(!tpPlace.isOnRails()){
+            if (!tpPlace.isOnRails()) {
                 ourEntity.stopRiding();
                 entity.remove(Entity.RemovalReason.DISCARDED);
                 ourEntity.teleportTo(tpPlace.x + 0.5, tpPlace.y, tpPlace.z + 0.5);
@@ -554,22 +568,24 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         }
     }
 
-    private boolean newHandleLadders()
+    private boolean handleLadderLikePathing()
     {
         // we have tested !this.path.isDone();
         assert this.path != null;
         final PathPointExtended thisNode = (PathPointExtended)(this.path.getNextNode());
         final PathPointExtended previousNode = getPreviousNodeI();
 
-        if (!thisNode.isOnLadder() && (previousNode == null || !previousNode.isOnLadder()))
+        if (!thisNode.isOnLadder())
         {
+            if(previousNode != null && previousNode.isOnLadder()) {
+                wantedPosition.setEmpty();
+            }
             return false;
         }
 
         final PathPointExtended nextNode = getNextNodeI();
-        if(!thisNode.isOnLadder() && previousNode != null) {
-            wantedPosition.setEmpty();
-            return false;
+        if((previousNode == null || previousNode.isOnLadder()) && nextNode != null && !nextNode.isOnLadder()) {
+            return true;
         }
 
         final Entity entity;

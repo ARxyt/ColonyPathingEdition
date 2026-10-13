@@ -2,13 +2,12 @@ package com.arxyt.colonypathingedition.core.ai.worker;
 
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingDyer;
 import com.minecolonies.core.colony.jobs.JobDyer;
-import com.minecolonies.core.entity.ai.workers.crafting.AbstractEntityAIRequestSmelter;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * Crafts dye related things.
  */
-public class NewEntityAIWorkDyer extends AbstractEntityAIRequestSmelter<JobDyer, BuildingDyer>
+public class NewEntityAIWorkDyer extends NewAbstractEntityRequestSmelter<JobDyer, BuildingDyer>
 {
     /**
      * Initialize the dyer.
