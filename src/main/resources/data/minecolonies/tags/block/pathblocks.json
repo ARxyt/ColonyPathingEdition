@@ -1,6 +1,7 @@
 {
   "values": [
       "#minecraft:stairs",
+      "#minecraft:slabs",
       "minecraft:cobblestone",
       "minecraft:cobblestone_slab",
       "minecraft:cobbled_deepslate",

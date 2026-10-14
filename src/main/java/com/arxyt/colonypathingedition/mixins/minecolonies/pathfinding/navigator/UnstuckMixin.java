@@ -67,15 +67,25 @@ public abstract class UnstuckMixin<NAV extends PathNavigation & IMinecoloniesNav
 
         delayToNextUnstuckAction = 50;
 
-        // 向前小距离传送
+        // 向前小距离传送 (仅在重新寻路后仍然卡住时作为备选，且不跨多层高度传送)
         boolean teleported = false;
         if (hadPath && navigator.getOurEntity() instanceof EntityCitizen)
         {
-            int index = Math.min(Objects.requireNonNull(navigator.getPath()).getNextNodeIndex() + 5, navigator.getPath().getNodeCount() - 1);
+            if (stuckLevel == 0 && !needReset)
+            {
+                stuckLevel = Math.max(stuckLevelRecorder, stuckLevel) + 1;
+                delayToNextUnstuckAction = 60;
+                navigator.recalc();
+                return;
+            }
+            int index = Math.min(Objects.requireNonNull(navigator.getPath()).getNextNodeIndex() + 3, navigator.getPath().getNodeCount() - 1);
             final Node togo = navigator.getPath().getNode(index);
-            navigator.getOurEntity().teleportTo(togo.x + 0.5d, togo.y, togo.z + 0.5d);
-            delayToNextUnstuckAction = 20;
-            teleported = true;
+            if (Math.abs(togo.y - navigator.getOurEntity().getY()) <= 2.0D)
+            {
+                navigator.getOurEntity().teleportTo(togo.x + 0.5d, togo.y, togo.z + 0.5d);
+                delayToNextUnstuckAction = 40;
+                teleported = true;
+            }
         }
         if (teleported || needReset) {
             navigator.getOurEntity().stopRiding();
@@ -102,7 +112,7 @@ public abstract class UnstuckMixin<NAV extends PathNavigation & IMinecoloniesNav
             //获取一个可能是通路的方向(因为同向遍历已近似广度优先，绕道到另一侧可以最大化收益)
             BlockPos dPos = new BlockPos(prevDestination.getX() - startPos.getX(),0,prevDestination.getZ() - startPos.getZ());
             double distance = BlockPosUtil.dist(dPos,BlockPos.ZERO);
-            if(distance == 0){
+            if(distance < 8){
                 dPos = dPos.relative(movingAwayDir,range);
                 movingAwayDir = movingAwayDir.getClockWise();
             }

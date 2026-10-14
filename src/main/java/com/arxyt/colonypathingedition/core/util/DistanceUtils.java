@@ -16,13 +16,13 @@ public class DistanceUtils {
      */
     public static double manhattanDistanceV(int x, int y, int z, BlockPos pos) {
         int xzDist = Math.abs(x - pos.getX()) + Math.abs(z - pos.getZ());
-        double yWeight = 0.2 + 20.0 / (xzDist + 20);
+        double yWeight = 0.6 + 36.0 / (xzDist + 15.0);
         return xzDist + Math.abs(y - pos.getY()) * yWeight;
     }
 
     public static double manhattanDistanceV(BlockPos pos1, BlockPos pos2) {
         int xzDist = Math.abs(pos1.getX() - pos2.getX()) + Math.abs(pos1.getZ() - pos2.getZ());
-        double yWeight = 0.2 + 20.0 / (xzDist + 20);
+        double yWeight = 0.6 + 36.0 / (xzDist + 15.0);
         return xzDist + Math.abs(pos1.getY() - pos2.getY()) * yWeight;
     }
 
