@@ -136,13 +136,20 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
                 return;
             }
 
-            // An exact exit movement handle going up, to handle jump on ladders.
-            if (pExPre != null && pExPre.isOnLadder() && !pEx.isOnLadder() && pExNext.y > pEx.y) {
+            // An exact exit movement handle going up, to handle jump and normal exit on ladders.
+            if (pExPre != null && pExPre.isOnLadder() && !pEx.isOnLadder()) {
                 final Vec3 vec3 = getTempMobPos();
-                if (((double) pEx.y - vec3.y) <= 0 && readyForJump(pEx.asBlockPos().getCenter(), vec3)) {
-                    this.path.setNextNodeIndex(curNodeNext);
+                if (pExNext.y > pEx.y) {
+                    if (((double) pEx.y - vec3.y) <= 0 && readyForJump(pEx.asBlockPos().getCenter(), vec3)) {
+                        this.path.setNextNodeIndex(curNodeNext);
+                    }
+                    return;
+                } else if (pEx.y > pExPre.y) {
+                    if (((double) pEx.y - vec3.y) <= 0.1) {
+                        this.path.setNextNodeIndex(curNodeNext);
+                    }
+                    return;
                 }
-                return;
             }
 
             if (!pEx.isOnRails() && ourEntity.getVehicle() != null && !(ourEntity.getVehicle() instanceof CavalryHorseEntity))
@@ -170,6 +177,10 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
 
         final int thisIndex = this.path.getNextNodeIndex();
         final Node thisNode = this.path.getNode(thisIndex);
+        if (thisNode instanceof PathPointExtended pExNode && pExNode.isOnLadder())
+        {
+            return;
+        }
         final Vec3 thisPos = thisNode.asBlockPos().getCenter();
         double minDist = DistanceUtils.manhattanDistanceVWithYWeight(ourEntity.getX(), ourEntity.getY() + 0.5D, ourEntity.getZ(), thisPos, 0.5);
         boolean skipOnce = false;
@@ -184,6 +195,10 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
 
         for (int i = thisIndex + 1; i < Math.min(this.path.getNodeCount() - 1, thisIndex + 5); i++)
         {
+            if (path.getNode(i) instanceof PathPointExtended pExLookahead && pExLookahead.isOnLadder())
+            {
+                break;
+            }
             final Vec3 pos = path.getNode(i).asBlockPos().getCenter();
             final double thisDist = DistanceUtils.manhattanDistanceVWithYWeight(ourEntity.getX(), ourEntity.getY() + 0.5D, ourEntity.getZ(), pos, 0.5);
             if(!skipOnce && thisDist < minDist) {
@@ -360,21 +375,23 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
                     {
                         double xOffset = 0;
                         double zOffset = 0;
-                        BlockState blockstate = this.mob.getBlockStateOn();
-                        if(!(blockstate.getBlock() instanceof LadderBlock)) {
-                            blockstate = level.getBlockState(this.mob.blockPosition().below());
-                        }
-                        if(blockstate.getBlock() instanceof LadderBlock) {
-                            switch (blockstate.getValue(HorizontalDirectionalBlock.FACING)) {
-                                case EAST -> xOffset = -0.2;
-                                case WEST -> xOffset = 0.2;
-                                case NORTH -> zOffset = 0.2;
-                                case SOUTH -> zOffset = -0.2;
+                        PathPointExtended previousNode = this.getPreviousNodeI();
+                        if (previousNode != null && previousNode.isOnLadder()) {
+                            BlockState blockstate = this.mob.getBlockStateOn();
+                            if(!(blockstate.getBlock() instanceof LadderBlock)) {
+                                blockstate = level.getBlockState(this.mob.blockPosition().below());
                             }
-                            PathPointExtended previousNode = this.getPreviousNodeI();
-                            if(previousNode != null && previousNode.isOnLadder() && previousNode.getLadderFacing() == Direction.DOWN) {
-                                xOffset = -xOffset;
-                                zOffset = -zOffset;
+                            if(blockstate.getBlock() instanceof LadderBlock) {
+                                switch (blockstate.getValue(HorizontalDirectionalBlock.FACING)) {
+                                    case EAST -> xOffset = -0.2;
+                                    case WEST -> xOffset = 0.2;
+                                    case NORTH -> zOffset = 0.2;
+                                    case SOUTH -> zOffset = -0.2;
+                                }
+                                if(previousNode.getLadderFacing() == Direction.DOWN) {
+                                    xOffset = -xOffset;
+                                    zOffset = -zOffset;
+                                }
                             }
                         }
                         wantedPosition.set(vector3d2.x + xOffset,
@@ -584,9 +601,6 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         }
 
         final PathPointExtended nextNode = getNextNodeI();
-        if((previousNode == null || previousNode.isOnLadder()) && nextNode != null && !nextNode.isOnLadder()) {
-            return true;
-        }
 
         final Entity entity;
         if ((entity = ourEntity.getVehicle()) != null)
@@ -611,14 +625,32 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
             final double nextY = thisNode.y;
             final double nextZ = (double) thisNode.z + ((int) (this.mob.getBbWidth() + 1.0F)) * 0.5D;
 
-            final double diffX = Math.abs(this.mob.getX() - nextX);
+            double xOffset = 0;
+            double zOffset = 0;
+            BlockState blockstate = level.getBlockState(thisNode.asBlockPos());
+            // Magic number 0.1, offset slightly away from the 3px ladder hitbox to stay centered in the free climbing space
+            if(blockstate.getBlock() instanceof LadderBlock) {
+                switch (blockstate.getValue(HorizontalDirectionalBlock.FACING)) {
+                    case EAST -> xOffset = 0.1;
+                    case WEST -> xOffset = -0.1;
+                    case NORTH -> zOffset = -0.1;
+                    case SOUTH -> zOffset = 0.1;
+                }
+            }
+
+            final double targetX = nextX + xOffset;
+            final double targetZ = nextZ + zOffset;
+            final double diffX = Math.abs(this.mob.getX() - targetX);
             final double diffY = this.mob.getY() - nextY;
-            final double diffZ = Math.abs(this.mob.getZ() - nextZ);
-            // Ladder entry needs more exact position tracking, we want to center the citizen before doing movement in another axis
+            final double diffZ = Math.abs(this.mob.getZ() - targetZ);
+
+            // Ladder entry needs exact position tracking: center the citizen and damp lateral momentum before climbing
             if (thisNode.isOnLadder() && (previousNode == null || !previousNode.isOnLadder()))
             {
-                if (diffX < 0.2 && diffZ < 0.2 && Math.abs(diffY) < 0.1)
+                if (diffX < 0.25 && diffZ < 0.25 && Math.abs(diffY) < 0.8)
                 {
+                    final Vec3 dm = ourEntity.getDeltaMovement();
+                    ourEntity.setDeltaMovement(0.0D, dm.y, 0.0D);
                     if (reached != null)
                     {
                         reached.add(thisNode.asBlockPos());
@@ -626,34 +658,45 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
                     }
                     this.path.advance();
                 }
-                double xOffset = 0;
-                double zOffset = 0;
-                BlockState blockstate = level.getBlockState(thisNode.asBlockPos());
-                // Magic number 0.1, just sufficient.
-                if(blockstate.getBlock() instanceof LadderBlock) {
-                    switch (blockstate.getValue(HorizontalDirectionalBlock.FACING)) {
-                        case EAST -> xOffset = 0.1;
-                        case WEST -> xOffset = -0.1;
-                        case NORTH -> zOffset = -0.1;
-                        case SOUTH -> zOffset = 0.1;
-                    }
-                }
                 ourEntity.xxa = 0;
                 ourEntity.zza = 0;
-                wantedPosition.set(nextX + xOffset, nextY, nextZ + zOffset);
-                this.ourEntity.getMoveControl().setWantedPosition(nextX + xOffset, nextY, nextZ + zOffset, 0.6);
+                wantedPosition.set(targetX, nextY, targetZ);
+                this.ourEntity.getMoveControl().setWantedPosition(targetX, nextY, targetZ, 0.5);
             }
             // Scaling ladder, move
             else
             {
-                if (diffX < 0.5 && diffZ < 0.5 && Math.abs(diffY - 0.2) < 0.2)
+                final boolean goingDown = (nextNode != null && nextNode.y < thisNode.y)
+                        || (previousNode != null && previousNode.y > thisNode.y && (nextNode == null || nextNode.y <= thisNode.y))
+                        || thisNode.getLadderFacing() == Direction.DOWN;
+
+                if (goingDown)
                 {
-                    if (reached != null)
+                    // For bottom exit node, followThePath handles advancing once MIN_Y_DISTANCE is reached
+                    if (nextNode == null || nextNode.isOnLadder())
                     {
-                        reached.add(thisNode.asBlockPos());
-                        PathfindingUtils.syncDebugReachedPositions(reached, pathResult.getDebugWatchers());
+                        if (diffX < 0.45 && diffZ < 0.45 && diffY <= 0.25 && diffY >= -0.8)
+                        {
+                            if (reached != null)
+                            {
+                                reached.add(thisNode.asBlockPos());
+                                PathfindingUtils.syncDebugReachedPositions(reached, pathResult.getDebugWatchers());
+                            }
+                            this.path.setNextNodeIndex(path.getNextNodeIndex() + 1);
+                        }
                     }
-                    this.path.setNextNodeIndex(path.getNextNodeIndex() + 1);
+                }
+                else
+                {
+                    if (diffX < 0.45 && diffZ < 0.45 && diffY >= -0.05 && diffY <= 1.2)
+                    {
+                        if (reached != null)
+                        {
+                            reached.add(thisNode.asBlockPos());
+                            PathfindingUtils.syncDebugReachedPositions(reached, pathResult.getDebugWatchers());
+                        }
+                        this.path.setNextNodeIndex(path.getNextNodeIndex() + 1);
+                    }
                 }
 
                 if (isDone())
@@ -661,8 +704,8 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
                     return true;
                 }
 
-                //  Ladder Workaround
-                if (thisNode.isOnLadder() && nextNode != null && nextNode.isOnLadder() && (thisNode.y != nextNode.y || mob.getY() > thisNode.y))
+                final PathPointExtended currentNode = (PathPointExtended) this.path.getNextNode();
+                if (currentNode.isOnLadder())
                 {
                     return doLadderMovement();
                 }
@@ -684,30 +727,57 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         assert this.path != null;
         final PathPointExtended thisNode = (PathPointExtended)(this.path.getNextNode());
         final PathPointExtended previousNode = getPreviousNodeI();
+        final PathPointExtended nextNode = getNextNodeI();
         Vec3 vec3 = thisNode.asBlockPos().getCenter();
 
-        Direction toSelect = previousNode != null ? previousNode.getLadderFacing() : thisNode.getLadderFacing();
+        double xOffset = 0;
+        double zOffset = 0;
+        final BlockState blockstate = level.getBlockState(thisNode.asBlockPos());
+        if (blockstate.getBlock() instanceof LadderBlock) {
+            final Direction facing = blockstate.getValue(HorizontalDirectionalBlock.FACING);
+            switch (facing) {
+                case EAST -> xOffset = 0.1;
+                case WEST -> xOffset = -0.1;
+                case NORTH -> zOffset = -0.1;
+                case SOUTH -> zOffset = 0.1;
+            }
+            // Damp lateral drift along the ladder width so diagonal momentum cannot carry the citizen off the side
+            final Vec3 dm = ourEntity.getDeltaMovement();
+            if (facing == Direction.NORTH || facing == Direction.SOUTH) {
+                if (Math.abs(ourEntity.getX() - vec3.x) < 0.25) {
+                    ourEntity.setDeltaMovement(dm.x * 0.2D, dm.y, dm.z);
+                }
+            } else {
+                if (Math.abs(ourEntity.getZ() - vec3.z) < 0.25) {
+                    ourEntity.setDeltaMovement(dm.x, dm.y, dm.z * 0.2D);
+                }
+            }
+        }
+
+        final boolean goingDown = (nextNode != null && nextNode.y < thisNode.y)
+                || (previousNode != null && previousNode.y > thisNode.y && (nextNode == null || nextNode.y <= thisNode.y))
+                || (previousNode != null ? previousNode.getLadderFacing() : thisNode.getLadderFacing()) == Direction.DOWN;
 
         //  Going down
-        if (toSelect == Direction.DOWN) {
+        if (goingDown) {
             newSpeed = false;
-
         }
-        //  Any other value is the same
+        //  Climbing up
         else {
-            vec3 = vec3.add(0, 1, 0);
+            vec3 = vec3.add(xOffset, 1.0D, zOffset);
         }
 
         if (newSpeed)
         {
             wantedPosition.set(vec3.x, vec3.y, vec3.z);
-            this.ourEntity.getMoveControl().setWantedPosition(vec3.x, vec3.y, vec3.z,1);
+            this.ourEntity.getMoveControl().setWantedPosition(vec3.x, vec3.y, vec3.z, 0.5);
         }
         else
         {
-            vec3 = this.getPath().getNextEntityPos(this.ourEntity);
-            this.ourEntity.getMoveControl().setWantedPosition(vec3.x, vec3.y, vec3.z, 0.2);
-            wantedPosition.set(vec3.x, vec3.y, vec3.z);
+            final double targetX = vec3.x + xOffset;
+            final double targetZ = vec3.z + zOffset;
+            this.ourEntity.getMoveControl().setWantedPosition(targetX, thisNode.y, targetZ, 0.2);
+            wantedPosition.set(targetX, thisNode.y, targetZ);
             return !(ourEntity.getY() <= thisNode.y + 0.2);
         }
         return true;

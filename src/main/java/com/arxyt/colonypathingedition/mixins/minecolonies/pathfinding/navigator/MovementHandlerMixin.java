@@ -21,6 +21,7 @@ public abstract class MovementHandlerMixin extends MoveControl {
     @Final @Shadow(remap = false) AttributeInstance speedAtr;
     @Shadow(remap = false) private float stepHeight;
     @Shadow(remap = false) private float speedValue;
+    @Shadow(remap = false) private int jumpingticks;
 
     @Shadow(remap = false) protected abstract boolean isWalkable(float p_24997_, float p_24998_);
 
@@ -30,6 +31,21 @@ public abstract class MovementHandlerMixin extends MoveControl {
     public MovementHandlerMixin(Mob mob)
     {
         super(mob);
+    }
+
+    /**
+     * @author ARxyt
+     * @reason Check position change before super overwrites wantedX/Y/Z.
+     */
+    @Overwrite(remap = false)
+    public void setWantedPosition(double x, double y, double z, double speedIn)
+    {
+        final boolean posChanged = this.wantedX != x || this.wantedY != y || this.wantedZ != z;
+        super.setWantedPosition(x, y, z, speedIn);
+        if (this.operation != Operation.JUMPING || posChanged || jumpingticks > 20)
+        {
+            this.operation = Operation.MOVE_TO;
+        }
     }
 
     /**
@@ -101,24 +117,41 @@ public abstract class MovementHandlerMixin extends MoveControl {
                 {
                     this.mob.setDeltaMovement(this.mob.getDeltaMovement().add(0, (double) this.mob.getSpeed() * ((yDif + 0.3) / d3) * 0.1D, 0));
                 }
+                if (yDif > 0.0D)
+                {
+                    this.mob.getJumpControl().jump();
+                }
 
                 return;
             }
 
             if (mob.getVehicle() == null) {
-                // handle water and ladder, that's definitely a better handler to not use jumpCoolDown at these cases.
-                if (yDif > 0 && (mob.isInWater() || !mob.onGround())) {
-                    this.mob.getJumpControl().jump();
-                    this.operation = net.minecraft.world.entity.ai.control.MoveControl.Operation.JUMPING;
+                final Block block = blockstate.getBlock();
+                final boolean isOnLadder = this.mob.onClimbable() || block.isLadder(blockstate, this.mob.level(), blockpos, this.mob);
+                if (isOnLadder) {
+                    if (yDif > 0.0D) {
+                        this.mob.getJumpControl().jump();
+                    }
                     jumpCoolDown = 0;
                     return;
                 }
-                final Block block = blockstate.getBlock();
+
+                // handle water and non-ground step-up without locking ladders into JUMPING
+                if (yDif > 0 && (mob.isInWater() || !mob.onGround())) {
+                    this.mob.getJumpControl().jump();
+                    if (!mob.isInWater()) {
+                        this.operation = net.minecraft.world.entity.ai.control.MoveControl.Operation.JUMPING;
+                        jumpingticks = 0;
+                    }
+                    jumpCoolDown = 0;
+                    return;
+                }
                 final VoxelShape voxelshape = blockstate.getCollisionShape(this.mob.level(), blockpos);
                 if (yDif > (double) stepHeight) {
                     if (xDif * xDif + zDif * zDif < (double) Math.max(1.0F, this.mob.getBbWidth()) || jumpCoolDown > FORCE_JUMP_LIMIT) {
                         this.mob.getJumpControl().jump();
                         this.operation = net.minecraft.world.entity.ai.control.MoveControl.Operation.JUMPING;
+                        jumpingticks = 0;
                         jumpCoolDown = 0;
                     } else {
                         jumpCoolDown++;
@@ -139,6 +172,7 @@ public abstract class MovementHandlerMixin extends MoveControl {
                     if (jumpCoolDown > FORCE_JUMP_LIMIT) {
                         this.mob.getJumpControl().jump();
                         this.operation = net.minecraft.world.entity.ai.control.MoveControl.Operation.JUMPING;
+                        jumpingticks = 0;
                     } else {
                         jumpCoolDown++;
                     }
@@ -149,14 +183,16 @@ public abstract class MovementHandlerMixin extends MoveControl {
         }
         else if (this.operation == Operation.JUMPING)
         {
+            jumpingticks++;
             this.mob.setSpeed((float) (this.speedModifier * speedValue));
 
-            // Avoid being stuck in jumping while in liquids
+            // Avoid being stuck in jumping while in liquids or on ladders
             final BlockPos blockpos = this.mob.blockPosition();
             final BlockState blockstate = this.mob.level().getBlockState(blockpos);
-            if (this.mob.onGround() || blockstate.liquid())
+            if (this.mob.onGround() || blockstate.liquid() || this.mob.onClimbable() || blockstate.getBlock().isLadder(blockstate, this.mob.level(), blockpos, this.mob))
             {
                 this.operation = Operation.WAIT;
+                jumpingticks = 0;
             }
         }
         else
