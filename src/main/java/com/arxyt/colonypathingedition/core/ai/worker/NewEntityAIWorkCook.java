@@ -195,7 +195,7 @@ public class NewEntityAIWorkCook extends AbstractEntityAIUsesFurnace<JobCook, Bu
             while (!initailCitizenToServe.isEmpty()) {
                 int citizenID = initailCitizenToServe.poll();
                 ICitizenData citizenData = building.getColony().getCitizenManager().getCivilian(citizenID);
-                if (citizenData.getEntity().isEmpty()) {
+                if (citizenData == null || citizenData.getEntity().isEmpty()) {
                     buildingExtra.deleteCustomer(citizenID);
                     continue;
                 }
@@ -240,11 +240,15 @@ public class NewEntityAIWorkCook extends AbstractEntityAIUsesFurnace<JobCook, Bu
         }
 
         final AbstractEntityCitizen citizen = citizenToServe.poll();
-        assert citizen != null;
+        if (citizen == null) return getState();
+        final ICitizenData citizenData = citizen.getCitizenData();
+        if (citizenData == null) {
+            buildingExtra.deleteCustomer(citizen.getCivilianID());
+            return getState();
+        }
         final InventoryCitizen handler = citizen.getInventoryCitizen();
         final RestaurantMenuModule module = Objects.requireNonNull(worker.getCitizenData().getWorkBuilding()).getModule(RESTAURANT_MENU);
         final Predicate<ItemStack> canEatPredicate = stack -> module.getMenu().contains(new ItemStorage(stack));
-        final ICitizenData citizenData = citizen.getCitizenData();
 
         if (!handler.hasSpace()) {
             for (int feedingAttempts = 0; feedingAttempts < 10; feedingAttempts++) {
@@ -397,9 +401,13 @@ public class NewEntityAIWorkCook extends AbstractEntityAIUsesFurnace<JobCook, Bu
         //检查在路上的客人是否已经取消预订或已到店
         for(int customerId : cookExtra.getOrders()) {
             ICitizenData citizenData = building.getColony().getCitizenManager().getCivilian(customerId);
-            if(citizenData.getEntity().isPresent() &&  citizenData.getEntity().get() instanceof EntityCitizen citizen){
+            if (citizenData == null) {
+                cookExtra.reached(customerId);
+                continue;
+            }
+            if (citizenData.getEntity().isPresent() &&  citizenData.getEntity().get() instanceof EntityCitizen citizen) {
                 IState state = citizen.getCitizenAI().getState();
-                if( state != NewEntityAIEat.NewEatingState.CHECK_FOOD && state != NewEntityAIEat.NewEatingState.GO_TO_RESTAURANT) {
+                if (state != NewEntityAIEat.NewEatingState.CHECK_FOOD && state != NewEntityAIEat.NewEatingState.GO_TO_RESTAURANT) {
                     cookExtra.reached(customerId);
                 }
             }
@@ -453,7 +461,7 @@ public class NewEntityAIWorkCook extends AbstractEntityAIUsesFurnace<JobCook, Bu
     @Override
     protected int getActionsDoneUntilDumping()
     {
-        return 1;
+        return 5;
     }
 
     @Override
