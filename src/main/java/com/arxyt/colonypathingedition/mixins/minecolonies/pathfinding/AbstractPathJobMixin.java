@@ -392,7 +392,7 @@ public abstract class AbstractPathJobMixin{
                     }
 
                     // we already at best score, return.
-                    if(bestNodeEndScore <= 1.25) break;
+                    if(bestNodeEndScore <= 1.25D) break;
 
                     // no need to count, directly visit.
                     if (node.isVisited())
@@ -419,7 +419,7 @@ public abstract class AbstractPathJobMixin{
     @Overwrite(remap = false)
     protected int getGroundHeight(final MNode node, final int x, final int y, final int z)
     {
-        if (!pathingOptions.canWalkUnderWater() && PathfindingUtils.isLiquid(cachedBlockLookup.getBlockState(x, y + 1, z)))
+        if (node != null && !PathfindingUtils.isLiquid(cachedBlockLookup.getBlockState(node.x, node.x + 1, node.x)) && !pathingOptions.canWalkUnderWater() && PathfindingUtils.isLiquid(cachedBlockLookup.getBlockState(x, y + 1, z)))
         {
             return Integer.MIN_VALUE;
         }
@@ -469,7 +469,7 @@ public abstract class AbstractPathJobMixin{
             return handleInLiquid(x, y, z, below, isSwimming);
         }
 
-        if (PathfindingUtils.isLadder(below, pathingOptions, x, y - 1, z, cachedBlockLookup) || below.getBlock() instanceof ScaffoldingBlock)
+        if (below.is(BlockTags.CLIMBABLE))
         {
             return y;
         }
@@ -485,7 +485,7 @@ public abstract class AbstractPathJobMixin{
         }
         final BlockState belowState = cachedBlockLookup.getBlockState(x, y - 1, z);
         boolean belowIsWater = PathfindingUtils.isWater(cachedBlockLookup, null, belowState, null);
-        if(!belowIsWater && (ShapeUtil.getEndY(belowState.getCollisionShape(world, tempWorldPos.set(x, y - 1, z)), 0) < 0.125) )
+        if (!belowIsWater && !belowState.is(BlockTags.CLIMBABLE) && (ShapeUtil.getEndY(belowState.getCollisionShape(world, tempWorldPos.set(x, y - 1, z)), 0) < 0.125))
         {
             return y - 1;
         }
@@ -578,8 +578,12 @@ public abstract class AbstractPathJobMixin{
                         cachedBlockLookup.getBlockState(parent.x, parent.y, parent.z),
                         tempWorldPos.set(parent.x, parent.y, parent.z),
                         getPathingOptions())
-                        == SurfaceType.DROPABLE)) {
-            return Integer.MIN_VALUE;
+                        == SurfaceType.DROPABLE))
+        {
+            if(parent == null || !cachedBlockLookup.getBlockState(parent.x, parent.y - 1, parent.z).is(BlockTags.CLIMBABLE)) {
+                return Integer.MIN_VALUE;
+            }
+            return y;
         }
 
         for (int i = 1; i <= (pathingOptions.canDrop ? 10 : 2); i++) {
@@ -593,7 +597,7 @@ public abstract class AbstractPathJobMixin{
             if (SurfaceType.getSurfaceType(world, below, tempWorldPos.set(x, y - i, z), getPathingOptions()) == SurfaceType.WALKABLE) {
                 //  Level path
                 return y - i + 1;
-            } else if (!(below.isAir() || below.getCollisionShape(world, new BlockPos(x, y-1, z)).isEmpty())) {
+            } else if (!(below.isAir() || below.getCollisionShape(world, new BlockPos(x, y - 1, z)).isEmpty())) {
                 if (PathfindingUtils.isLadder(below, pathingOptions)) {
                     return y - i + 1;
                 }
@@ -810,13 +814,14 @@ public abstract class AbstractPathJobMixin{
         }
         else
         {
+            final double newHeuristic;
             if ((onRoad || onRails) && Math.abs(dY) <= 1){
-                nextNode.setHeuristic(modifyHeuristic(node, nextNode, nextNode.getHeuristic(), onRoad, onRails));
+                newHeuristic = modifyHeuristic(node, nextNode, heuristic, onRoad, onRails);
             }
             else {
-                nextNode.setHeuristic(modifyHeuristic(nextNode, nextNode.getHeuristic(), state));
+                newHeuristic = modifyHeuristic(nextNode, heuristic, state);
             }
-            updateNode(node, nextNode, heuristic, cost, onRails, onRoad, Math.abs(dY) <= 2);
+            updateNode(node, nextNode, newHeuristic, cost, onRails, onRoad, Math.abs(dY) <= 2);
         }
     }
 
@@ -840,7 +845,7 @@ public abstract class AbstractPathJobMixin{
         {
             final VoxelShape bb1 = cachedBlockLookup.getBlockState(x, y, z).getCollisionShape(world, tempWorldPos.set(x, y, z));
             final VoxelShape bb2 = cachedBlockLookup.getBlockState(x, y + 2, z).getCollisionShape(world, tempWorldPos.set(x, y + 2, z));
-            if ((y + 2 + ShapeUtil.getStartY(bb2, 1)) - (y + ShapeUtil.getEndY(bb1, 0)) < 2)
+            if (2 + ShapeUtil.getStartY(bb2, 1) - ShapeUtil.getEndY(bb1, 0) < 1.8)
             {
                 return Integer.MIN_VALUE;
             }
@@ -865,10 +870,17 @@ public abstract class AbstractPathJobMixin{
         final BlockState parentBelow = cachedBlockLookup.getBlockState(parent.x, parent.y - 1, parent.z);
         final VoxelShape parentBB = parentBelow.getCollisionShape(world, tempWorldPos.set(parent.x, parent.y - 1, parent.z));
 
-        double parentY = ShapeUtil.max(parentBB, Direction.Axis.Y);
-        double parentMaxY = parentY + parent.y - 1;
-        final double targetMaxY = ShapeUtil.max(target.getCollisionShape(world, tempWorldPos.set(x, y, z)), Direction.Axis.Y) + y;
-        if (targetMaxY - parentMaxY < MAX_JUMP_HEIGHT)
+        final double parentY = ShapeUtil.max(parentBB, Direction.Axis.Y);
+        final double parentMaxY = parentY + parent.y - y - 1;
+        double targetMaxY = ShapeUtil.max(target.getCollisionShape(world, tempWorldPos.set(x, y, z)), Direction.Axis.Y);
+        final BlockState thisAbove = cachedBlockLookup.getBlockState(x, y + 1, z);
+        final VoxelShape thisBB = thisAbove.getCollisionShape(world, tempWorldPos.set(x, y + 1, z));
+        if(!ShapeUtil.isEmpty(thisBB) && (!thisAbove.hasProperty(BlockStateProperties.OPEN) || thisAbove.getBlock() instanceof PanelBlock)) {
+            double posX = Math.min(ShapeUtil.max(thisBB, Direction.Axis.X), 1 - ShapeUtil.min(thisBB, Direction.Axis.X));
+            double posZ = Math.min(ShapeUtil.max(thisBB, Direction.Axis.Z), 1 - ShapeUtil.min(thisBB, Direction.Axis.Z));
+            if (Math.min(posX, posZ) > 0.2) targetMaxY = ShapeUtil.max(thisBB, Direction.Axis.Y) + 1;
+        }
+        if (targetMaxY - parentMaxY <= 1.25)
         {
             return y + 1;
         }
@@ -992,7 +1004,6 @@ public abstract class AbstractPathJobMixin{
         {
             return;
         }
-        nextNode.setHeuristic(heuristic);
 
         // those low-cost nodes should change its parent node to current node.
         if (cost < nextNode.getCost()) {
@@ -1001,6 +1012,7 @@ public abstract class AbstractPathJobMixin{
             nextNode.parent = node;
             nextNode.setCost(cost);
             nextNode.setOnRails(onRails);
+            nextNode.setHeuristic(heuristic);
             if(noDrop) {
                 pathNodesToVisit.offer(nextNode);
             }
@@ -1019,6 +1031,7 @@ public abstract class AbstractPathJobMixin{
             }
             nodesToVisit.remove(nextNode);
             pathNodesToVisit.remove(nextNode);
+            nextNode.setHeuristic(heuristic);
             nodesToVisit.offer(nextNode);
             if((onRails || onRoad) && noDrop) {
                 pathNodesToVisit.offer(nextNode);

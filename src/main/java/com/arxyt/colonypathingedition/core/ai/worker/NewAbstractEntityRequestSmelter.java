@@ -709,6 +709,9 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
         if(furnace.getItem(SMELTABLE_SLOT).isEmpty()){
             resetFurnaceOccupy(furnace);
         }
+        else {
+            ((FurnaceBlockEntityExtra)furnace).colonyPathingEdition$setFurnacePicker(-1);
+        }
         worker.getCitizenExperienceHandler().addExperience(BASE_XP_GAIN);
     }
 

@@ -24,7 +24,7 @@ public class DoorBlockMixin extends Block {
 
     @Override
     public @NotNull VoxelShape getCollisionShape(@NotNull BlockState pState, @NotNull BlockGetter pLevel, @NotNull BlockPos pPos, @NotNull CollisionContext pContext) {
-        if (!(pContext instanceof EntityCollisionContext ecc && ecc.getEntity() instanceof Animal animal && !(animal.isLeashed() || animal.getPassengers().isEmpty()))) return super.getCollisionShape(pState, pLevel, pPos, pContext);
+        if (!(pContext instanceof EntityCollisionContext ecc && ecc.getEntity() instanceof Animal animal && !animal.isLeashed() && animal.getPassengers().isEmpty())) return super.getCollisionShape(pState, pLevel, pPos, pContext);
         if (animal.getPersistentData().getBoolean("ColonyPathingEdition_Penned")) return Shapes.block();
         return super.getCollisionShape(pState, pLevel, pPos, pContext);
     }
