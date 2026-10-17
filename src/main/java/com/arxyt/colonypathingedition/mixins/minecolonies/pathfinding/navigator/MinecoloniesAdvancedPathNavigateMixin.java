@@ -539,6 +539,7 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
             double speed = movement.length();
             int nodeIndex = Math.min(this.path.getNodeCount() - 1, this.path.getNextNodeIndex() + (int) Math.ceil(speed / 0.4F));
             @NotNull final PathPointExtended tpPlace = (PathPointExtended) this.path.getNode(nodeIndex);
+            this.path.setNextNodeIndex(nodeIndex);
             if (!tpPlace.isOnRails()) {
                 ourEntity.stopRiding();
                 entity.remove(Entity.RemovalReason.DISCARDED);
