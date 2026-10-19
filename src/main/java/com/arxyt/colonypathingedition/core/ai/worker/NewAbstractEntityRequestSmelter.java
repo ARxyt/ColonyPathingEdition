@@ -25,15 +25,21 @@ import com.minecolonies.core.entity.ai.workers.crafting.AbstractEntityAICrafting
 import com.minecolonies.core.entity.citizen.EntityCitizen;
 import com.minecolonies.core.util.citizenutils.CitizenItemUtils;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.FurnaceBlockEntity;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.wrapper.InvWrapper;
+import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Unique;
 
@@ -233,6 +239,9 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
         }
 
         final List<ItemStack> chosenFuels = haveToUseAlterFuels ? alterPossibleFuels : possibleFuels;
+        if(!isEmpty(furnace.getItem(FUEL_SLOT))) {
+            extractFromFurnaceSlot(furnace, FUEL_SLOT);
+        }
         if (InventoryUtils.hasItemInItemHandler(worker.getInventoryCitizen(), isCorrectFuel(chosenFuels)) && isEmpty(furnace.getItem(FUEL_SLOT)))
         {
             InventoryUtils.transferXOfFirstSlotInItemHandlerWithIntoInItemHandler(
@@ -373,6 +382,9 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
         if (worker.getItemInHand(InteractionHand.MAIN_HAND).isEmpty())
         {
             worker.setItemInHand(InteractionHand.MAIN_HAND, inputStack.copy());
+        }
+        if (!furnace.getItem(SMELTABLE_SLOT).isEmpty()) {
+            extractFromFurnaceSlot(furnace, SMELTABLE_SLOT);
         }
         if (hasFuelInFurnaceAndNoSmeltable(furnace) || hasNeitherFuelNorSmeltAble(furnace))
         {
@@ -571,9 +583,9 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
         for (final BlockPos pos : module.getFurnaces())
         {
             final BlockEntity entity = world.getBlockEntity(pos);
-            if (entity instanceof FurnaceBlockEntity furnaceBlockEntity)
+            if (entity instanceof FurnaceBlockEntity furnace)
             {
-                if (isEmpty(furnaceBlockEntity.getItem(SMELTABLE_SLOT)) && (isFurnaceNotOccupied(furnaceBlockEntity) || isFurnaceCanReoccupied(furnaceBlockEntity)))
+                if ((isFurnaceNotOccupied(furnace) || isFurnaceCanReoccupied(furnace)) && !isStuckSmeltable(furnace))
                 {
                     return pos;
                 }
@@ -591,7 +603,7 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
         for (final BlockPos pos : building.getModule(FURNACE).getFurnaces())
         {
             final BlockEntity entity = world.getBlockEntity(pos);
-            if (entity instanceof FurnaceBlockEntity furnace && furnace.getItem(FUEL_SLOT).isEmpty())
+            if (entity instanceof FurnaceBlockEntity furnace && (furnace.getItem(FUEL_SLOT).isEmpty() || !AbstractFurnaceBlockEntity.isFuel(furnace.getItem(FUEL_SLOT))))
             {
                 if(isFurnaceCorrectFueler(furnace, worker.getCivilianID()) || isFurnaceCanReoccupied(furnace)) {
                     return pos;
@@ -748,7 +760,7 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
         {
             if (WorldUtil.isBlockLoaded(world, pos)) {
                 final BlockEntity entity = world.getBlockEntity(pos);
-                if (entity instanceof FurnaceBlockEntity furnace && (isFurnaceNotOccupied(furnace) || (isEmpty(furnace.getItem(SMELTABLE_SLOT)) && isFurnaceCanReoccupied(furnace)))) {
+                if (entity instanceof FurnaceBlockEntity furnace && (isFurnaceNotOccupied(furnace) || (isFurnaceCanReoccupied(furnace) && !isStuckSmeltable(furnace)))) {
                     count += 1;
                 }
             }
@@ -758,6 +770,22 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
         }
 
         return count;
+    }
+
+
+    private boolean isStuckSmeltable(final FurnaceBlockEntity furnace)
+    {
+        final ItemStack input = furnace.getItem(SMELTABLE_SLOT);
+        if (isEmpty(input)) {
+            return false;
+        }
+        else if (furnace.getBlockState().getValue(BlockStateProperties.LIT) || isEmpty(furnace.getItem(FUEL_SLOT))) {
+            return true;
+        }
+        return world.getRecipeManager()
+                .getRecipeFor(RecipeType.SMELTING,
+                        new SingleRecipeInput(input), world)
+                .isPresent();
     }
 
     /**

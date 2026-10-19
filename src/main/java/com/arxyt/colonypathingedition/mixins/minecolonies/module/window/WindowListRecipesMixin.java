@@ -1,6 +1,7 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.module.window;
 
 import com.arxyt.colonypathingedition.api.extras.CraftingModuleViewExtra;
+import com.arxyt.colonypathingedition.core.message.compatible.CompatibleAddRemoveRecipeMessage;
 import com.ldtteam.blockui.Pane;
 import com.ldtteam.blockui.PaneBuilders;
 import com.ldtteam.blockui.controls.Button;
@@ -16,6 +17,7 @@ import com.minecolonies.api.util.constant.TranslationConstants;
 import com.minecolonies.core.client.gui.AbstractModuleWindow;
 import com.minecolonies.core.client.gui.modules.building.WindowListRecipes;
 import com.minecolonies.core.colony.buildings.moduleviews.CraftingModuleView;
+import com.minecolonies.core.network.messages.server.colony.building.worker.AddRemoveRecipeMessage;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -24,6 +26,7 @@ import net.minecraft.world.level.block.Blocks;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.List;
@@ -45,6 +48,19 @@ public abstract class WindowListRecipesMixin extends AbstractModuleWindow<Crafti
     public WindowListRecipesMixin(final CraftingModuleView module)
     {
         super(module, ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "gui/layouthuts/layoutlistrecipes.xml"));
+    }
+
+    /**
+     * @author ARxyt
+     * @reason Compatible multiple mods new-added modules.
+     */
+    @Overwrite(remap = false)
+    private void removeClicked(final Button button)
+    {
+        final int row = recipeList.getListElementIndexByPane(button);
+        final IRecipeStorage data = moduleView.getRecipes().get(row);
+        moduleView.removeRecipe(row);
+        new CompatibleAddRemoveRecipeMessage(buildingView, true, data, moduleView.getProducer().getRuntimeID(), moduleView.getProducer().key).sendToServer();
     }
 
     @Override

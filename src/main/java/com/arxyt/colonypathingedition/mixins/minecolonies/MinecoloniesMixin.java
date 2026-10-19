@@ -1,6 +1,7 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies;
 
 import com.arxyt.colonypathingedition.core.message.*;
+import com.arxyt.colonypathingedition.core.message.compatible.CompatibleAddRemoveRecipeMessage;
 import com.arxyt.colonypathingedition.core.message.compatible.CompatibleBuildingHiringModeMessage;
 import com.arxyt.colonypathingedition.core.message.compatible.CompatibleHireFireMessage;
 import com.llamalad7.mixinextras.sugar.Local;
@@ -18,6 +19,7 @@ public class MinecoloniesMixin {
     private static void onNetworkRegistry(RegisterPayloadHandlersEvent event, CallbackInfo ci, @Local final PayloadRegistrar registry){
         AlterBlackListMenuItemMessage.TYPE.register(registry);
         AlterWareHouseMenuItemMessage.TYPE.register(registry);
+        CompatibleAddRemoveRecipeMessage.TYPE.register(registry);
         CompatibleBuildingHiringModeMessage.TYPE.register(registry);
         CompatibleHireFireMessage.TYPE.register(registry);
         CropRotationAdvanceDayMessage.TYPE.register(registry);

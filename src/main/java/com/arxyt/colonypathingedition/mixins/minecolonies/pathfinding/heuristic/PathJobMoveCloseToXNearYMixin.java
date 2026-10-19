@@ -10,15 +10,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import com.minecolonies.core.entity.pathfinding.pathjobs.PathJobMoveCloseToXNearY;
 
-// Mixin for PathJobMoveAwayFromLocation
 @Mixin(value = PathJobMoveCloseToXNearY.class, remap = false)
 public abstract class PathJobMoveCloseToXNearYMixin {
     @Final @Shadow(remap = false) public BlockPos desiredPosition;
     @Final @Shadow(remap = false) public BlockPos nearbyPosition;
 
-    @Inject(method = "computeHeuristic(III)D", at = @At("HEAD"), cancellable = true,remap = false)
+    @Inject(method = "computeHeuristic(III)D", at = @At("HEAD"), cancellable = true, remap = false)
     protected void computeHeuristic(int x, int y, int z, CallbackInfoReturnable<Double> cir) {
-        double heuristic = (DistanceUtils.manhattanDistanceV(x, y, z, desiredPosition) * 2 + DistanceUtils.manhattanDistanceV(x, y, z,nearbyPosition) - DistanceUtils.manhattanDistanceV(desiredPosition, nearbyPosition)) / 3;
+        double heuristic = (DistanceUtils.manhattanDistanceV(x, y, z, desiredPosition) * 2 + DistanceUtils.manhattanDistanceV(x, y, z, nearbyPosition) - DistanceUtils.manhattanDistanceV(desiredPosition, nearbyPosition)) / 3;
         cir.setReturnValue((heuristic * heuristic + 99 * heuristic) / 100);
     }
 }
