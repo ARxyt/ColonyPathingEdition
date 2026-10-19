@@ -9,8 +9,6 @@ import com.minecolonies.api.colony.buildings.views.IBuildingView;
 import com.minecolonies.api.colony.requestsystem.StandardFactoryController;
 import com.minecolonies.api.colony.requestsystem.token.IToken;
 import com.minecolonies.api.crafting.IRecipeStorage;
-import com.minecolonies.api.crafting.ItemStorage;
-import com.minecolonies.api.crafting.RecipeStorage;
 import com.minecolonies.api.util.MessageUtils;
 import com.minecolonies.api.util.SoundUtils;
 import com.minecolonies.core.colony.buildings.modules.AbstractCraftingBuildingModule;
@@ -19,13 +17,9 @@ import com.minecolonies.core.util.AdvancementUtils;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.network.NetworkEvent;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
 import java.util.Objects;
 
 import static com.minecolonies.api.util.constant.TranslationConstants.MESSAGE_RECIPE_SAVED;
@@ -65,7 +59,7 @@ public class CompatibleAddRemoveRecipeMessage extends AbstractBuildingServerMess
      * Create a message to add or remove recipes.
      *
      * @param building the building we're executing on.
-     * @param remove   true if remove.
+     * @param remove   true if it should remove.
      * @param storage  the recipe storage.
      * @param id the unique id of the module.
      */
@@ -74,60 +68,6 @@ public class CompatibleAddRemoveRecipeMessage extends AbstractBuildingServerMess
         super(building);
         this.remove = remove;
         this.storage = storage;
-        this.id = id;
-        this.moduleKey = moduleKey;
-    }
-
-    /**
-     * Create a message to add or remove recipes. This constructor creates the recipeStorage on its own.
-     *
-     * @param input         the input.
-     * @param gridSize      the gridSize.
-     * @param primaryOutput the primary output.
-     * @param remove        true if remove.
-     * @param building      the building we're executing on.
-     * @param id module id.
-     * @param additionalOutputs the additional outputs.
-     */
-    public CompatibleAddRemoveRecipeMessage(final IBuildingView building, final List<ItemStorage> input, final int gridSize, final ItemStack primaryOutput, final List<ItemStack> additionalOutputs, final boolean remove, final int id, final String moduleKey)
-    {
-        super(building);
-        this.remove = remove;
-        this.storage = RecipeStorage.builder()
-                .withInputs(input)
-                .withPrimaryOutput(primaryOutput)
-                .withSecondaryOutputs(additionalOutputs)
-                .withGridSize(gridSize)
-                .withIntermediate(gridSize == 1 ? Blocks.FURNACE : Blocks.AIR)
-                .build();
-        this.id = id;
-        this.moduleKey = moduleKey;
-    }
-
-    /**
-     * Create a message to add or remove recipes. This constructor creates the recipeStorage on its own.
-     *
-     * @param input         the input.
-     * @param gridSize      the gridSize.
-     * @param primaryOutput the primary output.
-     * @param remove        true if remove.
-     * @param building      the building we're executing on.
-     * @param intermediary intermediate block.
-     * @param id the module id.
-     */
-    public CompatibleAddRemoveRecipeMessage(final IBuildingView building, final List<ItemStorage> input, final int gridSize, final ItemStack primaryOutput, final boolean remove, final Block intermediary, final int id, final String moduleKey)
-    {
-        super(building);
-        this.remove = remove;
-        if (gridSize == 1)
-        {
-            this.storage = RecipeStorage.builder()
-                    .withInputs(input)
-                    .withPrimaryOutput(primaryOutput)
-                    .withGridSize(gridSize)
-                    .withIntermediate(intermediary)
-                    .build();
-        }
         this.id = id;
         this.moduleKey = moduleKey;
     }

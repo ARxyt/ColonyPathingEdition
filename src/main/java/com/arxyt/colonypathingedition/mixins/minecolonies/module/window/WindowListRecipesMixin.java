@@ -53,7 +53,7 @@ public abstract class WindowListRecipesMixin extends AbstractModuleWindow<Crafti
 
     /**
      * @author ARxyt
-     * @reason Compatible multiple mod editing modules.
+     * @reason Compatible multiple mods new-added modules.
      */
     @Overwrite(remap = false)
     private void removeClicked(final Button button)
