@@ -1,7 +1,6 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.pathfinding.navigator;
 
 import com.minecolonies.api.util.ShapeUtil;
-import com.minecolonies.core.entity.pathfinding.PathfindingUtils;
 import com.minecolonies.core.entity.pathfinding.navigation.MovementHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -26,7 +25,6 @@ public abstract class MovementHandlerMixin extends MoveControl {
     @Shadow(remap = false) private float speedValue;
 
     @Unique private int jumpCoolDown = 0;
-    @Unique private static int FORCE_JUMP_LIMIT = 10;
 
     public MovementHandlerMixin(Mob mob)
     {
@@ -102,17 +100,20 @@ public abstract class MovementHandlerMixin extends MoveControl {
             final BlockPos blockpos = this.mob.blockPosition();
             final BlockState blockstate = this.mob.level().getBlockState(blockpos);
 
-            if (PathfindingUtils.isWater(mob.level(), mob.blockPosition(), blockstate, blockstate.getFluidState())
-                    && PathfindingUtils.isWater(mob.level(), mob.blockPosition().above(), null, null))
+            if (mob.isInWater())
             {
-                if (yDif != 0.0D)
+                this.mob.setShiftKeyDown(false);
+                if (Math.abs(yDif + 1) < 0.125D)
                 {
-                    double d3 = Math.sqrt(xDif * xDif + yDif * yDif + zDif * zDif);
+                    double d3 = Math.sqrt(dist);
                     this.mob.setDeltaMovement(this.mob.getDeltaMovement().add(0, (double) this.mob.getSpeed() * ((yDif + 0.3) / d3) * 0.1D, 0));
                 }
-                if (yDif > 0.0D)
+                else if (yDif + 1 > 0.0D)
                 {
                     this.mob.getJumpControl().jump();
+                }
+                else {
+                    this.mob.setShiftKeyDown(true);
                 }
                 return;
             }
@@ -127,6 +128,7 @@ public abstract class MovementHandlerMixin extends MoveControl {
                 }
                 final Block block = blockstate.getBlock();
                 final VoxelShape voxelshape = blockstate.getCollisionShape(this.mob.level(), blockpos);
+                final int FORCE_JUMP_LIMIT = 10;
                 if (yDif > (double) stepHeight) {
                     if (xDif * xDif + zDif * zDif < (double) Math.max(1.0F, this.mob.getBbWidth()) || jumpCoolDown > FORCE_JUMP_LIMIT) {
                         this.mob.getJumpControl().jump();
@@ -163,10 +165,7 @@ public abstract class MovementHandlerMixin extends MoveControl {
         {
             this.mob.setSpeed((float) (this.speedModifier * speedValue));
 
-            // Avoid being stuck in jumping while in liquids
-            final BlockPos blockpos = this.mob.blockPosition();
-            final BlockState blockstate = this.mob.level().getBlockState(blockpos);
-            if (this.mob.onGround() || blockstate.liquid())
+            if (this.mob.onGround() && !this.mob.isInWater())
             {
                 this.operation = net.minecraft.world.entity.ai.control.MoveControl.Operation.WAIT;
             }

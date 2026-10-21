@@ -361,7 +361,7 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
                         double xOffset = 0;
                         double zOffset = 0;
                         BlockState blockstate = this.mob.getBlockStateOn();
-                        if(!(blockstate.getBlock() instanceof LadderBlock)) {
+                        if(!(blockstate.getBlock() instanceof LadderBlock || blockstate.getBlock() instanceof VineBlock)) {
                             blockstate = level.getBlockState(this.mob.blockPosition().below());
                         }
                         if(blockstate.getBlock() instanceof LadderBlock) {
@@ -375,6 +375,14 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
                             if(previousNode != null && previousNode.isOnLadder() && previousNode.getLadderFacing() == Direction.DOWN) {
                                 xOffset = -xOffset;
                                 zOffset = -zOffset;
+                            }
+                        }
+                        if(blockstate.getBlock() instanceof VineBlock && blockstate.hasProperty(HorizontalDirectionalBlock.FACING)) {
+                            switch (blockstate.getValue(HorizontalDirectionalBlock.FACING)) {
+                                case EAST -> xOffset = -0.2;
+                                case WEST -> xOffset = 0.2;
+                                case NORTH -> zOffset = 0.2;
+                                case SOUTH -> zOffset = -0.2;
                             }
                         }
                         wantedPosition.set(vector3d2.x + xOffset,
@@ -694,14 +702,11 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         //  Going down
         if (toSelect == Direction.DOWN) {
             newSpeed = false;
-            //  Any other value is the same
-        } else {
-            vec3 = vec3.add(0, 1, 0);
         }
 
         if (newSpeed)
         {
-            wantedPosition.set(vec3.x , vec3.y, vec3.z);
+            wantedPosition.set(vec3.x , vec3.y + 1.25, vec3.z);
             this.ourEntity.getMoveControl().setWantedPosition(wantedPosition.getX(), wantedPosition.getY(), wantedPosition.getZ(),1);
         }
         else

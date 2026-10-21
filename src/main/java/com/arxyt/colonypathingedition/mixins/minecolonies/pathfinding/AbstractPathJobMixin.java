@@ -419,7 +419,7 @@ public abstract class AbstractPathJobMixin{
     @Overwrite(remap = false)
     protected int getGroundHeight(final MNode node, final int x, final int y, final int z)
     {
-        if (node != null && !PathfindingUtils.isLiquid(cachedBlockLookup.getBlockState(node.x, node.x + 1, node.x)) && !pathingOptions.canWalkUnderWater() && PathfindingUtils.isLiquid(cachedBlockLookup.getBlockState(x, y + 1, z)))
+        if (node != null && !PathfindingUtils.isLiquid(cachedBlockLookup.getBlockState(node.x, node.y + 1, node.z)) && !pathingOptions.canWalkUnderWater() && PathfindingUtils.isLiquid(cachedBlockLookup.getBlockState(x, y + 1, z)))
         {
             return Integer.MIN_VALUE;
         }
@@ -427,7 +427,7 @@ public abstract class AbstractPathJobMixin{
         //  lower body (headroom drop) or lower body (jump up)
         if (checkHeadBlock(node, x, y, z))
         {
-            return handleTargetNotPassable(node, x, y + 1, z, cachedBlockLookup.getBlockState(x, y + 1, z));
+            return Integer.MIN_VALUE;
         }
 
         //  Now check the block we want to move to
@@ -583,7 +583,6 @@ public abstract class AbstractPathJobMixin{
             if(parent == null || !cachedBlockLookup.getBlockState(parent.x, parent.y - 1, parent.z).is(BlockTags.CLIMBABLE)) {
                 return Integer.MIN_VALUE;
             }
-            return y;
         }
 
         for (int i = 1; i <= (pathingOptions.canDrop ? 10 : 2); i++) {
@@ -938,7 +937,7 @@ public abstract class AbstractPathJobMixin{
      */
     @Unique
     private double modifyHeuristic(MNode nextNode, double heuristic, final BlockState state) {
-        if(heuristic < 10) {
+        if(heuristic < 8) {
             return heuristic;
         }
         double newHeuristic = heuristic;
@@ -952,6 +951,10 @@ public abstract class AbstractPathJobMixin{
         }
         if (nextNode.isSwimming()){
             newHeuristic *= swimmingPreference;
+        }
+        // we assume all the multipliers >= 1.
+        if(heuristic < 16) {
+            return (2 * newHeuristic - heuristic) * (heuristic - 8) / heuristic + 8;
         }
         return newHeuristic;
     }
@@ -989,7 +992,7 @@ public abstract class AbstractPathJobMixin{
             newHeuristic = heuristic;
         }
         if(newHeuristic < 10) {
-            return 5 + newHeuristic / 2;
+            return newHeuristic * (heuristic - 5) / (2 * heuristic - newHeuristic) + 5;
         }
         return newHeuristic;
     }
@@ -1005,6 +1008,7 @@ public abstract class AbstractPathJobMixin{
             return;
         }
 
+        boolean betterHeuristic = nextNode.getHeuristic() > heuristic;
         // those low-cost nodes should change its parent node to current node.
         if (cost < nextNode.getCost()) {
             nodesToVisit.remove(nextNode);
@@ -1012,7 +1016,9 @@ public abstract class AbstractPathJobMixin{
             nextNode.parent = node;
             nextNode.setCost(cost);
             nextNode.setOnRails(onRails);
-            nextNode.setHeuristic(heuristic);
+            if(betterHeuristic) {
+                nextNode.setHeuristic(heuristic);
+            }
             if(noDrop) {
                 pathNodesToVisit.offer(nextNode);
             }
@@ -1023,7 +1029,7 @@ public abstract class AbstractPathJobMixin{
         // other nodes may need to recalculate its heuristic.
         if (nextNode.isVisited()){
             IMNodeExtras extrasNext = (IMNodeExtras) nextNode;
-            if (extrasNext.isCallbackNode() && nextNode.getHeuristic() <= heuristic){
+            if (extrasNext.isCallbackNode() && !betterHeuristic){
                 return;
             }
             if (nextNode.parent != null && Math.abs(nextNode.parent.y - nextNode.y) > 1){
@@ -1031,7 +1037,9 @@ public abstract class AbstractPathJobMixin{
             }
             nodesToVisit.remove(nextNode);
             pathNodesToVisit.remove(nextNode);
-            nextNode.setHeuristic(heuristic);
+            if(betterHeuristic) {
+                nextNode.setHeuristic(heuristic);
+            }
             nodesToVisit.offer(nextNode);
             if((onRails || onRoad) && noDrop) {
                 pathNodesToVisit.offer(nextNode);

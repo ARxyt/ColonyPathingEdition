@@ -129,7 +129,6 @@
     "minecolonies.linkage.WindowPostBoxMixin",
     "minecolonies.module.view.ExpeditionLogModuleViewMixin",
     "minecolonies.module.view.MinimumStockViewMixin",
-    "minecolonies.module.window.WindowCraftingMixin",
     "minecolonies.module.window.WindowListRecipesMixin",
     "structurize.WindowSelectResMixin"
   ],
