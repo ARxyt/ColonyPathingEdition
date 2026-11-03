@@ -66,7 +66,6 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) protected BlockPos.MutableBlockPos tempWorldPos;
     @Shadow(remap = false) protected int maxNodes;
     @Shadow(remap = false) private double maxCost;
-    @Shadow(remap = false) private int visitedLevel;
     @Shadow(remap = false) private Queue<MNode> nodesToVisit;
     @Shadow(remap = false) private MNode bestNode;
     @Shadow(remap = false) protected boolean debugDrawEnabled;
@@ -88,7 +87,6 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) protected abstract double computeHeuristic(final int x, final int y, final int z);
     @Shadow(remap = false) protected abstract int handleInLiquid(int x, int y, int z, @NotNull BlockState below, boolean isSwimming);
     @Shadow(remap = false) protected abstract void addPathNodeToDebug(MNode node);
-    @Shadow(remap = false) protected abstract void doDebugPrinting(@NotNull Node[] points);
 
     @Invoker(value="createNode",remap = false)
     public abstract MNode invokeCreateNode(final MNode parent, final int x, final int y, final int z, final double heuristic, final double cost);
@@ -973,8 +971,6 @@ public abstract class AbstractPathJobMixin{
 
             node = node.parent;
         }
-
-        doDebugPrinting(points);
 
         if (points.length > 1)
         {
