@@ -119,6 +119,12 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
     }
 
     public IAIState furnaceActionHandler() {
+        if (job.getCraftCounter() >= job.getMaxCraftingCount() && currentRequest != null)
+        {
+            furnacePos = null;
+            return finalizeCraftingTask();
+        }
+
         final List<ItemStack> possibleFuels = getAllowedFuel();
         if (possibleFuels.isEmpty())
         {
@@ -142,6 +148,10 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
             {
                 return ADD_FUEL_TO_FURNACE;
             }
+        }
+
+        if (currentRequest == null) {
+            return START_WORKING;
         }
 
         final int burning = countOfBurningFurnaces();
@@ -353,7 +363,7 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
 
         if (smeltableInInventory == 0)
         {
-            final int targetCount = (job.getMaxCraftingCount() - job.getCraftCounter()) - smeltableInFurnaces - resultInFurnaces - smeltableInInventory;
+            final int targetCount = pendingCount - smeltableInInventory;
             needsCurrently = new Tuple<>(smeltablePredicate, targetCount);
             furnacePos = null;
             withSpecialReturn = FILL_UP_FURNACES;
@@ -400,11 +410,6 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
                         SMELTABLE_SLOT);
                 if(!furnace.getItem(RESULT_SLOT).isEmpty()){
                     extractFromFurnaceSlot(furnace, RESULT_SLOT);
-                    if (job.getCraftCounter() >= job.getMaxCraftingCount())
-                    {
-                        furnacePos = null;
-                        return finalizeCraftingTask();
-                    }
                 }
             }
         }
@@ -668,13 +673,14 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
                         && ItemStackUtils.compareItemStacksIgnoreStackSize(citizenRecipeStorage.getPrimaryOutput(), stack)
                         && InventoryUtils.transferItemStackIntoNextFreeSlotInItemHandler(new InvWrapper(furnace), slot, mayCitizen.getInventory()))
                 {
-                    final ItemStack requestStack = aiCrafting.currentRequest.getRequest().getStack().copy();
-                    requestStack.setCount(count);
-                    aiCrafting.currentRequest.addDelivery(requestStack);
-
                     jobCrafter.setCraftCounter(jobCrafter.getCraftCounter() + count);
                     if (jobCrafter.getMaxCraftingCount() == 0) {
-                        job.setMaxCraftingCount(currentRequest.getRequest().getCount());
+                        jobCrafter.setMaxCraftingCount(currentRequest.getRequest().getCount());
+                    }
+                    if (jobCrafter.getMaxCraftingCount() <= jobCrafter.getCraftCounter()) {
+                        final ItemStack requestStack = aiCrafting.currentRequest.getRequest().getStack().copy();
+                        requestStack.setCount(jobCrafter.getCraftCounter());
+                        aiCrafting.currentRequest.addDelivery(requestStack);
                     }
                     success = true;
                 }
@@ -690,14 +696,15 @@ public abstract class NewAbstractEntityRequestSmelter <J extends AbstractJobCraf
                 {
                     if (ItemStackUtils.compareItemStacksIgnoreStackSize(currentRecipeStorage.getPrimaryOutput(), stack))
                     {
-                        final ItemStack requestStack = currentRequest.getRequest().getStack().copy();
-                        requestStack.setCount(count);
-                        currentRequest.addDelivery(requestStack);
-
                         job.setCraftCounter(job.getCraftCounter() + count);
                         if (job.getMaxCraftingCount() == 0)
                         {
                             job.setMaxCraftingCount(currentRequest.getRequest().getCount());
+                        }
+                        if(job.getMaxCraftingCount() <= job.getCraftCounter()) {
+                            final ItemStack requestStack = currentRequest.getRequest().getStack().copy();
+                            requestStack.setCount(job.getCraftCounter());
+                            currentRequest.addDelivery(requestStack);
                         }
                     }
                     else

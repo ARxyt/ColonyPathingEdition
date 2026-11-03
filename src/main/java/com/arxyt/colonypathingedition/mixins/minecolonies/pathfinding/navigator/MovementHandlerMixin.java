@@ -25,7 +25,7 @@ public abstract class MovementHandlerMixin extends MoveControl {
     @Shadow(remap = false) protected abstract boolean isWalkable(float p_24997_, float p_24998_);
 
     @Unique private int jumpCoolDown = 0;
-    @Unique private static int FORCE_JUMP_LIMIT = 10;
+    @Unique private static final int FORCE_JUMP_LIMIT = 10;
 
     public MovementHandlerMixin(Mob mob)
     {
@@ -96,11 +96,11 @@ public abstract class MovementHandlerMixin extends MoveControl {
 
             if (mob.isInWater())
             {
-                if (Math.abs(yDif + 1) < 0.125D)
+                if (Math.abs(yDif) < 0.125D)
                 {
                     this.mob.setDeltaMovement(this.mob.getDeltaMovement().add(0, (double) this.mob.getSpeed() * ((yDif + 0.3) / d3) * 0.1D, 0));
                 }
-                else if (yDif + 1 > 0.0D)
+                else if (yDif > 0.0D)
                 {
                     this.mob.getJumpControl().jump();
                 }
@@ -121,9 +121,11 @@ public abstract class MovementHandlerMixin extends MoveControl {
                     } else {
                         jumpCoolDown++;
                     }
-                } else if ((!ShapeUtil.isEmpty(voxelshape) && this.mob.getY() < ShapeUtil.max(voxelshape, Direction.Axis.Y) + (double) blockpos.getY() && !blockstate.is(BlockTags.DOORS)
-                        && !blockstate.is(BlockTags.FENCES) && !blockstate.is(BlockTags.FENCE_GATES))
-                        && !block.isLadder(blockstate, this.mob.level(), blockpos, this.mob)) {
+                } else if (!ShapeUtil.isEmpty(voxelshape)
+                        && this.mob.getY() < ShapeUtil.max(voxelshape, Direction.Axis.Y) + (double) blockpos.getY()
+                        && !blockstate.is(BlockTags.DOORS) && !blockstate.is(BlockTags.FENCES) && !blockstate.is(BlockTags.FENCE_GATES)
+                        && !block.isLadder(blockstate, this.mob.level(), blockpos, this.mob))
+                {
                     boolean canPass = true;
                     if (xDif > zDif){
                         canPass = ShapeUtil.min(voxelshape, Direction.Axis.Z) != 0 || ShapeUtil.max(voxelshape, Direction.Axis.Z) != 1;
@@ -149,7 +151,7 @@ public abstract class MovementHandlerMixin extends MoveControl {
         {
             this.mob.setSpeed((float) (this.speedModifier * speedValue));
 
-            if (this.mob.onGround() && !(this.mob.isInWater()))
+            if (this.mob.onGround() || this.mob.isInWater())
             {
                 this.operation = Operation.WAIT;
             }

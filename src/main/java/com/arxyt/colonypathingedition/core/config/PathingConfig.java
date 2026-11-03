@@ -23,6 +23,8 @@ public class PathingConfig {
         public static ModConfigSpec.DoubleValue FOOD_NUTRITION_MINECOLONIES;
         public static ModConfigSpec.DoubleValue FOOD_BONUS_NORMAL;
         public static ModConfigSpec.DoubleValue FOOD_BONUS_MINECOLONIES;
+        public static ModConfigSpec.DoubleValue MAX_SATURATION;
+        public static ModConfigSpec.DoubleValue SATURATION_DECREASE_AMOUNT;
 
     public static ModConfigSpec.BooleanValue SMELTERY_AI_MODULE;
     public static ModConfigSpec.BooleanValue FARMER_AI_MODULE;
@@ -149,6 +151,16 @@ public class PathingConfig {
                                             Bonus of minecolonies' food nutrition for citizens (It's a multiplier on saturation) (default: 0.5)
                                             殖民地食物饱和奖励乘数(取决于食物饱和) (默认 : 0.5)""")
                     .defineInRange("minecoloniesFoodBonus", 0.5, 0.0, 2.0);
+            MAX_SATURATION = builder
+                    .comment("""
+                                            Actual max saturation of citizens (default: 40.0)
+                                            市民的实际最大饱食度 (默认 : 40.0)""")
+                    .defineInRange("maxSaturation", 40.0, 10.0, 100.0);
+            SATURATION_DECREASE_AMOUNT = builder
+                    .comment("""
+                                            Decrease scale of saturation on citizen action (default: 0.005)
+                                            市民单次饱食度消耗动作消耗的饱食度 (默认 : 0.005)""")
+                    .defineInRange("saturationScale", 0.005, 0.0001, 0.1);
             builder.pop();
         FLEE_AI_MODULE = builder
                 .comment("Open the module to use the remastered flee AI system (default: true)\n 开启此模块将会启用重制的市民逃跑AI (默认开启)")

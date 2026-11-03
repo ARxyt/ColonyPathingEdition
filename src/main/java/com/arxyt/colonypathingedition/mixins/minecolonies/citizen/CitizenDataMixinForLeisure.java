@@ -39,6 +39,7 @@ public abstract class CitizenDataMixinForLeisure implements ICitizenData {
     @Shadow(remap = false) private int inactivityTimer;
     @Shadow(remap = false) private JobStatus jobStatus;
     @Shadow(remap = false) protected InventoryCitizen inventory;
+    @Shadow(remap = false) private double saturation;
 
     @Final @Shadow(remap = false) private Set<UUID> interactedRecentlyPlayers;
     @Final @Shadow(remap = false) protected Map<Component, IInteractionResponseHandler> citizenChatOptions;
@@ -47,6 +48,7 @@ public abstract class CitizenDataMixinForLeisure implements ICitizenData {
     @Unique final private static int MAX_PRE_LEISURE_TIME = PathingConfig.MAX_PRE_LEISURE_TIME.get();
     @Unique final private static int LEISURE_TIME = PathingConfig.LEISURE_TIME.get();
     @Unique final private static int LEISURE_RATIO = PathingConfig.LEISURE_RATIO.get();
+    @Unique private static double MAX_SATURATION = PathingConfig.MAX_SATURATION.get();
 
     @Unique int coolDownTime = 0;
 
@@ -129,6 +131,12 @@ public abstract class CitizenDataMixinForLeisure implements ICitizenData {
 
         citizenDiseaseHandler.update(tickRate);
         ci.cancel();
+    }
+
+    @Override
+    public void increaseSaturation(final double extraSaturation)
+    {
+        this.saturation = Math.min(MAX_SATURATION, this.saturation + Math.abs(extraSaturation));
     }
 
     @Override

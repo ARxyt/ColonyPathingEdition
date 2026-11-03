@@ -3,11 +3,15 @@ package com.arxyt.colonypathingedition.mixins.minecolonies.builder;
 import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.arxyt.colonypathingedition.core.util.NewFoodUtils;
 import com.arxyt.colonypathingedition.core.util.DistanceUtils;
+import com.minecolonies.api.colony.buildings.IBuilding;
+import com.minecolonies.api.colony.managers.interfaces.IRegisteredStructureManager;
+import com.minecolonies.api.colony.workorders.IWorkOrder;
 import com.minecolonies.api.crafting.ItemStorage;
 import com.minecolonies.api.entity.ai.statemachine.states.IAIState;
 import com.minecolonies.api.util.FoodUtils;
 import com.minecolonies.api.util.InventoryUtils;
 import com.minecolonies.api.util.MathUtils;
+import com.minecolonies.core.colony.buildings.modules.BedHandlingModule;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingBuilder;
 import com.minecolonies.core.colony.jobs.JobBuilder;
 import com.minecolonies.core.entity.ai.workers.AbstractEntityAIStructureWithWorkOrder;
@@ -18,8 +22,10 @@ import com.minecolonies.core.entity.pathfinding.pathresults.PathResult;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.block.AirBlock;
+import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -34,6 +40,7 @@ import java.lang.reflect.Method;
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.*;
 import static com.minecolonies.api.research.util.ResearchConstants.BLOCK_PLACE_SPEED;
 import static com.minecolonies.api.util.constant.CitizenConstants.*;
+import static com.minecolonies.core.colony.buildings.modules.BuildingModules.BED;
 
 @Mixin(value = EntityAIStructureBuilder.class, remap = false)
 public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStructureWithWorkOrder<JobBuilder, BuildingBuilder> {
@@ -269,7 +276,21 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
      * 每次建筑完成时，请求仓库取走物资
      */
     @Inject(at = @At("RETURN"),method = "sendCompletionMessage", remap = false)
-    protected void pickUpAfterSendCompletionMessage(CallbackInfo ci) {
+    protected void pickUpAfterSendCompletionMessage(final IWorkOrder wo, CallbackInfo ci) {
+        if(wo.getColony() != null) {
+            final IRegisteredStructureManager buildingManager = wo.getColony().getServerBuildingManager();
+            final IBuilding building = buildingManager.getBuilding(wo.getLocation());
+            if(building != null && building.hasModule(BED)) {
+                BedHandlingModule module = building.getModule(BED);
+                for(BlockPos pos : module.getRegisteredBlocks()) {
+                    final BlockState state = world.getBlockState(pos);
+                    if (!state.hasProperty(BedBlock.PART) || state.getValue(BedBlock.PART) != BedPart.FOOT)
+                    {
+                        module.removeBed(pos);
+                    }
+                }
+            }
+        }
         if (building.getPickUpPriority() > 0) {
             try {
                 building.createPickupRequest(building.getPickUpPriority());

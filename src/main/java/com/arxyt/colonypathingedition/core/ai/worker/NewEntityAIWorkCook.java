@@ -2,6 +2,7 @@ package com.arxyt.colonypathingedition.core.ai.worker;
 
 import com.arxyt.colonypathingedition.api.workersetting.BuildingCookExtra;
 import com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEat;
+import com.arxyt.colonypathingedition.core.config.PathingConfig;
 import com.arxyt.colonypathingedition.core.util.NewFoodUtils;
 import com.minecolonies.api.MinecoloniesAPIProxy;
 import com.minecolonies.api.colony.ICitizenData;
@@ -18,7 +19,6 @@ import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.entity.citizen.VisibleCitizenStatus;
 import com.minecolonies.api.inventory.InventoryCitizen;
 import com.minecolonies.api.util.*;
-import com.minecolonies.api.util.constant.CitizenConstants;
 import com.minecolonies.api.util.constant.Constants;
 import com.minecolonies.core.colony.buildings.modules.RestaurantMenuModule;
 import com.minecolonies.core.colony.buildings.workerbuildings.BuildingCook;
@@ -43,7 +43,6 @@ import java.util.Queue;
 import java.util.function.Predicate;
 
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.*;
-import static com.minecolonies.api.util.constant.CitizenConstants.FULL_SATURATION;
 import static com.minecolonies.api.util.constant.Constants.*;
 import static com.minecolonies.api.util.constant.StatisticsConstants.FOOD_SERVED;
 import static com.minecolonies.api.util.constant.StatisticsConstants.FOOD_SERVED_DETAIL;
@@ -52,6 +51,11 @@ import static com.minecolonies.core.colony.buildings.modules.BuildingModules.RES
 
 public class NewEntityAIWorkCook extends AbstractEntityAIUsesFurnace<JobCook, BuildingCook>
 {
+    /**
+     * Max saturation the citizen has.
+     */
+    private static final double FULL_SATURATION = PathingConfig.MAX_SATURATION.get();
+
     /**
      * The amount of food which should be served to the worker.
      */
@@ -262,7 +266,7 @@ public class NewEntityAIWorkCook extends AbstractEntityAIUsesFurnace<JobCook, Bu
                     break;
                 }
 
-                if (citizenData.getSaturation() >= CitizenConstants.FULL_SATURATION) {
+                if (citizenData.getSaturation() >= FULL_SATURATION) {
                     buildingExtra.deleteCustomer(citizen.getCivilianID());
                     break;
                 }
@@ -286,7 +290,7 @@ public class NewEntityAIWorkCook extends AbstractEntityAIUsesFurnace<JobCook, Bu
         }
 
         String foodName = worker.getInventoryCitizen().getStackInSlot(foodSlot).getDescriptionId();
-        int qty = (int) (Math.max(1.0, (FULL_SATURATION - citizen.getCitizenData().getSaturation()) / NewFoodUtils.getFoodValue(worker.getInventoryCitizen().getStackInSlot(foodSlot), citizen)));
+        int qty = (int) ((FULL_SATURATION - citizen.getCitizenData().getSaturation()) / NewFoodUtils.getFoodValue(worker.getInventoryCitizen().getStackInSlot(foodSlot), citizen)) + 1;
         if (InventoryUtils.transferXOfItemStackIntoNextFreeSlotInItemHandler(worker.getInventoryCitizen(), foodSlot, qty, citizenData.getInventory())) {
             buildingExtra.deleteCustomer(citizen.getCivilianID());
             Objects.requireNonNull(worker.getCitizenColonyHandler().getColonyOrRegister()).getStatisticsManager().incrementBy(FOOD_SERVED, qty, worker.getCitizenColonyHandler().getColonyOrRegister().getDay());

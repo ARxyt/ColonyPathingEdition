@@ -9,14 +9,12 @@ import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.util.BlockPosUtil;
 import com.minecolonies.api.util.Log;
 import com.minecolonies.api.util.ShapeUtil;
-import com.minecolonies.core.entity.pathfinding.PathfindingUtils;
-import com.minecolonies.core.entity.pathfinding.PathingOptions;
-import com.minecolonies.core.entity.pathfinding.SurfaceType;
+import com.minecolonies.core.MineColonies;
+import com.minecolonies.core.entity.pathfinding.*;
 import com.minecolonies.core.entity.pathfinding.pathjobs.AbstractPathJob;
 import com.minecolonies.core.entity.pathfinding.pathjobs.IDestinationPathJob;
 import com.minecolonies.core.entity.pathfinding.pathresults.PathResult;
 import com.minecolonies.core.entity.pathfinding.world.CachingBlockLookup;
-import com.minecolonies.core.entity.pathfinding.MNode;
 import com.minecolonies.core.util.WorkerUtil;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
@@ -31,6 +29,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.properties.*;
+import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
@@ -43,8 +42,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.*;
 
 import static com.minecolonies.api.util.BlockPosUtil.directionFromDelta;
-import static com.minecolonies.api.util.constant.PathingConstants.HALF_A_BLOCK;
-import static com.minecolonies.api.util.constant.PathingConstants.MAX_JUMP_HEIGHT;
+import static com.minecolonies.api.util.constant.PathingConstants.*;
 import static com.minecolonies.core.entity.pathfinding.PathingOptions.MAX_COST;
 
 @Mixin(value = AbstractPathJob.class, remap = false)
@@ -71,6 +69,7 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) private MNode bestNode;
     @Shadow(remap = false) @Nullable protected Mob entity;
     @Shadow(remap = false) private MNode startNode;
+    @Shadow(remap = false) protected boolean debugDrawEnabled;
 
     @Shadow(remap = false) public abstract Mob getEntity();
     @Shadow(remap = false) protected abstract boolean isPassable(int x, int y, int z, boolean head, MNode parent);
@@ -85,10 +84,11 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) protected abstract void handleDebugOptions(MNode node);
     @Shadow(remap = false) protected abstract boolean isAtDestination(MNode n);
     @Shadow(remap = false) protected abstract boolean stopOnNodeLimit(int totalNodesVisited, MNode bestNode, int nodesSinceEndNode);
-    @Shadow(remap = false) @NotNull protected abstract Path finalizePath(MNode targetNode);
     @Shadow(remap = false) protected abstract boolean checkHeadBlock(@Nullable MNode parent, int x, int y, int z);
     @Shadow(remap = false) protected abstract double computeHeuristic(final int x, final int y, final int z);
     @Shadow(remap = false) protected abstract int handleInLiquid(int x, int y, int z, @NotNull BlockState below, boolean isSwimming);
+    @Shadow(remap = false) protected abstract void addPathNodeToDebug(MNode node);
+    @Shadow(remap = false) protected abstract void doDebugPrinting(@NotNull Node[] points);
 
     @Unique private BlockEntity townhall;
     @Unique protected int actualMaxNodes;
@@ -105,6 +105,7 @@ public abstract class AbstractPathJobMixin{
     @Unique final private double onRoadCallbackMultiplier = PathingConfig.ONROAD_CALLBACK_MULTIPLIER.get();
     @Unique final private int callbackTimesTolerance =  PathingConfig.CALLBACK_TIMES_TOLERANCE.get();
     @Unique final private int extendCount =  PathingConfig.NODE_EXTEND_COUNT.get();
+    @Unique final Random random = new Random();
 
     @Invoker(value="createNode",remap = false)
     public abstract MNode invokeCreateNode(final MNode parent, final int x, final int y, final int z, final double heuristic, final double cost);
@@ -145,7 +146,7 @@ public abstract class AbstractPathJobMixin{
         double cost = 1;
 
         IMNodeExtra extras = (IMNodeExtra) parent;
-        if (onRails) {
+        if (onRails && dY >= -2) {
             cost *= pathingOptions.onRailCost;
             if (state.getBlock() instanceof PoweredRailBlock && !(state.getValue(PoweredRailBlock.POWERED)))
             {
@@ -311,7 +312,9 @@ public abstract class AbstractPathJobMixin{
                 if(node == null){
                     continue;
                 }
-
+                // To prevent multi-visit at one exploration.
+                pathNodesToVisit.remove(node);
+                nodesToVisit.remove(node);
                 if (node.isVisited()) {
                     // Revisiting is used to update neighbours to an updated cost
                     visitNode(node);
@@ -362,6 +365,7 @@ public abstract class AbstractPathJobMixin{
         {
             // Make sure to expand from the final node
             visitNode(bestNode);
+            bestNode.increaseVisited();
 
             if (!nodesToVisit.isEmpty())
             {
@@ -398,6 +402,7 @@ public abstract class AbstractPathJobMixin{
                     if (node.isVisited())
                     {
                         visitNode(node);
+                        node.increaseVisited();
                         continue;
                     }
 
@@ -405,6 +410,7 @@ public abstract class AbstractPathJobMixin{
                     handleDebugExtraNode(node);
                     if (--extraNodes <= 0) break;
                     visitNode(node);
+                    node.increaseVisited();
                 }
             }
         }
@@ -494,8 +500,8 @@ public abstract class AbstractPathJobMixin{
 
     @Unique
     private boolean checkConerCollision(int x, int y, int z) {
-        final BlockState above = cachedBlockLookup.getBlockState(x,y+1,z);
-        return !(ShapeUtil.getStartY(above.getCollisionShape(world, tempWorldPos.set(x, y + 1, z)), 1) < 0.875) || above.hasProperty(BlockStateProperties.OPEN);
+        final BlockState above = cachedBlockLookup.getBlockState(x, y + 1, z);
+        return !(ShapeUtil.getStartY(above.getCollisionShape(world, tempWorldPos.set(x, y + 1, z)), 1) < 0.875) || (above.hasProperty(BlockStateProperties.OPEN) && !(above.getBlock() instanceof PanelBlock));
     }
 
     @Unique
@@ -629,7 +635,7 @@ public abstract class AbstractPathJobMixin{
         }
 
         List<Direction> directions = new ArrayList<>(Arrays.asList(Direction.values()));
-        Collections.shuffle(directions, new Random());
+        Collections.shuffle(directions, random);
 
         for (Direction dir : directions) {
             switch (dir) {
@@ -646,7 +652,7 @@ public abstract class AbstractPathJobMixin{
                     if (dX <= 0 || dY <= -2) exploreInDirection(node, -1, 0, 0);
                 }
                 case UP -> {
-                    if (node.isLadder() || node.isVisited()) {
+                    if (node.isLadder()) {
                         exploreInDirection(node, 0, 1, 0);
                     } else if ( !cachedBlockLookup.getBlockState(node.x, node.y, node.z).getFluidState().isEmpty() ||
                             (node.parent != null && !node.parent.isLadder() && cachedBlockLookup.getBlockState(node.x, node.y + 1, node.z).getBlock() instanceof LadderBlock))
@@ -655,14 +661,15 @@ public abstract class AbstractPathJobMixin{
                     }
                 }
                 case DOWN -> {
-                    if (node.isLadder() || node.isVisited()) {
+                    if (node.isLadder()) {
                         exploreInDirection(node, 0, -1, 0);
                     }
                     // Walk downwards node if passable
-                    else if (!node.isSwimming() && isPassable(node.x, node.y - 1, node.z, false, node.parent)) {
+                    else if ((node.isSwimming() && !isPassable(node.x, node.y + 1, node.z, false, node.parent)) || (!node.isSwimming() && isPassable(node.x, node.y - 1, node.z, false, node.parent))) {
                         exploreInDirection(node, 0, -1, 0);
                     }
                 }
+                default -> {}
             }
         }
     }
@@ -672,7 +679,7 @@ public abstract class AbstractPathJobMixin{
      * @author ARxyt
      * @reason 重构代码，取消corner链接，使用统一规则缩减代码量，同时de奇怪的bug
      */
-    @Overwrite( remap = false)
+    @Overwrite(remap = false)
     protected final void exploreInDirection(final MNode node, int dX, int dY, int dZ) {
         int nextX = node.x + dX;
         int nextY = node.y + dY;
@@ -780,11 +787,6 @@ public abstract class AbstractPathJobMixin{
         final double heuristic = computeHeuristic(nextX, nextY, nextZ) * heuristicMod;
         final double cost = node.getCost() + nextCost;
 
-//        // fix to distant horizon
-//        if(heuristic == 0.0 && node.getHeuristic() == 0){
-//            return;
-//        }
-
         if (nextNode == null)
         {
             nextNode = invokeCreateNode(node, nextX, nextY, nextZ, heuristic, cost);
@@ -802,7 +804,7 @@ public abstract class AbstractPathJobMixin{
 
             extraNodeState(nextNode);
             if ((onRoad || onRails) && Math.abs(dY) <= 1 ){
-                nextNode.setHeuristic(modifyHeuristic(node, nextNode, nextNode.getHeuristic(), onRoad, onRails));
+                nextNode.setHeuristic(modifyHeuristic(node, nextNode, nextNode.getHeuristic(), nextCost, onRoad, onRails));
             }
             else {
                 nextNode.setHeuristic(modifyHeuristic(nextNode, nextNode.getHeuristic(), state));
@@ -816,13 +818,100 @@ public abstract class AbstractPathJobMixin{
         {
             final double newHeuristic;
             if ((onRoad || onRails) && Math.abs(dY) <= 1){
-                newHeuristic = modifyHeuristic(node, nextNode, heuristic, onRoad, onRails);
+                newHeuristic = modifyHeuristic(node, nextNode, heuristic, nextCost, onRoad, onRails);
             }
             else {
                 newHeuristic = modifyHeuristic(nextNode, heuristic, state);
             }
             updateNode(node, nextNode, newHeuristic, cost, onRails, onRoad, Math.abs(dY) <= 2);
         }
+    }
+
+    /**
+     * @author ARxyt
+     * @reason 重构代码，重新计算梯子朝向等各种问题，重新确定水面高度。
+     */
+    @Overwrite( remap = false)
+    private Path finalizePath(final MNode targetNode)
+    {
+        //  Compute length of path, since we need to allocate an array.  This is cheaper/faster than building a List
+        //  and converting it.  Yes, we have targetNode.steps, but I do not want to rely on that being accurate (I might
+        //  fudge that value later on for cutoff purposes
+        int pathLength = 1;
+        int railsLength = 0;
+        MNode node = targetNode;
+        while (node.parent != null)
+        {
+            ++pathLength;
+            if (node.isOnRails())
+            {
+                ++railsLength;
+            }
+            node = node.parent;
+        }
+
+        final Node[] points = new Node[pathLength];
+        points[0] = new PathPointExtended(new BlockPos(node.x, node.y, node.z));
+        if (debugDrawEnabled)
+        {
+            addPathNodeToDebug(node);
+        }
+
+        Node next = null;
+        node = targetNode;
+        while (node.parent != null)
+        {
+            if (debugDrawEnabled)
+            {
+                addPathNodeToDebug(node);
+            }
+
+            --pathLength;
+
+            final BlockPos pos = new BlockPos(node.x, node.y, node.z);
+
+            final PathPointExtended p = new PathPointExtended(pos);
+            if (railsLength >= MineColonies.getConfig().getServer().minimumRailsToPath.get())
+            {
+                p.setOnRails(node.isOnRails());
+                if (p.isOnRails() && (!node.parent.isOnRails() || node.parent.parent == null))
+                {
+                    p.setRailsEntry();
+                }
+                else if (p.isOnRails() && points.length > pathLength + 1)
+                {
+                    final PathPointExtended point = ((PathPointExtended) points[pathLength + 1]);
+                    if (!point.isOnRails())
+                    {
+                        point.setRailsExit();
+                    }
+                }
+            }
+
+            if (node.isLadder())
+            {
+                p.setOnLadder(true);
+            }
+
+            if (next != null)
+            {
+                next.cameFrom = p;
+            }
+            next = p;
+            points[pathLength] = p;
+
+            node = node.parent;
+        }
+
+        doDebugPrinting(points);
+
+        if (points.length > 1)
+        {
+            result.costPerDist = targetNode.getCost() / BlockPosUtil.distManhattan(start, targetNode.x, targetNode.y, targetNode.z);
+        }
+
+        result.searchedNodes = totalNodesVisited;
+        return new Path(Arrays.asList(points), new BlockPos(targetNode.x, targetNode.y, targetNode.z), reachesDestination);
     }
 
     /**
@@ -894,10 +983,10 @@ public abstract class AbstractPathJobMixin{
     }
 
     @Unique
-    private MNode extraNodeState(final MNode nextNode)
+    private void extraNodeState(final MNode nextNode)
     {
         IMNodeExtra extras = (IMNodeExtra) nextNode;
-        if (nextNode.isCornerNode() && nextNode.parent!=null) {
+        if (nextNode.isCornerNode() && nextNode.parent != null) {
             nextNode.setHeuristic(nextNode.parent.getHeuristic());
             IMNodeExtra extrasPre = (IMNodeExtra) nextNode.parent;
             if (extrasPre.isCallbackNode()){
@@ -920,7 +1009,6 @@ public abstract class AbstractPathJobMixin{
         {
             extras.setStation();
         }
-        return nextNode;
     }
 
     @Unique
@@ -951,7 +1039,7 @@ public abstract class AbstractPathJobMixin{
      * 启发值修正函数，根据 node、onRoad、onRails 做“绕路豁免”或其他调整。
      */
     @Unique
-    protected double modifyHeuristic(MNode node, MNode nextNode, double heuristic, boolean onRoad, boolean onRails)
+    protected double modifyHeuristic(MNode node, MNode nextNode, double heuristic, double nextCost, boolean onRoad, boolean onRails)
     {
         if(heuristic <= 5) {
             return heuristic;
@@ -961,16 +1049,15 @@ public abstract class AbstractPathJobMixin{
         IMNodeExtra extras = (IMNodeExtra) node;
         IMNodeExtra extrasNext = (IMNodeExtra) nextNode;
         double callbackAddon = 0.0;
-        if (onRails){
+        if (onRails) {
             heuristic *= onRailPreference;
-            callbackAddon = pathingOptions.onRailCost * onRailCallbackMultiplier;
+            callbackAddon = nextCost * onRailCallbackMultiplier;
         }
-        else if (onRoad && (!node.isOnRails() || extras.isStation()))
-        {
+        else if (onRoad && (!node.isOnRails() || extras.isStation())) {
             heuristic *= onRoadPreference;
-            callbackAddon = pathingOptions.onPathCost * onRoadCallbackMultiplier;
+            callbackAddon = nextCost * onRoadCallbackMultiplier;
         }
-        if (lastHeuristic + callbackAddon <= heuristic){
+        if (lastHeuristic + callbackAddon <= heuristic) {
             if (callbackAddon != 0.0){
                 newHeuristic = lastHeuristic + callbackAddon;
                 extrasNext.setCallbackNode();
@@ -988,17 +1075,18 @@ public abstract class AbstractPathJobMixin{
     @Unique
     private void updateNode(@NotNull final MNode node, @NotNull final MNode nextNode, final double heuristic, final double cost, boolean onRails, boolean onRoad, boolean noDrop)
     {
-        IMNodeExtra extras = (IMNodeExtra) node;
-
+        IMNodeExtra extras = (IMNodeExtra) nextNode;
+        final boolean betterHeuristic = nextNode.getHeuristic() > heuristic;
+        final boolean betterCost = nextNode.getCost() > cost;
+        boolean visitedNode = nextNode.isVisited();
         // We don't ignore any potentially low-cost nodes, only add some callback nodes to recalculate.
-        if (cost >= nextNode.getCost() && !(extras.isCallbackNode() && nextNode.getVisitedCount() <= visitedLevel * callbackTimesTolerance))
+        if (!betterCost && (!betterHeuristic || (visitedNode && !(extras.isCallbackNode() && nextNode.getVisitedCount() <= callbackTimesTolerance))))
         {
             return;
         }
 
-        boolean betterHeuristic = nextNode.getHeuristic() > heuristic;
         // those low-cost nodes should change its parent node to current node.
-        if (cost < nextNode.getCost()) {
+        if (betterCost) {
             nodesToVisit.remove(nextNode);
             pathNodesToVisit.remove(nextNode);
             nextNode.parent = node;
@@ -1007,7 +1095,7 @@ public abstract class AbstractPathJobMixin{
             if(betterHeuristic) {
                 nextNode.setHeuristic(heuristic);
             }
-            if(noDrop) {
+            if((onRails || onRoad) && noDrop) {
                 pathNodesToVisit.offer(nextNode);
             }
             nodesToVisit.offer(nextNode);
@@ -1015,23 +1103,15 @@ public abstract class AbstractPathJobMixin{
         }
 
         // other nodes may need to recalculate its heuristic.
-        if (nextNode.isVisited()){
-            IMNodeExtra extrasNext = (IMNodeExtra) nextNode;
-            if (extrasNext.isCallbackNode() && !betterHeuristic){
-                return;
-            }
-            if (nextNode.parent != null && Math.abs(nextNode.parent.y - nextNode.y) > 1){
-                return;
-            }
-            nodesToVisit.remove(nextNode);
-            pathNodesToVisit.remove(nextNode);
-            if(betterHeuristic) {
-                nextNode.setHeuristic(heuristic);
-            }
-            nodesToVisit.offer(nextNode);
-            if((onRails || onRoad) && noDrop) {
-                pathNodesToVisit.offer(nextNode);
-            }
+        if (nextNode.parent != null && Math.abs(nextNode.parent.y - nextNode.y) > 1){
+            return;
+        }
+        nextNode.setHeuristic(heuristic);
+        nodesToVisit.remove(nextNode);
+        nodesToVisit.offer(nextNode);
+
+        if(pathNodesToVisit.remove(nextNode) || (visitedNode && (onRails || onRoad) && noDrop)) {
+            pathNodesToVisit.offer(nextNode);
         }
     }
 

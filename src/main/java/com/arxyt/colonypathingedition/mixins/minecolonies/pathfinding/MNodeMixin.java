@@ -12,8 +12,7 @@ import org.spongepowered.asm.mixin.Interface;
  * 并用 @Unique 字段保存状态。
  */
 @Mixin(value = MNode.class, remap = false)
-@Implements(@Interface(iface = IMNodeExtra.class, prefix = "extra$"))
-public abstract class MNodeMixin
+public abstract class MNodeMixin implements IMNodeExtra
 {
     @Unique private boolean onFarmland;
     @Unique private boolean onSlab;
@@ -22,39 +21,42 @@ public abstract class MNodeMixin
     // 是否是绕路节点
     @Unique private boolean isCallBack;
 
-    // prefix = "extra$"，下面方法会被当作 IMNodeExtras 的实现织入 MNode
 
-    public boolean extra$getOnFarmland()
+    public boolean getOnFarmland()
     {
         return onFarmland;
     }
 
-    public void extra$setOnFarmland()
+    public void setOnFarmland()
     {
         this.onFarmland = true;
     }
 
-    public boolean extra$getOnSlab()
+    public boolean getOnSlab()
     {
         return onSlab;
     }
 
-    public void extra$setOnSlab()
+    public void setOnSlab()
     {
         this.onSlab = true;
     }
 
-    public boolean extra$isStation()
+    public boolean isStation()
     {
         return isStation;
     }
 
-    public void extra$setStation()
+    public void setStation()
     {
         this.isStation = true;
     }
 
-    public boolean extra$isCallbackNode(){return  isCallBack;}
+    public boolean isCallbackNode() {
+        return isCallBack;
+    }
 
-    public void extra$setCallbackNode(){this.isCallBack=true;}
+    public void setCallbackNode() {
+        this.isCallBack = true;
+    }
 }

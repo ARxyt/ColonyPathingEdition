@@ -1,6 +1,7 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.entity;
 
 import com.arxyt.colonypathingedition.core.util.SwitchUtils;
+import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.IColony;
 import com.minecolonies.api.colony.IColonyManager;
 import com.minecolonies.api.colony.IColonyView;
@@ -12,6 +13,7 @@ import com.minecolonies.api.entity.ai.statemachine.tickratestatemachine.ITickRat
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenColonyHandler;
 import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenJobHandler;
+import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenSleepHandler;
 import com.minecolonies.api.util.*;
 import com.minecolonies.core.colony.jobs.AbstractJobGuard;
 import com.minecolonies.core.colony.jobs.JobNetherWorker;
@@ -35,6 +37,7 @@ import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -42,18 +45,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Locale;
 import java.util.Objects;
 
+import static com.arxyt.colonypathingedition.core.config.PathingConfig.SATURATION_DECREASE_AMOUNT;
 import static com.minecolonies.api.util.constant.TranslationConstants.MESSAGE_INTERACTION_COOKIE;
 
 @Mixin(value = EntityCitizen.class, remap = false)
 public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
-    @Shadow(remap = false) private ICitizenColonyHandler citizenColonyHandler;
+    @Unique private static final double decreaseScale =  SATURATION_DECREASE_AMOUNT.get();
 
     @Shadow(remap = false) public abstract ITickRateStateMachine<IState> getCitizenAI();
     @Shadow(remap = false) public abstract ICitizenColonyHandler getCitizenColonyHandler();
     @Shadow(remap = false) public abstract ICitizenJobHandler getCitizenJobHandler();
 
-    @Shadow
-    private int interactionCooldown;
+    @Shadow(remap = false) private ICitizenColonyHandler citizenColonyHandler;
+    @Shadow(remap = false) private int interactionCooldown;
+    @Shadow(remap = false) private double cachedActionSaturationDecrease;
+    @Shadow(remap = false) private ICitizenData citizenData;
+    @Shadow(remap = false) private ICitizenSleepHandler citizenSleepHandler;
 
     public EntityCitizenMixin(final EntityType<? extends PathfinderMob> type, final Level world)
     {
@@ -82,6 +89,19 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
             ci.cancel();
         }
     }
+
+    @Override
+    public void decreaseSaturationForAction()
+    {
+        this.cachedActionSaturationDecrease += decreaseScale * 10;
+    }
+
+    @Override
+    public void decreaseSaturationForContinuousAction()
+    {
+        this.cachedActionSaturationDecrease += decreaseScale;
+    }
+
 
     /**
      * @author ARxyt
