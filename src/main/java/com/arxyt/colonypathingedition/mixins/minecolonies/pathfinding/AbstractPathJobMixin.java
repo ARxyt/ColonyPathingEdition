@@ -88,7 +88,6 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) protected abstract double computeHeuristic(final int x, final int y, final int z);
     @Shadow(remap = false) protected abstract int handleInLiquid(int x, int y, int z, @NotNull BlockState below, boolean isSwimming);
     @Shadow(remap = false) protected abstract void addPathNodeToDebug(MNode node);
-    @Shadow(remap = false) protected abstract void doDebugPrinting(@NotNull Node[] points);
 
     @Unique private BlockEntity townhall;
     @Unique protected int actualMaxNodes;
@@ -902,8 +901,6 @@ public abstract class AbstractPathJobMixin{
 
             node = node.parent;
         }
-
-        doDebugPrinting(points);
 
         if (points.length > 1)
         {
