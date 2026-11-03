@@ -9,10 +9,8 @@ import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.util.BlockPosUtil;
 import com.minecolonies.api.util.Log;
 import com.minecolonies.api.util.ShapeUtil;
-import com.minecolonies.core.entity.pathfinding.MNode;
-import com.minecolonies.core.entity.pathfinding.PathfindingUtils;
-import com.minecolonies.core.entity.pathfinding.PathingOptions;
-import com.minecolonies.core.entity.pathfinding.SurfaceType;
+import com.minecolonies.core.MineColonies;
+import com.minecolonies.core.entity.pathfinding.*;
 import com.minecolonies.core.entity.pathfinding.pathjobs.AbstractPathJob;
 import com.minecolonies.core.entity.pathfinding.pathresults.PathResult;
 import com.minecolonies.core.entity.pathfinding.world.CachingBlockLookup;
@@ -32,6 +30,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.Half;
 import net.minecraft.world.level.block.state.properties.RailShape;
 import net.minecraft.world.level.block.state.properties.SlabType;
+import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
@@ -70,6 +69,7 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) private int visitedLevel;
     @Shadow(remap = false) private Queue<MNode> nodesToVisit;
     @Shadow(remap = false) private MNode bestNode;
+    @Shadow(remap = false) protected boolean debugDrawEnabled;
 
     @Shadow(remap = false) public abstract Mob getEntity();
     @Shadow(remap = false) protected abstract boolean isPassable(int x, int y, int z, boolean head, MNode parent);
@@ -84,10 +84,11 @@ public abstract class AbstractPathJobMixin{
     @Shadow(remap = false) protected abstract void handleDebugOptions(MNode node);
     @Shadow(remap = false) protected abstract boolean isAtDestination(MNode n);
     @Shadow(remap = false) protected abstract boolean stopOnNodeLimit(int totalNodesVisited, MNode bestNode, int nodesSinceEndNode);
-    @Shadow(remap = false) @NotNull protected abstract Path finalizePath(MNode targetNode);
     @Shadow(remap = false) protected abstract boolean checkHeadBlock(@Nullable MNode parent, int x, int y, int z);
     @Shadow(remap = false) protected abstract double computeHeuristic(final int x, final int y, final int z);
     @Shadow(remap = false) protected abstract int handleInLiquid(int x, int y, int z, @NotNull BlockState below, boolean isSwimming);
+    @Shadow(remap = false) protected abstract void addPathNodeToDebug(MNode node);
+    @Shadow(remap = false) protected abstract void doDebugPrinting(@NotNull Node[] points);
 
     @Invoker(value="createNode",remap = false)
     public abstract MNode invokeCreateNode(final MNode parent, final int x, final int y, final int z, final double heuristic, final double cost);
@@ -121,6 +122,7 @@ public abstract class AbstractPathJobMixin{
     @Unique private BlockEntity townhall;
     @Unique protected int actualMaxNodes;
     @Unique private Queue<MNode> pathNodesToVisit;
+    @Unique final Random random = new Random();
 
     /**
      * 重写 computeCost 方法，修改游泳进入成本并添加自定义逻辑。
@@ -144,7 +146,7 @@ public abstract class AbstractPathJobMixin{
         double cost = 1;
 
         IMNodeExtras extras = (IMNodeExtras) parent;
-        if (onRails) {
+        if (onRails && dY >= -2) {
             cost *= pathingOptions.onRailCost;
             if (state.getBlock() instanceof PoweredRailBlock && !(state.getValue(PoweredRailBlock.POWERED)))
             {
@@ -311,7 +313,9 @@ public abstract class AbstractPathJobMixin{
                 if (node == null){
                     continue;
                 }
-
+                // To prevent multi-visit at one exploration.
+                pathNodesToVisit.remove(node);
+                nodesToVisit.remove(node);
                 if (node.isVisited()) {
                     // Revisiting is used to update neighbours to an updated cost
                     visitNode(node);
@@ -362,6 +366,7 @@ public abstract class AbstractPathJobMixin{
         {
             // Make sure to expand from the final node
             visitNode(bestNode);
+            bestNode.increaseVisited();
 
             if (!nodesToVisit.isEmpty())
             {
@@ -398,6 +403,7 @@ public abstract class AbstractPathJobMixin{
                     if (node.isVisited())
                     {
                         visitNode(node);
+                        node.increaseVisited();
                         continue;
                     }
 
@@ -405,6 +411,7 @@ public abstract class AbstractPathJobMixin{
                     handleDebugExtraNode(node);
                     if (--extraNodes <= 0) break;
                     visitNode(node);
+                    node.increaseVisited();
                 }
             }
         }
@@ -494,8 +501,8 @@ public abstract class AbstractPathJobMixin{
 
     @Unique
     private boolean checkConerCollision(int x, int y, int z) {
-        final BlockState above = cachedBlockLookup.getBlockState(x,y+1,z);
-        return !(ShapeUtil.getStartY(above.getCollisionShape(world, tempWorldPos.set(x, y + 1, z)), 1) < 0.875) || above.hasProperty(BlockStateProperties.OPEN);
+        final BlockState above = cachedBlockLookup.getBlockState(x, y + 1, z);
+        return !(ShapeUtil.getStartY(above.getCollisionShape(world, tempWorldPos.set(x, y + 1, z)), 1) < 0.875) || (above.hasProperty(BlockStateProperties.OPEN) && !(above.getBlock() instanceof PanelBlock));
     }
 
     @Unique
@@ -629,7 +636,7 @@ public abstract class AbstractPathJobMixin{
         }
 
         List<Direction> directions = new ArrayList<>(Arrays.asList(Direction.values()));
-        Collections.shuffle(directions, new Random());
+        Collections.shuffle(directions, random);
 
         for (Direction dir : directions) {
             switch (dir) {
@@ -646,23 +653,24 @@ public abstract class AbstractPathJobMixin{
                     if (dX <= 0 || dY <= -2) exploreInDirection(node, -1, 0, 0);
                 }
                 case UP -> {
-                    if (node.isLadder() || node.isVisited()) {
+                    if (node.isLadder()) {
                         exploreInDirection(node, 0, 1, 0);
-                    } else if (!cachedBlockLookup.getBlockState(node.x, node.y, node.z).getFluidState().isEmpty() ||
-                            node.parent != null && !node.parent.isLadder() && cachedBlockLookup.getBlockState(node.x, node.y + 1, node.z).getBlock() instanceof LadderBlock)
+                    } else if ( !cachedBlockLookup.getBlockState(node.x, node.y, node.z).getFluidState().isEmpty() ||
+                            (node.parent != null && !node.parent.isLadder() && cachedBlockLookup.getBlockState(node.x, node.y + 1, node.z).getBlock() instanceof LadderBlock))
                     {
                         exploreInDirection(node, 0, 1, 0);
                     }
                 }
                 case DOWN -> {
-                    if (node.isLadder() || node.isVisited()) {
+                    if (node.isLadder()) {
                         exploreInDirection(node, 0, -1, 0);
                     }
                     // Walk downwards node if passable
-                    else if (!node.isSwimming() && isPassable(node.x, node.y - 1, node.z, false, node.parent)) {
+                    else if ((node.isSwimming() && !isPassable(node.x, node.y + 1, node.z, false, node.parent)) || (!node.isSwimming() && isPassable(node.x, node.y - 1, node.z, false, node.parent))) {
                         exploreInDirection(node, 0, -1, 0);
                     }
                 }
+                default -> {}
             }
         }
     }
@@ -759,9 +767,10 @@ public abstract class AbstractPathJobMixin{
         }
 
         final boolean swimStart = isSwimming && !node.isSwimming();
-        final boolean onRails = pathingOptions.canUseRails() && state.getBlock() instanceof BaseRailBlock && checkConnection(node,dX,dZ);
+        final boolean belowIsRails = pathingOptions.canUseRails() && state.getBlock() instanceof BaseRailBlock;
+        final boolean onRails = belowIsRails && checkConnection(node,dX,dZ);
         final boolean ladder = PathfindingUtils.isLadder(state, pathingOptions);
-        final boolean onRoad = HasPathTag(below)||HasPathTag(pos)||(ladder||PathfindingUtils.isLadder(belowState, pathingOptions)||WorkerUtil.isPathBlock(belowState.getBlock())||WorkerUtil.isPathBlock(state.getBlock()))&&!(HasNotPathTag(below)||HasNotPathTag(pos));
+        final boolean onRoad = HasPathTag(below) || HasPathTag(pos) || (belowIsRails || ladder || PathfindingUtils.isLadder(belowState, pathingOptions) || WorkerUtil.isPathBlock(belowState.getBlock()) || WorkerUtil.isPathBlock(state.getBlock())) && !(HasNotPathTag(below) || HasNotPathTag(pos));
         final boolean isDiving = isSwimming && PathfindingUtils.isWater(world, null, aboveState, null);
 
 
@@ -778,11 +787,6 @@ public abstract class AbstractPathJobMixin{
         // since there may be a heuristic mod bug in Minecolonies, we abandon it.
         final double heuristic = computeHeuristic(nextX, nextY, nextZ);
         final double cost = node.getCost() + nextCost;
-
-//        // fix to distant horizon, compatibility fix.
-//        if(node.getHeuristic() == 0 && node.parent != null && node.parent.getHeuristic() == 0){
-//            return;
-//        }
 
         if (nextNode == null)
         {
@@ -801,7 +805,7 @@ public abstract class AbstractPathJobMixin{
 
             extraNodeState(nextNode);
             if ((onRoad || onRails) && Math.abs(dY) <= 1 ){
-                nextNode.setHeuristic(modifyHeuristic(node, nextNode, nextNode.getHeuristic(), onRoad, onRails));
+                nextNode.setHeuristic(modifyHeuristic(node, nextNode, nextNode.getHeuristic(), nextCost, onRoad, onRails));
             }
             else {
                 nextNode.setHeuristic(modifyHeuristic(nextNode, nextNode.getHeuristic(), state));
@@ -815,7 +819,7 @@ public abstract class AbstractPathJobMixin{
         {
             final double newHeuristic;
             if ((onRoad || onRails) && Math.abs(dY) <= 1){
-                newHeuristic = modifyHeuristic(node, nextNode, heuristic, onRoad, onRails);
+                newHeuristic = modifyHeuristic(node, nextNode, heuristic, nextCost, onRoad, onRails);
             }
             else {
                 newHeuristic = modifyHeuristic(nextNode, heuristic, state);
@@ -893,6 +897,94 @@ public abstract class AbstractPathJobMixin{
         return Integer.MIN_VALUE;
     }
 
+
+    /**
+     * @author ARxyt
+     * @reason 重构代码，重新计算梯子朝向等各种问题，重新确定水面高度。
+     */
+    @Overwrite( remap = false)
+    private Path finalizePath(final MNode targetNode)
+    {
+        //  Compute length of path, since we need to allocate an array.  This is cheaper/faster than building a List
+        //  and converting it.  Yes, we have targetNode.steps, but I do not want to rely on that being accurate (I might
+        //  fudge that value later on for cutoff purposes
+        int pathLength = 1;
+        int railsLength = 0;
+        MNode node = targetNode;
+        while (node.parent != null)
+        {
+            ++pathLength;
+            if (node.isOnRails())
+            {
+                ++railsLength;
+            }
+            node = node.parent;
+        }
+
+        final Node[] points = new Node[pathLength];
+        points[0] = new PathPointExtended(new BlockPos(node.x, node.y, node.z));
+        if (debugDrawEnabled)
+        {
+            addPathNodeToDebug(node);
+        }
+
+        Node next = null;
+        node = targetNode;
+        while (node.parent != null)
+        {
+            if (debugDrawEnabled)
+            {
+                addPathNodeToDebug(node);
+            }
+
+            --pathLength;
+
+            final BlockPos pos = new BlockPos(node.x, node.y, node.z);
+
+            final PathPointExtended p = new PathPointExtended(pos);
+            if (railsLength >= MineColonies.getConfig().getServer().minimumRailsToPath.get())
+            {
+                p.setOnRails(node.isOnRails());
+                if (p.isOnRails() && (!node.parent.isOnRails() || node.parent.parent == null))
+                {
+                    p.setRailsEntry();
+                }
+                else if (p.isOnRails() && points.length > pathLength + 1)
+                {
+                    final PathPointExtended point = ((PathPointExtended) points[pathLength + 1]);
+                    if (!point.isOnRails())
+                    {
+                        point.setRailsExit();
+                    }
+                }
+            }
+
+            if (node.isLadder())
+            {
+                p.setOnLadder(true);
+            }
+
+            if (next != null)
+            {
+                next.cameFrom = p;
+            }
+            next = p;
+            points[pathLength] = p;
+
+            node = node.parent;
+        }
+
+        doDebugPrinting(points);
+
+        if (points.length > 1)
+        {
+            result.costPerDist = targetNode.getCost() / BlockPosUtil.distManhattan(start, targetNode.x, targetNode.y, targetNode.z);
+        }
+
+        result.searchedNodes = totalNodesVisited;
+        return new Path(Arrays.asList(points), new BlockPos(targetNode.x, targetNode.y, targetNode.z), reachesDestination);
+    }
+
     /**
      * @author ARxyt
      * @reason Just useless and makes no sense.
@@ -963,26 +1055,25 @@ public abstract class AbstractPathJobMixin{
      * Heuristic correction function, making “detour exemptions” or other adjustments based on node, onRoad, and onRails.
      */
     @Unique
-    protected double modifyHeuristic(MNode node, MNode nextNode, double heuristic, boolean onRoad, boolean onRails)
+    protected double modifyHeuristic(MNode node, MNode nextNode, double heuristic, double nextCost, boolean onRoad, boolean onRails)
     {
-        if(heuristic < 5) {
+        if(heuristic <= 5) {
             return heuristic;
         }
         double newHeuristic = heuristic;
-        double lastHeuristic = node.getHeuristic();
+        double lastHeuristic =node.getHeuristic();
         IMNodeExtras extras = (IMNodeExtras) node;
         IMNodeExtras extrasNext = (IMNodeExtras) nextNode;
         double callbackAddon = 0.0;
-        if (onRails){
+        if (onRails) {
             heuristic *= onRailPreference;
-            callbackAddon = pathingOptions.onRailCost * onRailCallbackMultiplier;
+            callbackAddon = nextCost * onRailCallbackMultiplier;
         }
-        else if (onRoad && (!node.isOnRails() || extras.isStation()))
-        {
+        else if (onRoad && (!node.isOnRails() || extras.isStation())) {
             heuristic *= onRoadPreference;
-            callbackAddon = pathingOptions.onPathCost * onRoadCallbackMultiplier;
+            callbackAddon = nextCost * onRoadCallbackMultiplier;
         }
-        if (lastHeuristic + callbackAddon <= heuristic ){
+        if (lastHeuristic + callbackAddon <= heuristic) {
             if (callbackAddon != 0.0){
                 newHeuristic = lastHeuristic + callbackAddon;
                 extrasNext.setCallbackNode();
@@ -1000,17 +1091,18 @@ public abstract class AbstractPathJobMixin{
     @Unique
     private void updateNode(@NotNull final MNode node, @NotNull final MNode nextNode, final double heuristic, final double cost, boolean onRails, boolean onRoad, boolean noDrop)
     {
-        IMNodeExtras extras = (IMNodeExtras) node;
-
+        IMNodeExtras extras = (IMNodeExtras) nextNode;
+        final boolean betterHeuristic = nextNode.getHeuristic() > heuristic;
+        final boolean betterCost = nextNode.getCost() > cost;
+        boolean visitedNode = nextNode.isVisited();
         // We don't ignore any potentially low-cost nodes, only add some callback nodes to recalculate.
-        if (cost >= nextNode.getCost() && !(extras.isCallbackNode() && nextNode.getVisitedCount() <= visitedLevel * callbackTimesTolerance))
+        if (!betterCost && (!betterHeuristic || (visitedNode && !(extras.isCallbackNode() && nextNode.getVisitedCount() <= callbackTimesTolerance))))
         {
             return;
         }
 
-        boolean betterHeuristic = nextNode.getHeuristic() > heuristic;
         // those low-cost nodes should change its parent node to current node.
-        if (cost < nextNode.getCost()) {
+        if (betterCost) {
             nodesToVisit.remove(nextNode);
             pathNodesToVisit.remove(nextNode);
             nextNode.parent = node;
@@ -1019,7 +1111,7 @@ public abstract class AbstractPathJobMixin{
             if(betterHeuristic) {
                 nextNode.setHeuristic(heuristic);
             }
-            if(noDrop) {
+            if((onRails || onRoad) && noDrop) {
                 pathNodesToVisit.offer(nextNode);
             }
             nodesToVisit.offer(nextNode);
@@ -1027,23 +1119,15 @@ public abstract class AbstractPathJobMixin{
         }
 
         // other nodes may need to recalculate its heuristic.
-        if (nextNode.isVisited()){
-            IMNodeExtras extrasNext = (IMNodeExtras) nextNode;
-            if (extrasNext.isCallbackNode() && !betterHeuristic){
-                return;
-            }
-            if (nextNode.parent != null && Math.abs(nextNode.parent.y - nextNode.y) > 1){
-                return;
-            }
-            nodesToVisit.remove(nextNode);
-            pathNodesToVisit.remove(nextNode);
-            if(betterHeuristic) {
-                nextNode.setHeuristic(heuristic);
-            }
-            nodesToVisit.offer(nextNode);
-            if((onRails || onRoad) && noDrop) {
-                pathNodesToVisit.offer(nextNode);
-            }
+        if (nextNode.parent != null && Math.abs(nextNode.parent.y - nextNode.y) > 1){
+            return;
+        }
+        nextNode.setHeuristic(heuristic);
+        nodesToVisit.remove(nextNode);
+        nodesToVisit.offer(nextNode);
+
+        if(pathNodesToVisit.remove(nextNode) || (visitedNode && (onRails || onRoad) && noDrop)) {
+            pathNodesToVisit.offer(nextNode);
         }
     }
 

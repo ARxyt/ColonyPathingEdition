@@ -31,7 +31,6 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.RailShape;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
@@ -40,14 +39,10 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.*;
-import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.HashSet;
-import java.util.Objects;
 
 import static com.minecolonies.api.util.constant.Constants.TICKS_SECOND;
 
@@ -120,14 +115,23 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
             final PathPointExtended pExNext = (PathPointExtended) path.getNode(curNodeNext);
             final PathPointExtended pExPre = getPreviousNodeI();
 
+
             final boolean isOnScaffold = this.level.getBlockState(pEx.asBlockPos()).getBlock() instanceof ScaffoldingBlock;
+            final boolean pExPreOnLadder = pExPre != null && pExPre.isOnLadder();
             final boolean guessGoingDown = pExPre != null && pExPre.y > pEx.y;
+
+            // We should press shift as we're on scaffolding.
             if (isOnScaffold) {
                 ourEntity.setShiftKeyDown(guessGoingDown);
             }
-            //  If current node is bottom of a ladder, then stay on this node until
-            //  the ourEntity reaches the bottom, otherwise they will try to head out early
-            if (pEx.isOnLadder() && !pExNext.isOnLadder() && (pExPre == null || guessGoingDown))
+
+            // As we're entering ladder, shouldn't do anything. We have done that in handleLadder already.
+            if (pEx.isOnLadder() && !pExPreOnLadder) {
+                return;
+            }
+
+            // An exact exit movement handle going down, official code works fine.
+            if (pEx.isOnLadder() && !pExNext.isOnLadder() && guessGoingDown)
             {
                 final Vec3 vec3 = getTempMobPos();
                 if ((vec3.y - (double) pEx.y) < MIN_Y_DISTANCE) {
@@ -136,7 +140,8 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
                 return;
             }
 
-            if (pExPre != null && pExPre.isOnLadder() && !pEx.isOnLadder() && pExNext.y > pEx.y) {
+            // An exact exit movement handle going up, to handle jump on ladders.
+            if (pExPreOnLadder && !pEx.isOnLadder() && pExNext.y > pEx.y) {
                 final Vec3 vec3 = getTempMobPos();
                 if (((double) pEx.y - vec3.y) <= 0 && readyForJump(pEx.asBlockPos().getCenter(), vec3)) {
                     this.path.setNextNodeIndex(curNodeNext);
@@ -250,10 +255,14 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         state = world.getBlockState(pos);
         if (!state.isAir())
         {
+            double alterY = 0;
+            if(!state.getFluidState().isEmpty()) {
+                alterY = 0.7;
+            }
             final VoxelShape voxelshape = state.getCollisionShape(world, pos);
             if (!ShapeUtil.isEmpty(voxelshape))
             {
-                return pos.getY() + ShapeUtil.max(voxelshape, Direction.Axis.Y);
+                return pos.getY() + Math.max(ShapeUtil.max(voxelshape, Direction.Axis.Y), alterY);
             }
         }
 
@@ -309,7 +318,7 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         }
 
         this.ourEntity.setYya(0);
-        if (handleLaddersLikePathing())
+        if (handleLadderLikePathing())
         {
             followThePath();
             return;
@@ -372,9 +381,10 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
                                 case SOUTH -> zOffset = -0.2;
                             }
                             PathPointExtended previousNode = this.getPreviousNodeI();
-                            if(previousNode != null && previousNode.isOnLadder() && previousNode.getLadderFacing() == Direction.DOWN) {
-                                xOffset = -xOffset;
-                                zOffset = -zOffset;
+                            PathPointExtended thisNode = this.getThisNodeI();
+                            if(previousNode != null && previousNode.isOnLadder() && thisNode.y < previousNode.y) {
+                                xOffset = -xOffset / 2;
+                                zOffset = -zOffset / 2;
                             }
                         }
                         if(blockstate.getBlock() instanceof VineBlock && blockstate.hasProperty(HorizontalDirectionalBlock.FACING)) {
@@ -577,25 +587,25 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
         }
     }
 
-    // Handle ladders
-    @Unique
-    private boolean handleLaddersLikePathing()
+    private boolean handleLadderLikePathing()
     {
         // we have tested !this.path.isDone();
         assert this.path != null;
         final PathPointExtended thisNode = (PathPointExtended)(this.path.getNextNode());
         final PathPointExtended previousNode = getPreviousNodeI();
-        final PathPointExtended nextNode = getNextNodeI();
+        final boolean preOnLadder = previousNode != null && previousNode.isOnLadder();
         if (!thisNode.isOnLadder())
         {
-            if(previousNode != null && previousNode.isOnLadder()) {
-                // To reset offset.
+            if(preOnLadder) {
                 wantedPosition.setEmpty();
             }
             return false;
         }
 
-        if((previousNode == null || previousNode.isOnLadder()) && nextNode != null && !nextNode.isOnLadder()) {
+        final PathPointExtended nextNode = getNextNodeI();
+        final boolean nextOnLadder = nextNode != null && nextNode.isOnLadder();
+        final boolean guessGoingDown = previousNode != null && previousNode.y > thisNode.y;
+        if(thisNode.isOnLadder() && !nextOnLadder && guessGoingDown) {
             return true;
         }
 
@@ -618,28 +628,16 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
                 reached = new HashSet<>();
             }
 
-            final double nextX = (double) thisNode.x + ((int) (this.mob.getBbWidth() + 1.0F)) * 0.5D;
+            final double nextX = thisNode.x + 0.5D;
             final double nextY = thisNode.y;
-            final double nextZ = (double) thisNode.z + ((int) (this.mob.getBbWidth() + 1.0F)) * 0.5D;
-
-            final double diffX = Math.abs(this.mob.getX() - nextX);
-            final double diffY = this.mob.getY() - nextY;
-            final double diffZ = Math.abs(this.mob.getZ() - nextZ);
+            final double nextZ = thisNode.z + 0.5D;
             // Ladder entry needs more exact position tracking, we want to center the citizen before doing movement in another axis
-            if (thisNode.isOnLadder() && (previousNode == null || !previousNode.isOnLadder()))
+            if (thisNode.isOnLadder() && !preOnLadder)
             {
-                if (diffX < 0.2 && diffZ < 0.2 && Math.abs(diffY) < 0.1)
-                {
-                    if (reached != null)
-                    {
-                        reached.add(thisNode.asBlockPos());
-                        PathfindingUtils.syncDebugReachedPositions(reached, pathResult.getDebugWatchers());
-                    }
-                    this.path.advance();
-                }
                 double xOffset = 0;
                 double zOffset = 0;
                 BlockState blockstate = level.getBlockState(thisNode.asBlockPos());
+                // Magic number 0.1, just sufficient.
                 if(blockstate.getBlock() instanceof LadderBlock) {
                     switch (blockstate.getValue(HorizontalDirectionalBlock.FACING)) {
                         case EAST -> xOffset = 0.1;
@@ -651,12 +649,25 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
                 ourEntity.xxa = 0;
                 ourEntity.zza = 0;
                 wantedPosition.set(nextX + xOffset, nextY, nextZ + zOffset);
-                this.ourEntity.getMoveControl().setWantedPosition(nextX + xOffset, nextY, nextZ + zOffset, 0.6);
+                double distHorizon = wantedPosition.getX() + wantedPosition.getZ() - this.mob.getX() - this.mob.getZ();
+                if (distHorizon < 0.2)
+                {
+                    if (reached != null)
+                    {
+                        reached.add(thisNode.asBlockPos());
+                        PathfindingUtils.syncDebugReachedPositions(reached, pathResult.getDebugWatchers());
+                    }
+                    this.path.advance();
+                }
+                this.ourEntity.getMoveControl().setWantedPosition(nextX + xOffset, nextY, nextZ + zOffset, guessGoingDown ? 0.2 : 1);
             }
             // Scaling ladder, move
             else
             {
-                if (diffX < 0.5 && diffZ < 0.5 && Math.abs(diffY - 0.2) < 0.2)
+                final double diffX = Math.abs(this.mob.getX() - nextX);
+                final double diffY = this.mob.getY() - nextY;
+                final double diffZ = Math.abs(this.mob.getZ() - nextZ);
+                if (diffX < 0.4 && diffZ < 0.4 && (Math.abs(diffY - 0.2) < 0.2 || previousNode.y == thisNode.y))
                 {
                     if (reached != null)
                     {
@@ -672,9 +683,9 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
                 }
 
                 //  Ladder Workaround
-                if (thisNode.isOnLadder() && nextNode != null && nextNode.isOnLadder() && (thisNode.y != nextNode.y || mob.getY() > thisNode.y))
+                if (thisNode.isOnLadder())
                 {
-                    return doLadderMovement();
+                    return doLadderMovement(thisNode, nextOnLadder, guessGoingDown);
                 }
                 return false;
             }
@@ -687,36 +698,64 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
      *
      * @return true if a ladder is being handled
      */
-    @Unique
-    private boolean doLadderMovement()
+    private boolean doLadderMovement(PathPointExtended thisNode, boolean nextOnLadder, boolean guessGoingDown)
     {
         //This way he is less nervous and gets up the ladder
-        boolean newSpeed = true;
         assert this.path != null;
-        final PathPointExtended thisNode = (PathPointExtended)(this.path.getNextNode());
-        final PathPointExtended previousNode = getPreviousNodeI();
         Vec3 vec3 = thisNode.asBlockPos().getCenter();
 
-        Direction toSelect = previousNode != null ? previousNode.getLadderFacing() : thisNode.getLadderFacing();
-
-        //  Going down
-        if (toSelect == Direction.DOWN) {
-            newSpeed = false;
+        double xOffset = 0;
+        double zOffset = 0;
+        final BlockState blockstate = level.getBlockState(thisNode.asBlockPos());
+        if(blockstate.hasProperty(HorizontalDirectionalBlock.FACING)) {
+            switch (blockstate.getValue(HorizontalDirectionalBlock.FACING)) {
+                case EAST -> xOffset = -0.2;
+                case WEST -> xOffset = 0.2;
+                case NORTH -> zOffset = 0.2;
+                case SOUTH -> zOffset = -0.2;
+            }
         }
-
-        if (newSpeed)
-        {
-            wantedPosition.set(vec3.x , vec3.y + 1.25, vec3.z);
-            this.ourEntity.getMoveControl().setWantedPosition(wantedPosition.getX(), wantedPosition.getY(), wantedPosition.getZ(),1);
+        if (!guessGoingDown && nextOnLadder && mob.getY() < thisNode.y + 1) {
+            wantedPosition.set(vec3.x + xOffset , vec3.y + 1, vec3.z + zOffset);
+            this.ourEntity.getMoveControl().setWantedPosition(wantedPosition.getX(), wantedPosition.getY(), wantedPosition.getZ(), 1);
         }
-        else
-        {
-            vec3 = this.getPath().getNextEntityPos(this.ourEntity);
-            this.ourEntity.getMoveControl().setWantedPosition(vec3.x, vec3.y, vec3.z, 0.2);
-            wantedPosition.set(vec3.x, vec3.y, vec3.z);
-            return !(ourEntity.getY() <= thisNode.y + 0.2);
+        else {
+            // I really don't know why, 0 works bad, should give a 0.05 offset, 0.1 or 0.2 is too much.
+            xOffset = -xOffset / 4;
+            zOffset = -zOffset / 4;
+            wantedPosition.set(vec3.x + xOffset , vec3.y, vec3.z + zOffset);
+            this.ourEntity.getMoveControl().setWantedPosition(wantedPosition.getX(), wantedPosition.getY(), wantedPosition.getZ(), 1);
         }
         return true;
+    }
+
+    @Nullable
+    private PathPointExtended getPreviousNodeI()
+    {
+        assert path != null;
+        if (path.getNextNodeIndex() > 0)
+        {
+            return (PathPointExtended) path.getNode(path.getNextNodeIndex() - 1);
+        }
+
+        return null;
+    }
+
+    @NotNull
+    private PathPointExtended getThisNodeI()
+    {
+        assert path != null;
+        return (PathPointExtended) path.getNode(path.getNextNodeIndex());
+    }
+
+    @Nullable
+    private PathPointExtended getNextNodeI() {
+        assert path != null;
+        if (path.getNextNodeIndex() + 1 < path.getNodeCount()) {
+            return (PathPointExtended) path.getNode(path.getNextNodeIndex() + 1);
+        }
+
+        return null;
     }
 
     private boolean readyForJump(Vec3 thisPosCenter, Vec3 entityPos){
@@ -738,27 +777,5 @@ public abstract class MinecoloniesAdvancedPathNavigateMixin extends AbstractAdva
             }
         }
         return true;
-    }
-
-    @Nullable
-    private PathPointExtended getPreviousNodeI()
-    {
-        assert path != null;
-        if (path.getNextNodeIndex() > 0)
-        {
-            return (PathPointExtended) path.getNode(path.getNextNodeIndex() - 1);
-        }
-
-        return null;
-    }
-
-    @Nullable
-    private PathPointExtended getNextNodeI() {
-        assert path != null;
-        if (path.getNextNodeIndex() + 1 < path.getNodeCount()) {
-            return (PathPointExtended) path.getNode(path.getNextNodeIndex() + 1);
-        }
-
-        return null;
     }
 }

@@ -34,6 +34,7 @@
     "minecolonies.citizen.CitizenDataMixinForLeisure",
     "minecolonies.citizen.CitizenSkillDataMixin",
     "minecolonies.citizen.CitizenSkillHandlerMixin",
+    "minecolonies.citizen.CitizenWindowUtilsMixin",
     "minecolonies.compatible.WorkerBuildingModuleViewMixin",
     "minecolonies.concretemixer.EntityAIConcreteMixerMixin",
     "minecolonies.entity.AbstractEntityCitizenMixin",

@@ -25,6 +25,7 @@ public abstract class MovementHandlerMixin extends MoveControl {
     @Shadow(remap = false) private float speedValue;
 
     @Unique private int jumpCoolDown = 0;
+    @Unique private static final int FORCE_JUMP_LIMIT = 10;
 
     public MovementHandlerMixin(Mob mob)
     {
@@ -81,14 +82,14 @@ public abstract class MovementHandlerMixin extends MoveControl {
             this.mob.setXxa(this.strafeRight);
             this.operation = net.minecraft.world.entity.ai.control.MoveControl.Operation.WAIT;
         }
-        else if (this.operation == net.minecraft.world.entity.ai.control.MoveControl.Operation.MOVE_TO)
+        else if (this.operation == Operation.MOVE_TO)
         {
-            this.operation = net.minecraft.world.entity.ai.control.MoveControl.Operation.WAIT;
+            this.operation = Operation.WAIT;
             final double xDif = this.wantedX - this.mob.getX();
             final double zDif = this.wantedZ - this.mob.getZ();
             final double yDif = this.wantedY - this.mob.getY();
-            final double dist = xDif * xDif + yDif * yDif + zDif * zDif;
-            if (dist < (double) 2.5000003E-7F)
+            final double d3 = Math.sqrt(xDif * xDif + yDif * yDif + zDif * zDif);
+            if (d3 < (double) 2.5000003E-7F)
             {
                 this.mob.setZza(0.0F);
                 return;
@@ -102,13 +103,11 @@ public abstract class MovementHandlerMixin extends MoveControl {
 
             if (mob.isInWater())
             {
-                this.mob.setShiftKeyDown(false);
-                if (Math.abs(yDif + 1) < 0.125D)
+                if (Math.abs(yDif) < 0.125D)
                 {
-                    double d3 = Math.sqrt(dist);
                     this.mob.setDeltaMovement(this.mob.getDeltaMovement().add(0, (double) this.mob.getSpeed() * ((yDif + 0.3) / d3) * 0.1D, 0));
                 }
-                else if (yDif + 1 > 0.0D)
+                else if (yDif > 0.0D)
                 {
                     this.mob.getJumpControl().jump();
                 }
@@ -119,16 +118,8 @@ public abstract class MovementHandlerMixin extends MoveControl {
             }
 
             if (mob.getVehicle() == null) {
-                // handle water and ladder, that's definitely a better handler to not use jumpCoolDown at these cases.
-                if (yDif > 0 && (mob.isInWater() || !mob.onGround())) {
-                    this.mob.getJumpControl().jump();
-                    this.operation = net.minecraft.world.entity.ai.control.MoveControl.Operation.JUMPING;
-                    jumpCoolDown = 0;
-                    return;
-                }
                 final Block block = blockstate.getBlock();
                 final VoxelShape voxelshape = blockstate.getCollisionShape(this.mob.level(), blockpos);
-                final int FORCE_JUMP_LIMIT = 10;
                 if (yDif > (double) stepHeight) {
                     if (xDif * xDif + zDif * zDif < (double) Math.max(1.0F, this.mob.getBbWidth()) || jumpCoolDown > FORCE_JUMP_LIMIT) {
                         this.mob.getJumpControl().jump();
@@ -137,9 +128,11 @@ public abstract class MovementHandlerMixin extends MoveControl {
                     } else {
                         jumpCoolDown++;
                     }
-                } else if ((!ShapeUtil.isEmpty(voxelshape) && this.mob.getY() < ShapeUtil.max(voxelshape, Direction.Axis.Y) + (double) blockpos.getY() && !blockstate.is(BlockTags.DOORS)
-                        && !blockstate.is(BlockTags.FENCES) && !blockstate.is(BlockTags.FENCE_GATES))
-                        && !block.isLadder(blockstate, this.mob.level(), blockpos, this.mob)) {
+                } else if (!ShapeUtil.isEmpty(voxelshape)
+                        && this.mob.getY() < ShapeUtil.max(voxelshape, Direction.Axis.Y) + (double) blockpos.getY()
+                        && !blockstate.is(BlockTags.DOORS) && !blockstate.is(BlockTags.FENCES) && !blockstate.is(BlockTags.FENCE_GATES)
+                        && !block.isLadder(blockstate, this.mob.level(), blockpos, this.mob))
+                {
                     boolean canPass = true;
                     if (xDif > zDif){
                         canPass = ShapeUtil.min(voxelshape, Direction.Axis.Z) != 0 || ShapeUtil.max(voxelshape, Direction.Axis.Z) != 1;
@@ -161,13 +154,13 @@ public abstract class MovementHandlerMixin extends MoveControl {
                 }
             }
         }
-        else if (this.operation == net.minecraft.world.entity.ai.control.MoveControl.Operation.JUMPING)
+        else if (this.operation == Operation.JUMPING)
         {
             this.mob.setSpeed((float) (this.speedModifier * speedValue));
 
-            if (this.mob.onGround() && !this.mob.isInWater())
+            if (this.mob.onGround() || this.mob.isInWater())
             {
-                this.operation = net.minecraft.world.entity.ai.control.MoveControl.Operation.WAIT;
+                this.operation = Operation.WAIT;
             }
         }
         else

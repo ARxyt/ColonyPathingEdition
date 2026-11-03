@@ -1,6 +1,7 @@
 package com.arxyt.colonypathingedition.mixins.minecolonies.entity;
 
 import com.arxyt.colonypathingedition.core.util.SwitchUtils;
+import com.minecolonies.api.colony.ICitizenData;
 import com.minecolonies.api.colony.IColony;
 import com.minecolonies.api.colony.IColonyManager;
 import com.minecolonies.api.colony.IColonyView;
@@ -12,10 +13,8 @@ import com.minecolonies.api.entity.ai.statemachine.tickratestatemachine.ITickRat
 import com.minecolonies.api.entity.citizen.AbstractEntityCitizen;
 import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenColonyHandler;
 import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenJobHandler;
-import com.minecolonies.api.util.DamageSourceKeys;
-import com.minecolonies.api.util.Log;
-import com.minecolonies.api.util.MessageUtils;
-import com.minecolonies.api.util.SoundUtils;
+import com.minecolonies.api.entity.citizen.citizenhandlers.ICitizenSleepHandler;
+import com.minecolonies.api.util.*;
 import com.minecolonies.core.Network;
 import com.minecolonies.core.colony.jobs.AbstractJobGuard;
 import com.minecolonies.core.colony.jobs.JobNetherWorker;
@@ -47,20 +46,24 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Locale;
 import java.util.Objects;
 
+import static com.arxyt.colonypathingedition.core.config.PathingConfig.SATURATION_DECREASE_AMOUNT;
 import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.TAG_UPDATE_INTERVAL;
 import static com.minecolonies.api.util.constant.TranslationConstants.MESSAGE_INTERACTION_COOKIE;
 
 @Mixin(value = EntityCitizen.class, remap = false)
 public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
     @Unique private short entityCitizenIntervalCounter = -1;
-
-    @Shadow(remap = false) private ICitizenColonyHandler citizenColonyHandler;
+    @Unique private static final double decreaseScale =  SATURATION_DECREASE_AMOUNT.get();
 
     @Shadow(remap = false) public abstract ITickRateStateMachine<IState> getCitizenAI();
     @Shadow(remap = false) public abstract ICitizenColonyHandler getCitizenColonyHandler();
     @Shadow(remap = false) public abstract ICitizenJobHandler getCitizenJobHandler();
 
+    @Shadow(remap = false) private ICitizenColonyHandler citizenColonyHandler;
     @Shadow(remap = false) private int interactionCooldown;
+    @Shadow(remap = false) private double cachedActionSaturationDecrease;
+    @Shadow(remap = false) private ICitizenData citizenData;
+    @Shadow(remap = false) private ICitizenSleepHandler citizenSleepHandler;
 
     public EntityCitizenMixin(final EntityType<? extends PathfinderMob> type, final Level world)
     {
@@ -92,6 +95,18 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
         if(getCitizenJobHandler().getColonyJob() instanceof JobNetherWorker jobNetherWorker && jobNetherWorker.isInNether()) {
             ci.cancel();
         }
+    }
+
+    @Override
+    public void decreaseSaturationForAction()
+    {
+        this.cachedActionSaturationDecrease += decreaseScale * 10;
+    }
+
+    @Override
+    public void decreaseSaturationForContinuousAction()
+    {
+        this.cachedActionSaturationDecrease += decreaseScale;
     }
 
     /**
@@ -148,7 +163,6 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
         return true;
     }
 
-
     /**
      * @author ARxyt
      * @reason some addon.
@@ -181,6 +195,58 @@ public abstract class EntityCitizenMixin extends AbstractEntityCitizen {
                         .sendTo(player);
             }
         }
+    }
+
+    /**
+     * @author ARxyt
+     * @reason some addon.
+     */
+    @Overwrite(remap = false)
+    private void eatFoodInteraction(final ItemStack usedStack, final Player player, final InteractionHand hand)
+    {
+        if (!level().isClientSide())
+        {
+            playSound(SoundEvents.GENERIC_EAT, 1.5f, (float) SoundUtils.getRandomPitch(getRandom()));
+            Network.getNetwork().sendToTrackingEntity(new ItemParticleEffectMessage(usedStack, getX(), getY(), getZ(), getXRot(), getYRot(), getEyeHeight()), this);
+            if (citizenData != null)
+            {
+                citizenData.getCitizenFoodHandler().addLastEaten(usedStack.getItem());
+            }
+            SwitchUtils.consumeFoodSwitcher(usedStack, this, player.getInventory());
+        }
+
+        interactionCooldown = 100;
+    }
+
+    /**
+     * @author ARxyt
+     * @reason some addon.
+     */
+    @Overwrite(remap = false)
+    private boolean decreaseIdleSaturation()
+    {
+        if (citizenData != null && !level().isNight() && !citizenSleepHandler.isAsleep())
+        {
+            double decrease = decreaseScale * 20;
+
+            if (citizenData.getJob() != null)
+            {
+                decrease *= citizenData.getJob().getSaturationFactor();
+            }
+
+            if (cachedActionSaturationDecrease != 0)
+            {
+                decrease += Math.min(decrease / 2.0, cachedActionSaturationDecrease);
+                cachedActionSaturationDecrease = 0;
+            }
+
+            if (citizenData.isChild())
+            {
+                decrease = decrease / 2.0;
+            }
+            citizenData.decreaseSaturation(decrease);
+        }
+        return false;
     }
 
     @Override

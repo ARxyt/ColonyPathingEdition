@@ -34,7 +34,7 @@ public abstract class PathJobMoveTowardsMixin extends AbstractPathJobMixin {
      * Heuristic correction function, making “detour exemptions” or other adjustments based on node, onRoad, and onRails.
      */
     @Override
-    protected double modifyHeuristic(MNode node, MNode nextNode, double heuristic, boolean onRoad, boolean onRails)
+    protected double modifyHeuristic(MNode node, MNode nextNode, double heuristic, double nextCost, boolean onRoad, boolean onRails)
     {
         if(heuristic < 5) {
             return heuristic;

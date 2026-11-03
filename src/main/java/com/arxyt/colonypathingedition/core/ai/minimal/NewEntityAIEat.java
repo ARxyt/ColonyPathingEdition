@@ -50,18 +50,19 @@ import static com.arxyt.colonypathingedition.core.ai.minimal.NewEntityAIEat.Eati
 import static com.arxyt.colonypathingedition.core.costants.AdditionalContants.*;
 import static com.arxyt.colonypathingedition.core.minecolonies.module.BuildingModules.WAREHOUSE_MENU;
 import static com.arxyt.colonypathingedition.core.util.NewFoodUtils.getShouldEatAtHut;
-import static com.minecolonies.api.util.constant.CitizenConstants.FULL_SATURATION;
 import static com.minecolonies.api.util.constant.CitizenConstants.NIGHT;
 import static com.minecolonies.api.util.constant.GuardConstants.BASIC_VOLUME;
 import static com.minecolonies.api.util.constant.TranslationConstants.*;
 
 public class NewEntityAIEat implements IStateAI {
-
+    private static final double FULL_SATURATION = PathingConfig.MAX_SATURATION.get();
     private static final Predicate<BuildingCook> STAFFED_RESTAURANTS = buildingCook -> buildingCook.getModule(BuildingModules.COOK_WORK).hasAssignedCitizen();
-    private final double WAITING_MINUTES = PathingConfig.RESTAURANT_WAITING_TIME.get();
     private static final int REQUIRED_TIME_TO_EAT = 5;
     private static final int MAX_SCORE_DISTANCE = 200;
     private static final int CROWD_PENALTY = 10;
+
+    private final double WAITING_MINUTES = PathingConfig.RESTAURANT_WAITING_TIME.get();
+
     private IBuilding buildingToGo = null;
 
     public enum NewEatingState implements IState
