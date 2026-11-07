@@ -36,6 +36,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 import static com.minecolonies.api.entity.ai.statemachine.states.AIWorkerState.*;
 import static com.minecolonies.api.research.util.ResearchConstants.BLOCK_PLACE_SPEED;
@@ -282,11 +283,16 @@ public abstract class EntityAIStructureBuilderMixin extends AbstractEntityAIStru
             final IBuilding building = buildingManager.getBuilding(wo.getLocation());
             if(building != null && building.hasModule(BED)) {
                 BedHandlingModule module = building.getModule(BED);
-                for(BlockPos pos : module.getRegisteredBlocks()) {
+                List<BlockPos> bedList = module.getRegisteredBlocks();
+                for(BlockPos pos : bedList) {
                     final BlockState state = world.getBlockState(pos);
-                    if (!state.hasProperty(BedBlock.PART) || state.getValue(BedBlock.PART) != BedPart.FOOT)
-                    {
+                    if (!state.hasProperty(BedBlock.PART)) {
                         module.removeBed(pos);
+                    }
+                    else if(state.getValue(BedBlock.PART) == BedPart.FOOT) {
+                        if(state.hasProperty(BedBlock.FACING) && bedList.contains(pos.relative(state.getValue(BedBlock.FACING)))) {
+                            module.removeBed(pos);
+                        }
                     }
                 }
             }
