@@ -105,7 +105,6 @@ public abstract class AbstractPathJobMixin{
             final int z,
             final BlockState state, final BlockState below);
 
-    @Unique final private int callbackTimesTolerance =  PathingConfig.CALLBACK_TIMES_TOLERANCE.get();
     @Unique final private int extendCount =  PathingConfig.NODE_EXTEND_COUNT.get();
     @Unique final protected double onRailPreference = PathingConfig.ONRAIL_PREFERENCE.get();
     @Unique final protected double onRoadPreference = PathingConfig.ONROAD_PREFERENCE.get();
@@ -120,6 +119,7 @@ public abstract class AbstractPathJobMixin{
     @Unique private BlockEntity townhall;
     @Unique protected int actualMaxNodes;
     @Unique private Queue<MNode> pathNodesToVisit;
+    @Unique private Queue<MNode> cheapestNodelist;
     @Unique final Random random = new Random();
 
     /**
@@ -278,6 +278,7 @@ public abstract class AbstractPathJobMixin{
     {
         this.actualMaxNodes = this.maxNodes;
         this.pathNodesToVisit = new PriorityQueue<>();
+        this.cheapestNodelist = new ArrayDeque<>();
         bestNode = getAndSetupStartNode();
         double bestNodeEndScore = getEndNodeScore(bestNode);
         // Node count since we found a better end node than the current one
@@ -291,10 +292,13 @@ public abstract class AbstractPathJobMixin{
                 return null;
             }
 
-            Queue<MNode> cheapestNodelist = new ArrayDeque<>();
-            if(nodesToVisit.peek() != null){
-                pathNodesToVisit.remove(nodesToVisit.peek());
-                cheapestNodelist.add(nodesToVisit.poll());
+            final MNode bestThisRound = nodesToVisit.poll();
+            if(bestThisRound != null){
+                // we assume those two queues are used correctly, hence we can assume the best node of all must at the top of pathNodes.
+                if(bestThisRound == pathNodesToVisit.peek()) {
+                    pathNodesToVisit.poll();
+                }
+                cheapestNodelist.add(bestThisRound);
             }
 
             for (int i = 0; i < extendCount - 1; i++) {
@@ -311,9 +315,6 @@ public abstract class AbstractPathJobMixin{
                 if (node == null){
                     continue;
                 }
-                // To prevent multi-visit at one exploration.
-                pathNodesToVisit.remove(node);
-                nodesToVisit.remove(node);
                 if (node.isVisited()) {
                     // Revisiting is used to update neighbours to an updated cost
                     visitNode(node);
@@ -1059,7 +1060,6 @@ public abstract class AbstractPathJobMixin{
         double newHeuristic = heuristic;
         double lastHeuristic =node.getHeuristic();
         IMNodeExtras extras = (IMNodeExtras) node;
-        IMNodeExtras extrasNext = (IMNodeExtras) nextNode;
         double callbackAddon = 0.0;
         if (onRails) {
             heuristic *= onRailPreference;
@@ -1072,7 +1072,6 @@ public abstract class AbstractPathJobMixin{
         if (lastHeuristic + callbackAddon <= heuristic) {
             if (callbackAddon != 0.0){
                 newHeuristic = lastHeuristic + callbackAddon;
-                extrasNext.setCallbackNode();
             }
         }
         else{
@@ -1087,12 +1086,11 @@ public abstract class AbstractPathJobMixin{
     @Unique
     private void updateNode(@NotNull final MNode node, @NotNull final MNode nextNode, final double heuristic, final double cost, boolean onRails, boolean onRoad, boolean noDrop)
     {
-        IMNodeExtras extras = (IMNodeExtras) nextNode;
         final boolean betterHeuristic = nextNode.getHeuristic() > heuristic;
         final boolean betterCost = nextNode.getCost() > cost;
         boolean visitedNode = nextNode.isVisited();
         // We don't ignore any potentially low-cost nodes, only add some callback nodes to recalculate.
-        if (!betterCost && (!betterHeuristic || (visitedNode && !(extras.isCallbackNode() && nextNode.getVisitedCount() <= callbackTimesTolerance))))
+        if (!betterCost && (!betterHeuristic || visitedNode))
         {
             return;
         }
@@ -1104,10 +1102,11 @@ public abstract class AbstractPathJobMixin{
             nextNode.parent = node;
             nextNode.setCost(cost);
             nextNode.setOnRails(onRails);
-            if(betterHeuristic) {
+            if (betterHeuristic) {
                 nextNode.setHeuristic(heuristic);
             }
-            if((onRails || onRoad) && noDrop) {
+            if (cheapestNodelist.contains(nextNode)) return;
+            if (!reachesDestination && (onRails || onRoad) && noDrop) {
                 pathNodesToVisit.offer(nextNode);
             }
             nodesToVisit.offer(nextNode);
@@ -1119,10 +1118,11 @@ public abstract class AbstractPathJobMixin{
             return;
         }
         nextNode.setHeuristic(heuristic);
-        nodesToVisit.remove(nextNode);
-        nodesToVisit.offer(nextNode);
+        if(nodesToVisit.remove(nextNode)) {
+            nodesToVisit.offer(nextNode);
+        }
 
-        if(pathNodesToVisit.remove(nextNode) || (visitedNode && (onRails || onRoad) && noDrop)) {
+        if(!reachesDestination && pathNodesToVisit.remove(nextNode)) {
             pathNodesToVisit.offer(nextNode);
         }
     }
