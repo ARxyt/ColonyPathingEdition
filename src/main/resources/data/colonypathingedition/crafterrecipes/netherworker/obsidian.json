@@ -1,0 +1,23 @@
+{
+  "type": "recipe",
+  "additional-output": [
+    {
+      "count": 2,
+      "id": "minecraft:bucket"
+    }
+  ],
+  "crafter": "netherworker_custom",
+  "inputs": [
+    {
+      "id": "minecraft:lava_bucket"
+    },
+    {
+      "id": "minecraft:water_bucket"
+    }
+  ],
+  "min-building-level": 3,
+  "intermediate": "minecraft:air",
+  "result": {
+    "id": "minecraft:obsidian"
+  }
+}

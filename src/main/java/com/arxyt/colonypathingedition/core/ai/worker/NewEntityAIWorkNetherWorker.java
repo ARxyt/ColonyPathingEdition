@@ -460,11 +460,10 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
 
                 JobNetherWorkerExtra jobExtra = (JobNetherWorkerExtra)job;
                 // Check for materials needed to go to the Nether
-                if (currentRecipeStorage != null && jobExtra.canExtraRounds(extraRoundsLimit()))
-                {
-                    for (ItemStorage item : currentRecipeStorage.getInput())
-                    {
-                        checkIfRequestForItemExistOrCreateAsync(new ItemStack(item.getItem(), 1), item.getAmount() * jobExtra.remainExtraRounds(extraRoundsLimit()), item.getAmount());
+                final int remainExtraRounds = jobExtra.remainExtraRounds(extraRoundsLimit());
+                if (currentRecipeStorage != null && remainExtraRounds >= 1) {
+                    for (ItemStorage item : currentRecipeStorage.getInput()) {
+                        checkIfRequestForItemExistOrCreateAsync(new ItemStack(item.getItem(), 1), item.getAmount() * remainExtraRounds, item.getAmount());
                     }
                 }
                 worker.setInvisible(true);
@@ -606,11 +605,11 @@ public class NewEntityAIWorkNetherWorker extends AbstractEntityAICrafting<JobNet
                     worker.getCitizenData().setJobStatus(JobStatus.WORKING);
                     extraRound = jobExtra.setExtraRounds(true);
                     StatsUtil.trackStat(building, "extraRounds", 1);
-                    if (currentRecipeStorage != null && jobExtra.canExtraRounds(extraRoundsLimit()))
-                    {
-                        for (ItemStorage item : currentRecipeStorage.getInput())
-                        {
-                            checkIfRequestForItemExistOrCreateAsync(new ItemStack(item.getItem(), 1), item.getAmount() * jobExtra.remainExtraRounds(extraRoundsLimit()), item.getAmount());
+                    // Check for materials needed to go to the Nether
+                    final int remainExtraRounds = jobExtra.remainExtraRounds(extraRoundsLimit());
+                    if (currentRecipeStorage != null && remainExtraRounds >= 1) {
+                        for (ItemStorage item : currentRecipeStorage.getInput()) {
+                            checkIfRequestForItemExistOrCreateAsync(new ItemStack(item.getItem(), 1), item.getAmount() * remainExtraRounds, item.getAmount());
                         }
                     }
                     if(!checkForToolOrWeaponNotTooBroken()) {
