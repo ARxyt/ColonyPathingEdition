@@ -65,6 +65,7 @@
     "minecolonies.job.JobDyerMixin",
     "minecolonies.job.JobEntryMixin",
     "minecolonies.job.JobFarmerMixin",
+    "minecolonies.job.JobFloristMixin",
     "minecolonies.job.JobGlassblowerMixin",
     "minecolonies.job.JobNetherWorkerMixin",
     "minecolonies.job.JobPlanterMixin",

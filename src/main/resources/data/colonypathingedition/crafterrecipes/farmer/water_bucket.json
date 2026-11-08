@@ -1,0 +1,12 @@
+{
+  "type": "recipe",
+  "crafter": "farmer_crafting",
+  "inputs": [
+    {
+      "count": 1,
+      "item": "minecraft:bucket"
+    }
+  ],
+  "intermediate": "minecraft:air",
+  "result": "minecraft:water_bucket"
+}
